@@ -9,7 +9,12 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@types/tinycolor2": "^1.4.6",
     "typescript": "~5.8.3",
     "vite": "^7.0.4"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0",
+    "tinycolor2": "^1.6.0"
   }
 }
