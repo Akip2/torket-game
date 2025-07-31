@@ -1,13 +1,14 @@
 import Phaser from "phaser";
 import MenuScene from "./scenes/MenuScene";
 import TestScene from "./scenes/TestScene";
+import { GAME_HEIGHT, GAME_WIDTH } from "./const";
 
 const config = {
     type: Phaser.AUTO,
-    width: 1600,
-    height: 800,
+    width: GAME_WIDTH,
+    height: GAME_HEIGHT,
     parent: 'game-container',
-    backgroundColor: '#028af8',
+    backgroundColor: 'rgb(0,14,27)',
     resolution: window.devicePixelRatio,
 
     scale: {
@@ -17,7 +18,7 @@ const config = {
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: { x: 0, y: 300 },
+            gravity: { x: 0, y: 800 },
             debug: false
         }
     },
