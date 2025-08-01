@@ -1,3 +1,5 @@
+import { GAME_HEIGHT, PLAYER_HEIGHT, PLAYER_WIDTH, TILE_SIZE } from "../const";
+
 export default abstract class GameScene extends Phaser.Scene {
     cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
     player?: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
@@ -8,7 +10,7 @@ export default abstract class GameScene extends Phaser.Scene {
 
     preload() {
         this.cursors = this.input.keyboard!.createCursorKeys();
-        this.load.image('ground', 'assets/platform.png');
+        this.load.image('ground', 'assets/ground_32.png');
         this.load.spritesheet('player', 'assets/player.png', { frameWidth: 32, frameHeight: 48 });
 
         this.loadAdditionalRessources();
@@ -46,6 +48,14 @@ export default abstract class GameScene extends Phaser.Scene {
         this.physics.add.collider(this.player, staticGroup);
     }
 
+    placePlayer(row: number, column: number) {
+        return this.physics.add.sprite(
+            (column * TILE_SIZE) + (PLAYER_WIDTH / 2),
+            GAME_HEIGHT - (row * TILE_SIZE) - (PLAYER_HEIGHT / 2),
+            'player'
+        );
+    }
+
     abstract addStaticPlatforms(staticGroup: Phaser.Physics.Arcade.StaticGroup): void;
 
     abstract addPlayer(): Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
@@ -70,13 +80,31 @@ export default abstract class GameScene extends Phaser.Scene {
         }
 
         if (this.cursors.up.isDown && this.player.body.touching.down) {
-            this.player.setVelocityY(-330);
+            this.player.setVelocityY(-375);
         }
     }
 
     update(): void {
         this.checkPlayerMovements();
         this.sceneLogic();
+    }
+
+    addPlatformBlock(
+        group: Phaser.GameObjects.Group,
+        startCol: number,
+        endCol: number,
+        startRow: number,
+        endRow: number
+    ) {
+        for (let row = startRow; row <= endRow; row++) {
+            for (let col = startCol; col <= endCol; col++) {
+                group.create(
+                    (col * TILE_SIZE) + (TILE_SIZE / 2),
+                    GAME_HEIGHT - (row * TILE_SIZE) - (TILE_SIZE / 2),
+                    'ground'
+                );
+            }
+        }
     }
 
     loadAdditionalRessources() {

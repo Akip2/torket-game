@@ -1,7 +1,4 @@
-import { GAME_HEIGHT } from "../const";
-import { HorizontalEnum } from "../enums/horizontal.enum";
-import { VerticalEnum } from "../enums/vertical.enum";
-import { generateHorizontalValue, generateVerticalValue } from "../utils";
+import { LAST_COLUMN } from "../const";
 import GameScene from "./GameScene";
 
 export default class TestScene extends GameScene {
@@ -10,10 +7,10 @@ export default class TestScene extends GameScene {
     }
 
     addPlayer() {
-        return this.physics.add.sprite(generateHorizontalValue(0, HorizontalEnum.CENTER), GAME_HEIGHT - 80, 'player');
+        return this.placePlayer(4, LAST_COLUMN / 2);
     }
 
     addStaticPlatforms(staticGroup: Phaser.Physics.Arcade.StaticGroup): void {
-        staticGroup.create(generateHorizontalValue(400, HorizontalEnum.CENTER), generateVerticalValue(32, VerticalEnum.DOWN), 'ground');
+        this.addPlatformBlock(staticGroup, 0, LAST_COLUMN, 0, 3);
     }
 }
