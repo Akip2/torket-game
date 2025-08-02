@@ -11,6 +11,6 @@ export default class TestScene extends GameScene {
     }
 
     addStaticPlatforms(staticGroup: Phaser.Physics.Arcade.StaticGroup): void {
-        this.addPlatformBlock(staticGroup, 0, LAST_COLUMN, 0, 3);
+        //this.addPlatformBlock(staticGroup, 0, LAST_COLUMN, 0, 3);
     }
 }
