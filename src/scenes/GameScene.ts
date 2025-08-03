@@ -1,4 +1,4 @@
-import { GAME_HEIGHT, GAME_WIDTH, PLAYER_HEIGHT, PLAYER_WIDTH, TILE_SIZE } from "../const";
+import { EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TILE_SIZE } from "../const";
 import type { QuadBlock } from "../types";
 
 export default abstract class GameScene extends Phaser.Scene {
@@ -13,9 +13,9 @@ export default abstract class GameScene extends Phaser.Scene {
 
         this.root = {
             x: 0,
-            y: 0,
+            y: GAME_HEIGHT - GAME_HEIGHT / 5,
             width: GAME_WIDTH,
-            height: GAME_HEIGHT,
+            height: GAME_HEIGHT / 5,
             filled: true
         };
     }
@@ -26,7 +26,7 @@ export default abstract class GameScene extends Phaser.Scene {
 
     preload() {
         this.cursors = this.input.keyboard!.createCursorKeys();
-        this.load.image('ground', 'assets/ground_32.png');
+        this.load.image('ground', `assets/ground_${TILE_SIZE}.png`);
         this.load.spritesheet('player', 'assets/player.png', { frameWidth: 32, frameHeight: 48 });
 
         this.loadAdditionalRessources();
@@ -67,21 +67,49 @@ export default abstract class GameScene extends Phaser.Scene {
         this.drawTerrain(this.root);
 
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+            var startDate = new Date();
+
             const x = pointer.x;
             const y = pointer.y;
-            const radius = 32;
 
-            this.destroyTerrain(this.root, x, y, radius, TILE_SIZE);
+            this.destroyTerrain(this.root, x, y, EXPLOSION_RADIUS, TILE_SIZE);
             this.redrawTerrain();
+
+            var endDate = new Date();
+            console.log((endDate.getTime() - startDate.getTime()) / 1000);
 
             const g = this.add.graphics();
             g.clear();
             g.lineStyle(2, 0xffff00);
-            g.strokeCircle(x, y, radius);
+            g.strokeCircle(x, y, EXPLOSION_RADIUS);
             this.debugGraphics.push(g);
 
-            this.highlightTouchedBlocks(this.root, x, y, radius);
+            this.highlightTouchedBlocks(this.root, x, y, EXPLOSION_RADIUS);
         });
+    }
+
+    createGround(heightInTiles: number) {
+        const groundHeight = heightInTiles * TILE_SIZE;
+        const airHeight = GAME_HEIGHT - groundHeight;
+
+        this.root.children = [
+            {
+                x: 0,
+                y: 0,
+                width: GAME_WIDTH,
+                height: airHeight,
+                filled: false,
+            },
+            {
+                x: 0,
+                y: airHeight,
+                width: GAME_WIDTH,
+                height: groundHeight,
+                filled: true,
+            }
+        ];
+
+        this.root.filled = false;
     }
 
     highlightTouchedBlocks(block: QuadBlock, cx: number, cy: number, radius: number) {
@@ -109,10 +137,10 @@ export default abstract class GameScene extends Phaser.Scene {
         }
     }
 
-    placePlayer(row: number, column: number) {
+    placePlayer(x: number, y: number) {
         return this.physics.add.sprite(
-            (column * TILE_SIZE) + (PLAYER_WIDTH / 2),
-            GAME_HEIGHT - (row * TILE_SIZE) - (PLAYER_HEIGHT / 2),
+            x,
+            y,
             'player'
         );
     }
@@ -172,15 +200,40 @@ export default abstract class GameScene extends Phaser.Scene {
     subdivide(block: QuadBlock, minSize = TILE_SIZE) {
         if (block.width <= minSize || block.height <= minSize) return;
 
-        const hw = block.width / 2;
-        const hh = block.height / 2;
+        const aspectRatio = block.width / block.height;
 
-        block.children = [
-            { x: block.x, y: block.y, width: hw, height: hh, filled: block.filled },
-            { x: block.x + hw, y: block.y, width: hw, height: hh, filled: block.filled },
-            { x: block.x, y: block.y + hh, width: hw, height: hh, filled: block.filled },
-            { x: block.x + hw, y: block.y + hh, width: hw, height: hh, filled: block.filled },
-        ];
+        // Si très large → subdivision horizontale
+        if (aspectRatio > 2) {
+            const midX = block.x + block.width / 2;
+            const hw = block.width / 2;
+
+            block.children = [
+                { x: block.x, y: block.y, width: hw, height: block.height, filled: block.filled},
+                { x: midX, y: block.y, width: hw, height: block.height, filled: block.filled },
+            ];
+        }
+        // Si très haut → subdivision verticale
+        else if (aspectRatio < 0.5) {
+            const midY = block.y + block.height / 2;
+            const hh = block.height / 2;
+
+            block.children = [
+                { x: block.x, y: block.y, width: block.width, height: hh, filled: block.filled },
+                { x: block.x, y: midY, width: block.width, height: hh, filled: block.filled },
+            ];
+        }
+        // Sinon, subdivision classique en 4
+        else {
+            const hw = block.width / 2;
+            const hh = block.height / 2;
+
+            block.children = [
+                { x: block.x, y: block.y, width: hw, height: hh, filled: block.filled },
+                { x: block.x + hw, y: block.y, width: hw, height: hh, filled: block.filled},
+                { x: block.x, y: block.y + hh, width: hw, height: hh, filled: block.filled  },
+                { x: block.x + hw, y: block.y + hh, width: hw, height: hh, filled: block.filled  },
+            ];
+        }
 
         block.filled = false;
     }
