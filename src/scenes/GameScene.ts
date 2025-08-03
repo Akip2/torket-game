@@ -71,19 +71,15 @@ export default abstract class GameScene extends Phaser.Scene {
             const y = pointer.y;
             const radius = 32;
 
-            this.destroyTerrain(this.root, x, y, radius, 4); // rayon 40, min bloc 4 px
+            this.destroyTerrain(this.root, x, y, radius, TILE_SIZE);
             this.redrawTerrain();
 
-
-
-            // Affiche le cercle de destruction
             const g = this.add.graphics();
             g.clear();
             g.lineStyle(2, 0xffff00);
             g.strokeCircle(x, y, radius);
             this.debugGraphics.push(g);
 
-            // Dessine les blocs touchés par le cercle
             this.highlightTouchedBlocks(this.root, x, y, radius);
         });
     }
@@ -174,7 +170,6 @@ export default abstract class GameScene extends Phaser.Scene {
     }
 
     subdivide(block: QuadBlock, minSize = TILE_SIZE) {
-        // Ne pas subdiviser si la taille n'est pas divisible proprement
         if (block.width <= minSize || block.height <= minSize) return;
 
         const hw = block.width / 2;
@@ -196,17 +191,16 @@ export default abstract class GameScene extends Phaser.Scene {
 
         if (!Phaser.Geom.Intersects.CircleToRectangle(circle, rect)) return;
 
-        if (block.width <= minSize && block.height <= minSize) {
+        if (block.width <= minSize || block.height <= minSize) {
             block.filled = false;
+            block.children = [];
             return;
         }
 
-        // Subdiviser uniquement si le cercle touche le bloc
         if (!block.children) {
             this.subdivide(block, minSize);
         }
 
-        // Descendre uniquement si on a effectivement subdivisé
         if (block.children) {
             for (const child of block.children) {
                 this.destroyTerrain(child, cx, cy, radius, minSize);
@@ -216,6 +210,9 @@ export default abstract class GameScene extends Phaser.Scene {
 
 
     redrawTerrain() {
+        this.debugGraphics.forEach(g => g.destroy());
+        this.debugGraphics = [];
+
         this.renderTexture.clear();
         this.drawTerrain(this.root);
     }
