@@ -1,10 +1,9 @@
-import { EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TILE_SIZE } from "../const";
+import { DEBUG, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE, TILE_SIZE } from "../const";
 import type { QuadBlock } from "../types";
 
 export default abstract class GameScene extends Phaser.Scene {
     cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
-    renderTexture!: Phaser.GameObjects.RenderTexture;
     root: QuadBlock;
     debugGraphics: Phaser.GameObjects.Graphics[] = [];
     terrainColliders!: Phaser.Physics.Arcade.StaticGroup;
@@ -22,16 +21,50 @@ export default abstract class GameScene extends Phaser.Scene {
         };
     }
 
-    debugDraw(display: Phaser.GameObjects.Graphics) {
-        this.debugGraphics.push(display);
-    }
-
     preload() {
         this.cursors = this.input.keyboard!.createCursorKeys();
-        this.load.image('ground', `assets/ground/ground_16.png`);
+        this.load.image('ground', `assets/ground/ground_${TEXTURE_SIZE}.png`);
         this.load.spritesheet('player', 'assets/player.png', { frameWidth: 32, frameHeight: 48 });
 
         this.loadAdditionalRessources();
+    }
+
+    create() {
+        this.player = this.addPlayer();
+
+        this.terrainColliders = this.physics.add.staticGroup();
+        this.physics.add.collider(this.player, this.terrainColliders);
+
+        this.setUpPlayerAnimations();
+
+        this.drawTerrain(this.root);
+        this.createTerrainColliders(this.root);
+
+        this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+            var startDate = new Date();
+
+            const x = pointer.x;
+            const y = pointer.y;
+
+            this.destroyTerrain(this.root, x, y, EXPLOSION_RADIUS, TILE_SIZE);
+            this.redrawTerrain();
+
+            var endDate = new Date();
+            console.log((endDate.getTime() - startDate.getTime()) / 1000);
+
+            if (DEBUG) {
+                const g = this.add.graphics();
+                g.clear();
+                g.lineStyle(2, 0xffff00);
+                g.strokeCircle(x, y, EXPLOSION_RADIUS);
+                this.debugGraphics.push(g);
+            }
+        });
+    }
+
+    update() {
+        this.checkPlayerMovements();
+        this.sceneLogic();
     }
 
     setUpPlayerAnimations() {
@@ -56,41 +89,6 @@ export default abstract class GameScene extends Phaser.Scene {
         });
     }
 
-    create() {
-        this.player = this.addPlayer();
-
-        this.terrainColliders = this.physics.add.staticGroup();
-        this.physics.add.collider(this.player, this.terrainColliders);
-
-        this.renderTexture = this.add.renderTexture(0, 0, GAME_WIDTH, GAME_HEIGHT).setOrigin(0);
-
-        this.setUpPlayerAnimations();
-
-        this.drawTerrain(this.root);
-        this.createTerrainColliders(this.root);
-
-        this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-            var startDate = new Date();
-
-            const x = pointer.x;
-            const y = pointer.y;
-
-            this.destroyTerrain(this.root, x, y, EXPLOSION_RADIUS, TILE_SIZE);
-            this.redrawTerrain();
-
-            var endDate = new Date();
-            console.log((endDate.getTime() - startDate.getTime()) / 1000);
-
-            const g = this.add.graphics();
-            g.clear();
-            g.lineStyle(2, 0xffff00);
-            g.strokeCircle(x, y, EXPLOSION_RADIUS);
-            this.debugGraphics.push(g);
-
-            this.highlightTouchedBlocks(this.root, x, y, EXPLOSION_RADIUS);
-        });
-    }
-
     createTerrainColliders(block: QuadBlock) {
         if (!block.filled && !block.children) return;
 
@@ -111,28 +109,6 @@ export default abstract class GameScene extends Phaser.Scene {
         }
     }
 
-    highlightTouchedBlocks(block: QuadBlock, cx: number, cy: number, radius: number) {
-        const circle = new Phaser.Geom.Circle(cx, cy, radius);
-        const rect = new Phaser.Geom.Rectangle(block.x, block.y, block.width, block.height);
-
-        if (!Phaser.Geom.Intersects.CircleToRectangle(circle, rect)) return;
-
-        if (block.filled && !block.children) {
-            const g = this.add.graphics()
-                .lineStyle(2, 0xff0000)
-                .strokeRect(block.x, block.y, block.width, block.height);
-
-            this.debugGraphics.push(g);
-            return;
-        }
-
-        if (block.children) {
-            for (const child of block.children) {
-                this.highlightTouchedBlocks(child, cx, cy, radius);
-            }
-        }
-    }
-
     placePlayer(x: number, y: number) {
         return this.physics.add.sprite(
             x,
@@ -140,8 +116,6 @@ export default abstract class GameScene extends Phaser.Scene {
             'player'
         );
     }
-
-    abstract addPlayer(): Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
 
     checkPlayerMovements() {
         if (this.cursors.left.isDown) {
@@ -165,39 +139,30 @@ export default abstract class GameScene extends Phaser.Scene {
         }
     }
 
-    update(): void {
-        this.checkPlayerMovements();
-        this.sceneLogic();
-    }
-
-    normalize(n: number, m: number) {
-        return n - (n % m);
-    }
-
     subdivide(block: QuadBlock, minSize = TILE_SIZE) {
         if (block.width <= minSize || block.height <= minSize) return;
 
         const aspectRatio = block.width / block.height;
 
         if (aspectRatio > 2) {
-            const midX = block.x + block.width / 2;
-            const hw = block.width / 2;
+            const midX = Math.round(block.x + block.width / 2);
+            const hw = Math.round(block.width / 2);
 
             block.children = [
                 { x: block.x, y: block.y, width: hw, height: block.height, filled: block.filled },
                 { x: midX, y: block.y, width: hw, height: block.height, filled: block.filled },
             ];
         } else if (aspectRatio < 0.5) {
-            const midY = block.y + block.height / 2;
-            const hh = block.height / 2;
+            const midY = Math.round(block.y + block.height / 2);
+            const hh = Math.round(block.height / 2);
 
             block.children = [
                 { x: block.x, y: block.y, width: block.width, height: hh, filled: block.filled },
                 { x: block.x, y: midY, width: block.width, height: hh, filled: block.filled },
             ];
         } else {
-            const hw = block.width / 2;
-            const hh = block.height / 2;
+            const hw = Math.round(block.width / 2);
+            const hh = Math.round(block.height / 2);
 
             block.children = [
                 { x: block.x, y: block.y, width: hw, height: hh, filled: block.filled },
@@ -233,7 +198,6 @@ export default abstract class GameScene extends Phaser.Scene {
         }
     }
 
-
     redrawTerrain() {
         this.debugGraphics.forEach(g => g.destroy());
         this.debugGraphics = [];
@@ -251,22 +215,29 @@ export default abstract class GameScene extends Phaser.Scene {
         if (!block.filled && !block.children) return;
 
         if (block.filled) {
+            const x = block.x;
+            const y = block.y;
+            const width = block.width;
+            const height = block.height;
+
             const sprite = this.add.tileSprite(
-                block.x + block.width / 2,
-                block.y + block.height / 2,
-                block.width,
-                block.height,
+                x, y,
+                width, height,
                 'ground'
-            ).setOrigin(0.5);
+            ).setOrigin(0);
+
+            sprite.tilePositionX = block.x % TEXTURE_SIZE;
+            sprite.tilePositionY = block.y % TEXTURE_SIZE;
 
             this.terrainSprites.push(sprite);
 
-            // DEBUG
-            const g = this.add.graphics()
-                .lineStyle(1, 0x00ff00)
-                .strokeRect(block.x, block.y, block.width, block.height);
+            if (DEBUG) {
+                const g = this.add.graphics()
+                    .lineStyle(1, 0x00ff00)
+                    .strokeRect(block.x, block.y, block.width, block.height);
 
-            this.debugGraphics.push(g);
+                this.debugGraphics.push(g);
+            }
         } else if (block.children) {
             for (const child of block.children!) {
                 this.drawTerrain(child);
@@ -274,11 +245,9 @@ export default abstract class GameScene extends Phaser.Scene {
         }
     }
 
-    loadAdditionalRessources() {
+    abstract addPlayer(): Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
 
-    }
+    loadAdditionalRessources() {}
 
-    sceneLogic() {
-
-    }
+    sceneLogic() {}
 }

@@ -23,6 +23,11 @@ const config = {
         }
     },
 
+    render: {
+        antialias: false,
+        roundPixels: true
+    },
+
     scene: [
         TestScene,
         MenuScene,

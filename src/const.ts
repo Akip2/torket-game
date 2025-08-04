@@ -1,7 +1,11 @@
+export const DEBUG = true;
+
 export const GAME_WIDTH = 1600;
 export const GAME_HEIGHT = 800;
 
-export const TILE_SIZE = 16;
+export const TILE_SIZE = 8;
+export const TEXTURE_SIZE = 64;
+
 export const LAST_ROW = GAME_HEIGHT / TILE_SIZE;
 export const LAST_COLUMN = GAME_WIDTH / TILE_SIZE;
 
