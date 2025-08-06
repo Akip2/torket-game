@@ -1,5 +1,5 @@
 import { DEBUG, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE, TILE_SIZE } from "../const";
-import type { QuadBlock } from "../types";
+import QuadBlock from "../data/Quadblock";
 
 export default abstract class GameScene extends Phaser.Scene {
     cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -12,13 +12,12 @@ export default abstract class GameScene extends Phaser.Scene {
     constructor(name: string) {
         super(name);
 
-        this.root = {
-            x: 0,
-            y: GAME_HEIGHT - GAME_HEIGHT / 5,
-            width: GAME_WIDTH,
-            height: GAME_HEIGHT / 5,
-            filled: true
-        };
+        this.root = new QuadBlock(
+            0,
+            GAME_HEIGHT - GAME_HEIGHT / 5,
+            GAME_WIDTH,
+            GAME_HEIGHT / 5,
+        );
     }
 
     preload() {
@@ -90,7 +89,7 @@ export default abstract class GameScene extends Phaser.Scene {
     }
 
     createTerrainColliders(block: QuadBlock) {
-        if (!block.filled && !block.children) return;
+        if (block.isEmpty()) return;
 
         if (block.filled) {
             const collider = this.add.rectangle(
@@ -102,7 +101,7 @@ export default abstract class GameScene extends Phaser.Scene {
 
             this.physics.add.existing(collider, true);
             this.terrainColliders.add(collider);
-        } else if (block.children) {
+        } else if (block.hasChildren()) {
             for (const child of block.children) {
                 this.createTerrainColliders(child);
             }
@@ -139,42 +138,6 @@ export default abstract class GameScene extends Phaser.Scene {
         }
     }
 
-    subdivide(block: QuadBlock, minSize = TILE_SIZE) {
-        if (block.width <= minSize || block.height <= minSize) return;
-
-        const aspectRatio = block.width / block.height;
-
-        if (aspectRatio > 2) {
-            const midX = Math.round(block.x + block.width / 2);
-            const hw = Math.round(block.width / 2);
-
-            block.children = [
-                { x: block.x, y: block.y, width: hw, height: block.height, filled: block.filled },
-                { x: midX, y: block.y, width: hw, height: block.height, filled: block.filled },
-            ];
-        } else if (aspectRatio < 0.5) {
-            const midY = Math.round(block.y + block.height / 2);
-            const hh = Math.round(block.height / 2);
-
-            block.children = [
-                { x: block.x, y: block.y, width: block.width, height: hh, filled: block.filled },
-                { x: block.x, y: midY, width: block.width, height: hh, filled: block.filled },
-            ];
-        } else {
-            const hw = Math.round(block.width / 2);
-            const hh = Math.round(block.height / 2);
-
-            block.children = [
-                { x: block.x, y: block.y, width: hw, height: hh, filled: block.filled },
-                { x: block.x + hw, y: block.y, width: hw, height: hh, filled: block.filled },
-                { x: block.x, y: block.y + hh, width: hw, height: hh, filled: block.filled },
-                { x: block.x + hw, y: block.y + hh, width: hw, height: hh, filled: block.filled },
-            ];
-        }
-
-        block.filled = false;
-    }
-
     destroyTerrain(block: QuadBlock, cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
         const rect = new Phaser.Geom.Rectangle(block.x, block.y, block.width, block.height);
         const circle = new Phaser.Geom.Circle(cx, cy, radius);
@@ -182,16 +145,15 @@ export default abstract class GameScene extends Phaser.Scene {
         if (!Phaser.Geom.Intersects.CircleToRectangle(circle, rect)) return;
 
         if (block.width <= minSize || block.height <= minSize) {
-            block.filled = false;
-            block.children = [];
+            block.destroy();
             return;
         }
 
-        if (!block.children) {
-            this.subdivide(block, minSize);
+        if (!block.hasChildren()) {
+            block.subdivide(minSize);
         }
 
-        if (block.children) {
+        if (block.hasChildren()) {
             for (const child of block.children) {
                 this.destroyTerrain(child, cx, cy, radius, minSize);
             }
@@ -212,7 +174,7 @@ export default abstract class GameScene extends Phaser.Scene {
     }
 
     drawTerrain(block: QuadBlock) {
-        if (!block.filled && !block.children) return;
+        if (block.isEmpty()) return;
 
         if (block.filled) {
             const x = block.x;
@@ -238,7 +200,7 @@ export default abstract class GameScene extends Phaser.Scene {
 
                 this.debugGraphics.push(g);
             }
-        } else if (block.children) {
+        } else if (block.hasChildren()) {
             for (const child of block.children!) {
                 this.drawTerrain(child);
             }
