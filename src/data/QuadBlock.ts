@@ -72,7 +72,29 @@ export default class QuadBlock {
         this.filled = false;
     }
 
-    destroy() {
+    destroy(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
+        const rect = new Phaser.Geom.Rectangle(this.x, this.y, this.width, this.height);
+        const circle = new Phaser.Geom.Circle(cx, cy, radius);
+
+        if (!Phaser.Geom.Intersects.CircleToRectangle(circle, rect)) return;
+
+        if (this.width <= minSize || this.height <= minSize) {
+            this.turnEmpty();
+            return;
+        }
+
+        if (!this.hasChildren()) {
+            this.subdivide(minSize);
+        }
+
+        if (this.hasChildren()) {
+            for (const child of this.children) {
+                child.destroy(cx, cy, radius, minSize);
+            }
+        }
+    }
+
+    turnEmpty() {
         this.filled = false;
         this.children = [];
     }

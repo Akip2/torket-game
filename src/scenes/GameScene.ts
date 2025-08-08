@@ -1,5 +1,5 @@
 import { DEBUG, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE, TILE_SIZE } from "../const";
-import QuadBlock from "../data/Quadblock";
+import QuadBlock from "../data/QuadBlock";
 
 export default abstract class GameScene extends Phaser.Scene {
     cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -36,8 +36,8 @@ export default abstract class GameScene extends Phaser.Scene {
 
         this.setUpPlayerAnimations();
 
-        this.drawTerrain(this.root);
-        this.createTerrainColliders(this.root);
+        this.drawTerrain();
+        this.createTerrainColliders();
 
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
             var startDate = new Date();
@@ -45,7 +45,7 @@ export default abstract class GameScene extends Phaser.Scene {
             const x = pointer.x;
             const y = pointer.y;
 
-            this.destroyTerrain(this.root, x, y, EXPLOSION_RADIUS, TILE_SIZE);
+            this.destroyTerrain(x, y, EXPLOSION_RADIUS, TILE_SIZE);
             this.redrawTerrain();
 
             var endDate = new Date();
@@ -88,26 +88,6 @@ export default abstract class GameScene extends Phaser.Scene {
         });
     }
 
-    createTerrainColliders(block: QuadBlock) {
-        if (block.isEmpty()) return;
-
-        if (block.filled) {
-            const collider = this.add.rectangle(
-                block.x + block.width / 2,
-                block.y + block.height / 2,
-                block.width,
-                block.height
-            );
-
-            this.physics.add.existing(collider, true);
-            this.terrainColliders.add(collider);
-        } else if (block.hasChildren()) {
-            for (const child of block.children) {
-                this.createTerrainColliders(child);
-            }
-        }
-    }
-
     placePlayer(x: number, y: number) {
         return this.physics.add.sprite(
             x,
@@ -138,42 +118,15 @@ export default abstract class GameScene extends Phaser.Scene {
         }
     }
 
-    destroyTerrain(block: QuadBlock, cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
-        const rect = new Phaser.Geom.Rectangle(block.x, block.y, block.width, block.height);
-        const circle = new Phaser.Geom.Circle(cx, cy, radius);
-
-        if (!Phaser.Geom.Intersects.CircleToRectangle(circle, rect)) return;
-
-        if (block.width <= minSize || block.height <= minSize) {
-            block.destroy();
-            return;
-        }
-
-        if (!block.hasChildren()) {
-            block.subdivide(minSize);
-        }
-
-        if (block.hasChildren()) {
-            for (const child of block.children) {
-                this.destroyTerrain(child, cx, cy, radius, minSize);
-            }
-        }
+    destroyTerrain(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
+        this.root.destroy(cx, cy, radius, minSize);
     }
 
-    redrawTerrain() {
-        this.debugGraphics.forEach(g => g.destroy());
-        this.debugGraphics = [];
-
-        this.terrainSprites.forEach(s => s.destroy());
-        this.terrainSprites = [];
-
-        this.drawTerrain(this.root);
-
-        this.terrainColliders.clear(true, true);
-        this.createTerrainColliders(this.root);
+    drawTerrain() {
+        this.drawQuadBlock(this.root);
     }
 
-    drawTerrain(block: QuadBlock) {
+    drawQuadBlock(block: QuadBlock) {
         if (block.isEmpty()) return;
 
         if (block.filled) {
@@ -202,14 +155,51 @@ export default abstract class GameScene extends Phaser.Scene {
             }
         } else if (block.hasChildren()) {
             for (const child of block.children!) {
-                this.drawTerrain(child);
+                this.drawQuadBlock(child);
+            }
+        }
+    }
+
+    redrawTerrain() {
+        this.debugGraphics.forEach(g => g.destroy());
+        this.debugGraphics = [];
+
+        this.terrainSprites.forEach(s => s.destroy());
+        this.terrainSprites = [];
+
+        this.drawTerrain();
+
+        this.terrainColliders.clear(true, true);
+        this.createTerrainColliders();
+    }
+
+    createTerrainColliders() {
+        this.createQuadBlockCollider(this.root);
+    }
+
+    createQuadBlockCollider(block: QuadBlock) {
+        if (block.isEmpty()) return;
+
+        if (block.filled) {
+            const collider = this.add.rectangle(
+                block.x + block.width / 2,
+                block.y + block.height / 2,
+                block.width,
+                block.height
+            );
+
+            this.physics.add.existing(collider, true);
+            this.terrainColliders.add(collider);
+        } else if (block.hasChildren()) {
+            for (const child of block.children) {
+                this.createQuadBlockCollider(child);
             }
         }
     }
 
     abstract addPlayer(): Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
 
-    loadAdditionalRessources() {}
+    loadAdditionalRessources() { }
 
-    sceneLogic() {}
+    sceneLogic() { }
 }
