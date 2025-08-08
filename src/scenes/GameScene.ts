@@ -1,5 +1,6 @@
 import { DEBUG, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE, TILE_SIZE } from "../const";
 import QuadBlock from "../data/QuadBlock";
+import { getExplosionSpriteScale } from "../utils";
 
 export default abstract class GameScene extends Phaser.Scene {
     cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -24,6 +25,7 @@ export default abstract class GameScene extends Phaser.Scene {
         this.cursors = this.input.keyboard!.createCursorKeys();
         this.load.image('ground', `assets/ground/ground_${TEXTURE_SIZE}.png`);
         this.load.spritesheet('player', 'assets/player.png', { frameWidth: 32, frameHeight: 48 });
+        this.load.spritesheet('explosion', 'assets/explosion/explosion_1.png', { frameWidth: 64, frameHeight: 64 });
 
         this.loadAdditionalRessources();
     }
@@ -34,36 +36,50 @@ export default abstract class GameScene extends Phaser.Scene {
         this.terrainColliders = this.physics.add.staticGroup();
         this.physics.add.collider(this.player, this.terrainColliders);
 
-        this.setUpPlayerAnimations();
+        this.setUpAnimations();
 
         this.drawTerrain();
         this.createTerrainColliders();
 
-        this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-            var startDate = new Date();
-
-            const x = pointer.x;
-            const y = pointer.y;
-
-            this.destroyTerrain(x, y, EXPLOSION_RADIUS, TILE_SIZE);
-            this.redrawTerrain();
-
-            var endDate = new Date();
-            console.log((endDate.getTime() - startDate.getTime()) / 1000);
-
-            if (DEBUG) {
-                const g = this.add.graphics();
-                g.clear();
-                g.lineStyle(2, 0xffff00);
-                g.strokeCircle(x, y, EXPLOSION_RADIUS);
-                this.debugGraphics.push(g);
-            }
-        });
+        this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => this.clickEvent(pointer));
     }
 
     update() {
         this.checkPlayerMovements();
         this.sceneLogic();
+    }
+
+    clickEvent(pointer: Phaser.Input.Pointer) {
+        const startDate = new Date();
+
+        const x = pointer.x;
+        const y = pointer.y;
+
+        this.explodeTerrain(x, y, EXPLOSION_RADIUS, TILE_SIZE);
+
+        this.redrawTerrain();
+
+        const endDate = new Date();
+        console.log((endDate.getTime() - startDate.getTime()) / 1000);
+
+        if (DEBUG) {
+            const g = this.add.graphics();
+            g.clear();
+            g.lineStyle(2, 0xffff00);
+            g.strokeCircle(x, y, EXPLOSION_RADIUS);
+            this.debugGraphics.push(g);
+        }
+    }
+
+    setUpAnimations() {
+        //Explosion
+        this.anims.create({
+            key: 'explode',
+            frames: this.anims.generateFrameNumbers('explosion', { start: 0, end: 8 }),
+            duration: 550
+        });
+
+        this.setUpPlayerAnimations();
     }
 
     setUpPlayerAnimations() {
@@ -118,7 +134,18 @@ export default abstract class GameScene extends Phaser.Scene {
         }
     }
 
-    destroyTerrain(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
+    explodeTerrain(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
+        const explosion = this.add.sprite(cx, cy, 'explosion')
+            .setOrigin(0.5, 0.7)
+            .setScale(getExplosionSpriteScale(radius))
+            .setDepth(1000);
+
+        explosion.play('explode');
+
+        explosion.on('animationcomplete', () => {
+            explosion.destroy();
+        });
+
         this.root.destroy(cx, cy, radius, minSize);
     }
 
