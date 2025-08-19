@@ -1,4 +1,4 @@
-import { EXPLOSION_SPRITE_SIZE, EXPLOSION_SPRITE_TO_RADIUS_RATIO } from "./const";
+import { EXPLOSION_SPRITE_SIZE } from "./const";
 
 export function getTextWidth(text: string, fontSize: string) {
     return text.length * fontSizeToNumber(fontSize) * 0.7;
@@ -9,6 +9,5 @@ export function fontSizeToNumber(fontSize: string): number {
 }
 
 export function getExplosionSpriteScale(explosionRadius: number) {
-    const desiredDiameter = explosionRadius * EXPLOSION_SPRITE_TO_RADIUS_RATIO;
-    return (desiredDiameter / EXPLOSION_SPRITE_SIZE);
+    return (explosionRadius / EXPLOSION_SPRITE_SIZE) * 1.75;
 }

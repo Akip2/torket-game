@@ -25,7 +25,8 @@ export default abstract class GameScene extends Phaser.Scene {
         this.cursors = this.input.keyboard!.createCursorKeys();
         this.load.image('ground', `assets/ground/ground_${TEXTURE_SIZE}.png`);
         this.load.spritesheet('player', 'assets/player.png', { frameWidth: 32, frameHeight: 48 });
-        this.load.spritesheet('explosion', 'assets/explosion/explosion_1.png', { frameWidth: 64, frameHeight: 64 });
+
+        this.load.image('particle', 'assets/explosion/particle.png');
 
         this.loadAdditionalRessources();
     }
@@ -36,7 +37,7 @@ export default abstract class GameScene extends Phaser.Scene {
         this.terrainColliders = this.physics.add.staticGroup();
         this.physics.add.collider(this.player, this.terrainColliders);
 
-        this.setUpAnimations();
+        this.setUpPlayerAnimations();
 
         this.drawTerrain();
         this.createTerrainColliders();
@@ -69,17 +70,6 @@ export default abstract class GameScene extends Phaser.Scene {
             g.strokeCircle(x, y, EXPLOSION_RADIUS);
             this.debugGraphics.push(g);
         }
-    }
-
-    setUpAnimations() {
-        //Explosion
-        this.anims.create({
-            key: 'explode',
-            frames: this.anims.generateFrameNumbers('explosion', { start: 0, end: 8 }),
-            duration: 550
-        });
-
-        this.setUpPlayerAnimations();
     }
 
     setUpPlayerAnimations() {
@@ -115,17 +105,14 @@ export default abstract class GameScene extends Phaser.Scene {
     checkPlayerMovements() {
         if (this.cursors.left.isDown) {
             this.player.setVelocityX(-160);
-
             this.player.anims.play('left', true);
         }
         else if (this.cursors.right.isDown) {
             this.player.setVelocityX(160);
-
             this.player.anims.play('right', true);
         }
         else {
             this.player.setVelocityX(0);
-
             this.player.anims.play('turn');
         }
 
@@ -135,17 +122,25 @@ export default abstract class GameScene extends Phaser.Scene {
     }
 
     explodeTerrain(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
-        const explosion = this.add.sprite(cx, cy, 'explosion')
-            .setOrigin(0.5, 0.7)
-            .setScale(getExplosionSpriteScale(radius))
-            .setDepth(1000);
+        //Explosion particles
+        const scale = getExplosionSpriteScale(radius);
+        const speedCoef = Math.max(scale * 0.5, 1);
 
-        explosion.play('explode');
+        const emitter = this.add.particles(cx, cy, 'particle', {
+            lifespan: 500,
+            speed: {
+                min: 100 * speedCoef,
+                max: 100 * speedCoef
+            },
+            scale: { start: scale, end: 0 },
+            gravityY: 150,
+            blendMode: 'ADD',
+            emitting: false
+        }).setDepth(1000);
 
-        explosion.on('animationcomplete', () => {
-            explosion.destroy();
-        });
+        emitter.explode(10 + Math.random() * 5);
 
+        //Terrain destruction
         this.root.destroy(cx, cy, radius, minSize);
     }
 
@@ -177,7 +172,6 @@ export default abstract class GameScene extends Phaser.Scene {
                 const g = this.add.graphics()
                     .lineStyle(1, 0x00ff00)
                     .strokeRect(block.x, block.y, block.width, block.height);
-
                 this.debugGraphics.push(g);
             }
         } else if (block.hasChildren()) {
