@@ -24,20 +24,17 @@ export default abstract class GameScene extends Phaser.Scene {
     preload() {
         this.cursors = this.input.keyboard!.createCursorKeys();
         this.load.image('ground', `assets/ground/ground_${TEXTURE_SIZE}.png`);
-        this.load.spritesheet('player', 'assets/player.png', { frameWidth: 32, frameHeight: 48 });
-
         this.load.image('particle', 'assets/explosion/particle.png');
 
         this.loadAdditionalRessources();
     }
 
     create() {
+        this.generatePlayerTexture();
         this.player = this.addPlayer();
 
         this.terrainColliders = this.physics.add.staticGroup();
         this.physics.add.collider(this.player, this.terrainColliders);
-
-        this.setUpPlayerAnimations();
 
         this.drawTerrain();
         this.createTerrainColliders();
@@ -72,48 +69,36 @@ export default abstract class GameScene extends Phaser.Scene {
         }
     }
 
-    setUpPlayerAnimations() {
-        this.anims.create({
-            key: 'left',
-            frames: this.anims.generateFrameNumbers('player', { start: 0, end: 3 }),
-            frameRate: 10,
-            repeat: -1
-        });
+    generatePlayerTexture(size = 64, baseColor = 0x3498db) {
+        const g = this.add.graphics();
 
-        this.anims.create({
-            key: 'turn',
-            frames: [{ key: 'player', frame: 4 }],
-            frameRate: 20
-        });
+        g.fillStyle(baseColor, 1);
+        g.fillRect(0, 0, size, size);
 
-        this.anims.create({
-            key: 'right',
-            frames: this.anims.generateFrameNumbers('player', { start: 5, end: 8 }),
-            frameRate: 10,
-            repeat: -1
-        });
+        g.lineStyle(size / 4, 0x21618c, 1);
+        g.strokeRect(0, 0, size, size);
+
+        g.generateTexture('playerTexture', size, size);
+        g.destroy();
     }
 
     placePlayer(x: number, y: number) {
         return this.physics.add.sprite(
             x,
             y,
-            'player'
-        );
+            'playerTexture'
+        ).setScale(0.5); // ajuste la taille si besoin
     }
 
     checkPlayerMovements() {
         if (this.cursors.left.isDown) {
             this.player.setVelocityX(-160);
-            this.player.anims.play('left', true);
         }
         else if (this.cursors.right.isDown) {
             this.player.setVelocityX(160);
-            this.player.anims.play('right', true);
         }
         else {
             this.player.setVelocityX(0);
-            this.player.anims.play('turn');
         }
 
         if (this.cursors.up.isDown && this.player.body.touching.down) {
@@ -140,8 +125,9 @@ export default abstract class GameScene extends Phaser.Scene {
 
         emitter.explode(10 + Math.random() * 5);
 
-        //Terrain destruction
         this.root.destroy(cx, cy, radius, minSize);
+
+        this.cameras.main.shake(250, 0.005);
     }
 
     drawTerrain() {
