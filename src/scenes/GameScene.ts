@@ -1,17 +1,27 @@
 import { DEBUG, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE, TILE_SIZE } from "../const";
 import QuadBlock from "../data/QuadBlock";
+import { RessourceKeys } from "../enums/RessourceKeys.enum";
+import Player from "../game-objects/Player";
 import { getExplosionSpriteScale } from "../utils";
 
 export default abstract class GameScene extends Phaser.Scene {
-    cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
-    player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
+    keyboard!: Phaser.Types.Input.Keyboard.CursorKeys;
+
+    player!: Player;
+    startingX: number;
+    startingY: number;
+
     root: QuadBlock;
-    debugGraphics: Phaser.GameObjects.Graphics[] = [];
     terrainColliders!: Phaser.Physics.Arcade.StaticGroup;
     terrainSprites: Phaser.GameObjects.TileSprite[] = [];
 
-    constructor(name: string) {
+    debugGraphics: Phaser.GameObjects.Graphics[] = [];
+
+    constructor(name: string, startingX: number, startingY: number) {
         super(name);
+
+        this.startingX = startingX;
+        this.startingY = startingY;
 
         this.root = new QuadBlock(
             0,
@@ -22,19 +32,18 @@ export default abstract class GameScene extends Phaser.Scene {
     }
 
     preload() {
-        this.cursors = this.input.keyboard!.createCursorKeys();
-        this.load.image('ground', `assets/ground/ground_${TEXTURE_SIZE}.png`);
-        this.load.image('particle', 'assets/explosion/particle.png');
+        this.keyboard = this.input.keyboard!.createCursorKeys();
+        this.load.image(RessourceKeys.Ground, `assets/ground/ground_${TEXTURE_SIZE}.png`);
+        this.load.image(RessourceKeys.Particle, 'assets/explosion/particle.png');
 
         this.loadAdditionalRessources();
     }
 
     create() {
-        this.generatePlayerTexture();
-        this.player = this.addPlayer();
+        this.player = new Player(this, this.startingX, this.startingY);
 
         this.terrainColliders = this.physics.add.staticGroup();
-        this.physics.add.collider(this.player, this.terrainColliders);
+        this.physics.add.collider(this.player.dynamicBody, this.terrainColliders);
 
         this.drawTerrain();
         this.createTerrainColliders();
@@ -43,7 +52,7 @@ export default abstract class GameScene extends Phaser.Scene {
     }
 
     update() {
-        this.checkPlayerMovements();
+        this.player.checkPlayerMovements(this.keyboard);
         this.sceneLogic();
     }
 
@@ -69,49 +78,12 @@ export default abstract class GameScene extends Phaser.Scene {
         }
     }
 
-    generatePlayerTexture(size = 64, baseColor = 0x3498db) {
-        const g = this.add.graphics();
-
-        g.fillStyle(baseColor, 1);
-        g.fillRect(0, 0, size, size);
-
-        g.lineStyle(size / 4, 0x21618c, 1);
-        g.strokeRect(0, 0, size, size);
-
-        g.generateTexture('playerTexture', size, size);
-        g.destroy();
-    }
-
-    placePlayer(x: number, y: number) {
-        return this.physics.add.sprite(
-            x,
-            y,
-            'playerTexture'
-        ).setScale(0.5); // ajuste la taille si besoin
-    }
-
-    checkPlayerMovements() {
-        if (this.cursors.left.isDown) {
-            this.player.setVelocityX(-160);
-        }
-        else if (this.cursors.right.isDown) {
-            this.player.setVelocityX(160);
-        }
-        else {
-            this.player.setVelocityX(0);
-        }
-
-        if (this.cursors.up.isDown && this.player.body.touching.down) {
-            this.player.setVelocityY(-375);
-        }
-    }
-
     explodeTerrain(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
         //Explosion particles
         const scale = getExplosionSpriteScale(radius);
         const speedCoef = Math.max(scale * 0.5, 1);
 
-        const emitter = this.add.particles(cx, cy, 'particle', {
+        const emitter = this.add.particles(cx, cy, RessourceKeys.Particle, {
             lifespan: 500,
             speed: {
                 min: 100 * speedCoef,
@@ -146,7 +118,7 @@ export default abstract class GameScene extends Phaser.Scene {
             const sprite = this.add.tileSprite(
                 x, y,
                 width, height,
-                'ground'
+                RessourceKeys.Ground
             ).setOrigin(0);
 
             sprite.tilePositionX = block.x % TEXTURE_SIZE;
@@ -203,8 +175,6 @@ export default abstract class GameScene extends Phaser.Scene {
             }
         }
     }
-
-    abstract addPlayer(): Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
 
     loadAdditionalRessources() { }
 

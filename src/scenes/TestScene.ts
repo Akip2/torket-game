@@ -3,10 +3,6 @@ import GameScene from "./GameScene";
 
 export default class TestScene extends GameScene {
     constructor() {
-        super("TestScene");
-    }
-
-    addPlayer() {
-        return this.placePlayer(GAME_WIDTH / 2, GAME_HEIGHT - GAME_HEIGHT / 3);
+        super("TestScene", GAME_WIDTH / 2, GAME_HEIGHT - GAME_HEIGHT / 3);
     }
 }
