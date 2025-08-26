@@ -40,10 +40,11 @@ export default abstract class GameScene extends Phaser.Scene {
     }
 
     create() {
+        this.generatePlayerTexture();
         this.player = new Player(this, this.startingX, this.startingY);
 
         this.terrainColliders = this.physics.add.staticGroup();
-        this.physics.add.collider(this.player.dynamicBody, this.terrainColliders);
+        this.physics.add.collider(this.player, this.terrainColliders);
 
         this.drawTerrain();
         this.createTerrainColliders();
@@ -52,8 +53,21 @@ export default abstract class GameScene extends Phaser.Scene {
     }
 
     update() {
-        this.player.checkPlayerMovements(this.keyboard);
+        this.player.checkForMovements(this.keyboard);
         this.sceneLogic();
+    }
+
+    generatePlayerTexture(size = 32, baseColor = 0x3498db) {
+        const g = this.add.graphics();
+
+        g.fillStyle(baseColor, 1);
+        g.fillRect(0, 0, size, size);
+
+        g.lineStyle(size / 4, 0x21618c, 1);
+        g.strokeRect(0, 0, size, size);
+
+        g.generateTexture(RessourceKeys.Player, size, size);
+        g.destroy();
     }
 
     clickEvent(pointer: Phaser.Input.Pointer) {
