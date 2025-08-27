@@ -43,6 +43,8 @@ export default abstract class GameScene extends Phaser.Scene {
         this.generatePlayerTexture();
         this.player = new Player(this, this.startingX, this.startingY);
 
+        this.player.setDrag(300);
+
         this.terrainColliders = this.physics.add.staticGroup();
         this.physics.add.collider(this.player, this.terrainColliders);
 
@@ -111,9 +113,11 @@ export default abstract class GameScene extends Phaser.Scene {
 
         emitter.explode(10 + Math.random() * 5);
 
-        this.root.destroy(cx, cy, radius, minSize);
+        this.root.destroy(cx, cy, radius, minSize); // Destroy terrain
 
-        this.cameras.main.shake(250, 0.005);
+        this.cameras.main.shake(250, 0.005); // Shake camera
+
+        this.player.push(cx, cy, radius); // Push back player
     }
 
     drawTerrain() {
