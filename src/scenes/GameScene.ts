@@ -1,6 +1,7 @@
 import { DEBUG, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE, TILE_SIZE } from "../const";
 import QuadBlock from "../data/QuadBlock";
 import { RessourceKeys } from "../enums/RessourceKeys.enum";
+import Bullet from "../game-objects/Bullet";
 import Player from "../game-objects/Player";
 import { getExplosionSpriteScale } from "../utils";
 
@@ -40,10 +41,10 @@ export default abstract class GameScene extends Phaser.Scene {
     }
 
     create() {
-        this.generatePlayerTexture();
-        this.player = new Player(this, this.startingX, this.startingY);
+        this.generateTextures();
 
-        this.player.setDrag(300);
+        this.player = new Player(this, this.startingX, this.startingY);
+        this.player.setDragX(300);
 
         this.terrainColliders = this.physics.add.staticGroup();
         this.physics.add.collider(this.player, this.terrainColliders);
@@ -59,6 +60,11 @@ export default abstract class GameScene extends Phaser.Scene {
         this.sceneLogic();
     }
 
+    generateTextures() {
+        this.generatePlayerTexture();
+        this.generateBulletTexture();
+    }
+
     generatePlayerTexture(size = 32, baseColor = 0x3498db) {
         const g = this.add.graphics();
 
@@ -72,18 +78,27 @@ export default abstract class GameScene extends Phaser.Scene {
         g.destroy();
     }
 
-    clickEvent(pointer: Phaser.Input.Pointer) {
-        const startDate = new Date();
+    generateBulletTexture(size = 4) {
+        const g = this.add.graphics();
 
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillCircle(size, size, size);
+        
+        g.generateTexture(RessourceKeys.Bullet, size * 2, size * 2);
+        g.destroy();
+    }
+
+    clickEvent(pointer: Phaser.Input.Pointer) {
         const x = pointer.x;
         const y = pointer.y;
 
         this.explodeTerrain(x, y, EXPLOSION_RADIUS, TILE_SIZE);
-
         this.redrawTerrain();
 
-        const endDate = new Date();
-        console.log((endDate.getTime() - startDate.getTime()) / 1000);
+
+
+        const bullet = new Bullet(this, this.player.x, this.player.y);
+        bullet.shoot(x, y, 800);
 
         if (DEBUG) {
             const g = this.add.graphics();

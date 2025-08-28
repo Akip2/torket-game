@@ -1,5 +1,6 @@
 export enum RessourceKeys {
     Ground = "ground",
     Particle = "particle",
-    Player = "player"
+    Player = "player",
+    Bullet = "bullet",
 }
