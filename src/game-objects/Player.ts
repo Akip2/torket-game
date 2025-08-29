@@ -1,3 +1,4 @@
+import Vector from "../data/Vector";
 import { RessourceKeys } from "../enums/RessourceKeys.enum";
 import type GameScene from "../scenes/GameScene";
 
@@ -33,26 +34,22 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     push(cx: number, cy: number, radius: number) {
-        const dx = this.x - cx;
-        const dy = this.y - cy;
-        const dist = Math.sqrt(dx * dx + dy * dy);
+        const pushVector = new Vector(this.x - cx, this.y - cy);
+        const dist = pushVector.getNorm();
 
         if (dist < radius) {
-            let nx: number, ny: number;
+            let normalizedPushVector: Vector;
 
             if (dist === 0) {
-                console.log("ddddd")
                 const angle = Math.random() * Math.PI * 2;
-                nx = Math.cos(angle);
-                ny = Math.sin(angle);
+                normalizedPushVector = new Vector(Math.cos(angle), Math.sin(angle));
             } else {
-                nx = dx / dist;
-                ny = dy / dist;
+                normalizedPushVector = pushVector.getNormalizedVector();
             }
 
             const force = (1 - dist / radius) * (250 + (radius * 5) + Math.random() * 150);
 
-            this.setVelocity(nx * force, ny * force);
+            this.setVelocity(normalizedPushVector.x * force, normalizedPushVector.y * force);
         }
     }
 }
