@@ -1,4 +1,4 @@
-import { DEBUG, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE, TILE_SIZE } from "../const";
+import { DEBUG, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE, TILE_SIZE } from "../const";
 import QuadBlock from "../data/QuadBlock";
 import { RessourceKeys } from "../enums/RessourceKeys.enum";
 import Bullet from "../game-objects/Bullet";
@@ -92,21 +92,8 @@ export default abstract class GameScene extends Phaser.Scene {
         const x = pointer.x;
         const y = pointer.y;
 
-        this.explodeTerrain(x, y, EXPLOSION_RADIUS, TILE_SIZE);
-        this.redrawTerrain();
-
-
-
         const bullet = new Bullet(this, this.player.x, this.player.y);
         bullet.shoot(x, y, 800);
-
-        if (DEBUG) {
-            const g = this.add.graphics();
-            g.clear();
-            g.lineStyle(2, 0xffff00);
-            g.strokeCircle(x, y, EXPLOSION_RADIUS);
-            this.debugGraphics.push(g);
-        }
     }
 
     explodeTerrain(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
@@ -129,6 +116,8 @@ export default abstract class GameScene extends Phaser.Scene {
         emitter.explode(10 + Math.random() * 5);
 
         this.root.destroy(cx, cy, radius, minSize); // Destroy terrain
+
+        this.redrawTerrain();
 
         this.cameras.main.shake(250, 0.005); // Shake camera
 
