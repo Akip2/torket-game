@@ -38,8 +38,17 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         const dist = Math.sqrt(dx * dx + dy * dy);
 
         if (dist < radius) {
-            const nx = dx / dist;
-            const ny = dy / dist;
+            let nx: number, ny: number;
+
+            if (dist === 0) {
+                console.log("ddddd")
+                const angle = Math.random() * Math.PI * 2;
+                nx = Math.cos(angle);
+                ny = Math.sin(angle);
+            } else {
+                nx = dx / dist;
+                ny = dy / dist;
+            }
 
             const force = (1 - dist / radius) * (250 + (radius * 5) + Math.random() * 150);
 
