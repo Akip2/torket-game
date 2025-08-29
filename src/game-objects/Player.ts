@@ -2,16 +2,26 @@ import Vector from "../data/Vector";
 import { RessourceKeys } from "../enums/RessourceKeys.enum";
 import type GameScene from "../scenes/GameScene";
 
-export default class Player extends Phaser.Physics.Arcade.Sprite {
+export default class Player extends Phaser.Physics.Matter.Sprite {
     isMoving: boolean;
+    isOnGround: boolean;
 
     constructor(scene: GameScene, x: number, y: number) {
-        super(scene, x, y, RessourceKeys.Player);
+        super(scene.matter.world, x, y, RessourceKeys.Player);
+
+        this.setFixedRotation();
+        this.setFriction(0,0.05,0)
 
         scene.add.existing(this);
-        scene.physics.add.existing(this);
+        (this.body as MatterJS.BodyType).label = RessourceKeys.Player;
 
         this.isMoving = false;
+        this.isOnGround = false;
+    }
+
+    canJump() {
+        if (this.body == null) return false;
+        return Math.abs(this.body.velocity.y) < 0.1 && this.isOnGround;
     }
 
     checkForMovements(keyboard: Phaser.Types.Input.Keyboard.CursorKeys) {
@@ -19,17 +29,18 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             this.isMoving = true;
 
             if (keyboard.left.isDown) { //Left
-                this.setVelocityX(-160);
+                this.setVelocityX(-3);
             } else { //Right
-                this.setVelocityX(160);
+                this.setVelocityX(3);
             }
         } else if (this.isMoving) {
             this.isMoving = false;
             this.setVelocityX(0);
         }
 
-        if (keyboard.up.isDown && this.body?.touching.down) {
-            this.setVelocityY(-375);
+        if (keyboard.up.isDown && this.canJump()) {
+            this.isOnGround = false;
+            this.setVelocityY(-14);
         }
     }
 
@@ -46,8 +57,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             } else {
                 normalizedPushVector = pushVector.getNormalizedVector();
             }
-
-            const force = (1 - dist / radius) * (250 + (radius * 5) + Math.random() * 150);
+            const force = (1 - dist / radius) * (10 + radius / 2.5);
 
             this.setVelocity(normalizedPushVector.x * force, normalizedPushVector.y * force);
         }

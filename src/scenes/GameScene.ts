@@ -1,4 +1,4 @@
-import { DEBUG, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE, TILE_SIZE } from "../const";
+import { DEBUG, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE, TILE_SIZE } from "../const";
 import QuadBlock from "../data/QuadBlock";
 import { RessourceKeys } from "../enums/RessourceKeys.enum";
 import Bullet from "../game-objects/Bullet";
@@ -13,7 +13,7 @@ export default abstract class GameScene extends Phaser.Scene {
     startingY: number;
 
     root: QuadBlock;
-    terrainColliders!: Phaser.Physics.Arcade.StaticGroup;
+    terrainColliders: MatterJS.BodyType[] = [];
     terrainSprites: Phaser.GameObjects.TileSprite[] = [];
 
     debugGraphics: Phaser.GameObjects.Graphics[] = [];
@@ -44,13 +44,13 @@ export default abstract class GameScene extends Phaser.Scene {
         this.generateTextures();
 
         this.player = new Player(this, this.startingX, this.startingY);
-        this.player.setDragX(300);
+        //this.player.setDragX(300);
 
-        this.terrainColliders = this.physics.add.staticGroup();
-        this.physics.add.collider(this.player, this.terrainColliders);
 
         this.drawTerrain();
         this.createTerrainColliders();
+
+        this.setupCollisionEvents();
 
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => this.clickEvent(pointer));
     }
@@ -58,6 +58,28 @@ export default abstract class GameScene extends Phaser.Scene {
     update() {
         this.player.checkForMovements(this.keyboard);
         this.sceneLogic();
+    }
+
+    setupCollisionEvents() {
+        this.matter.world.on("collisionstart", (event: Phaser.Physics.Matter.Events.CollisionStartEvent) => {
+            for (const { bodyA, bodyB } of event.pairs) {
+                const labels = [bodyA.label, bodyB.label];
+
+                if (labels.includes(RessourceKeys.Bullet) && labels.includes(RessourceKeys.Ground)) {
+                    const bullet = (bodyA.label === RessourceKeys.Bullet ? bodyA.gameObject : bodyB.gameObject) as Bullet;
+
+                    if (bullet) {
+                        this.explodeTerrain(bullet.x, bullet.y, EXPLOSION_RADIUS);
+                        bullet.destroy();
+                    }
+                }
+
+                if (labels.includes(RessourceKeys.Player) && labels.includes(RessourceKeys.Ground)) {
+                    const player = (bodyA.label === RessourceKeys.Player ? bodyA.gameObject : bodyB.gameObject) as Player;
+                    player.isOnGround = true;
+                }
+            }
+        });
     }
 
     generateTextures() {
@@ -83,7 +105,7 @@ export default abstract class GameScene extends Phaser.Scene {
 
         g.fillStyle(0xFFFFFF, 1);
         g.fillCircle(size, size, size);
-        
+
         g.generateTexture(RessourceKeys.Bullet, size * 2, size * 2);
         g.destroy();
     }
@@ -93,7 +115,7 @@ export default abstract class GameScene extends Phaser.Scene {
         const y = pointer.y;
 
         const bullet = new Bullet(this, this.player.x, this.player.y);
-        bullet.shoot(x, y, 800);
+        bullet.shoot(x, y, 20);
     }
 
     explodeTerrain(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
@@ -170,7 +192,7 @@ export default abstract class GameScene extends Phaser.Scene {
 
         this.drawTerrain();
 
-        this.terrainColliders.clear(true, true);
+        this.terrainColliders.forEach(c => this.matter.world.remove(c))
         this.createTerrainColliders();
     }
 
@@ -182,15 +204,19 @@ export default abstract class GameScene extends Phaser.Scene {
         if (block.isEmpty()) return;
 
         if (block.filled) {
-            const collider = this.add.rectangle(
+            const collider = this.matter.add.rectangle(
                 block.x + block.width / 2,
                 block.y + block.height / 2,
                 block.width,
-                block.height
+                block.height,
+                {
+                    isStatic: true,
+                    label: RessourceKeys.Ground
+                }
             );
 
-            this.physics.add.existing(collider, true);
-            this.terrainColliders.add(collider);
+            //this.physics.add.existing(collider, true);
+            this.terrainColliders.push(collider);
         } else if (block.hasChildren()) {
             for (const child of block.children) {
                 this.createQuadBlockCollider(child);
