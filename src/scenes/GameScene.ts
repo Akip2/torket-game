@@ -4,8 +4,13 @@ import { RessourceKeys } from "../enums/RessourceKeys.enum";
 import Bullet from "../game-objects/Bullet";
 import Player from "../game-objects/Player";
 import { getExplosionSpriteScale } from "../utils";
+import { Client, Room, getStateCallbacks } from "colyseus.js";
 
 export default abstract class GameScene extends Phaser.Scene {
+    client = new Client("ws://localhost:2567");
+    playerEntities: { [sessionId: string]: any } = {};
+    room!: Room;
+
     keyboard!: Phaser.Types.Input.Keyboard.CursorKeys;
 
     player!: Player;
@@ -40,12 +45,29 @@ export default abstract class GameScene extends Phaser.Scene {
         this.loadAdditionalRessources();
     }
 
-    create() {
+    async create() {
+        try {
+            this.room = await this.client.joinOrCreate("my_room");
+            console.log("Joined successfully!");
+
+            const $ = getStateCallbacks(this.room);
+
+            $(this.room.state).players.onAdd((player: any, sessionId: string) => {
+                console.log(player);
+                console.log("A player has joined! Their unique session id is", sessionId);
+            });
+
+            $(this.room.state).players.onRemove((player: any, sessionId: string) => {
+                console.log("A player has left! Their unique session id was", sessionId);
+            });
+
+        } catch (e) {
+            console.error(e);
+        }
+
         this.generateTextures();
 
         this.player = new Player(this, this.startingX, this.startingY);
-        //this.player.setDragX(300);
-
 
         this.drawTerrain();
         this.createTerrainColliders();
@@ -56,7 +78,7 @@ export default abstract class GameScene extends Phaser.Scene {
     }
 
     update() {
-        this.player.checkForMovements(this.keyboard);
+        this.player?.checkForMovements(this.keyboard);
         this.sceneLogic();
     }
 
