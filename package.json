@@ -14,6 +14,7 @@
     "vite": "^7.0.4"
   },
   "dependencies": {
+    "colyseus.js": "^0.16.19",
     "phaser": "^3.90.0",
     "tinycolor2": "^1.6.0"
   }
