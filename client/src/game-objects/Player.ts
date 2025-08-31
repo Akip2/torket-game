@@ -1,3 +1,4 @@
+import { PLAYER_CONST } from "../../../shared/const";
 import Vector from "../data/Vector";
 import { RessourceKeys } from "../enums/RessourceKeys.enum";
 import type GameScene from "../scenes/GameScene";
@@ -29,9 +30,9 @@ export default class Player extends Phaser.Physics.Matter.Sprite {
             this.isMoving = true;
 
             if (keyboard.left.isDown) { //Left
-                this.setVelocityX(-3);
+                this.setVelocityX(-PLAYER_CONST.SPEED);
             } else { //Right
-                this.setVelocityX(3);
+                this.setVelocityX(PLAYER_CONST.SPEED);
             }
         } else if (this.isMoving) {
             this.isMoving = false;
@@ -40,7 +41,7 @@ export default class Player extends Phaser.Physics.Matter.Sprite {
 
         if (keyboard.up.isDown && this.canJump()) {
             this.isOnGround = false;
-            this.setVelocityY(-14);
+            this.setVelocityY(PLAYER_CONST.JUMP);
         }
     }
 

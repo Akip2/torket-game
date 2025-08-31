@@ -1,4 +1,4 @@
-import { DEBUG, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE, TILE_SIZE } from "../const";
+import { DEBUG, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE, TILE_SIZE } from "../../../shared/const";
 import QuadBlock from "../data/QuadBlock";
 import { RessourceKeys } from "../enums/RessourceKeys.enum";
 import Bullet from "../game-objects/Bullet";
@@ -71,7 +71,7 @@ export default abstract class GameScene extends Phaser.Scene {
                 });
             });
 
-            $(this.room.state).players.onRemove((player: any, sessionId: string) => {
+            $(this.room.state).players.onRemove((_player: any, sessionId: string) => {
                 this.playerEntities[sessionId].destroy();
                 delete this.playerEntities[sessionId];
             });

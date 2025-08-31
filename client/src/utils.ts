@@ -1,4 +1,4 @@
-import { EXPLOSION_SPRITE_SIZE } from "./const";
+import { EXPLOSION_SPRITE_SIZE } from "../../shared/const";
 
 export function getTextWidth(text: string, fontSize: string) {
     return text.length * fontSizeToNumber(fontSize) * 0.7;

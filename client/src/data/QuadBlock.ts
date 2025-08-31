@@ -1,4 +1,4 @@
-import { GAME_HEIGHT, GAME_WIDTH, TILE_SIZE } from "../const";
+import { GAME_HEIGHT, GAME_WIDTH, TILE_SIZE } from "../../../shared/const";
 
 export default class QuadBlock {
     x: number;
