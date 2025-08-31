@@ -1,53 +1,40 @@
 import { Room, Client } from "@colyseus/core";
 import { MyRoomState, Player } from "./schema/MyRoomState";
-import Matter, { Bodies, Body, Engine, World } from "matter-js"
+import { Engine } from "matter-js"
 import { GAME_HEIGHT, GAME_WIDTH, GRAVITY, PLAYER_CONST } from "@shared/const";
+import PlayerBody from "./bodies/PlayerBody";
+import GroundBlock from "./bodies/GroundBlock";
 
 export class MyRoom extends Room<MyRoomState> {
   maxClients = 4;
   state = new MyRoomState();
 
   engine!: Engine;
-  playerBodies: Map<string, Body> = new Map();
+  playerBodies: Map<string, PlayerBody> = new Map();
 
   onCreate(options: any) {
     this.onMessage("move", (client, inputPayload) => {
       const playerBody = this.playerBodies.get(client.sessionId);
       if (!playerBody) return;
 
-      if (inputPayload.left) {
-        Matter.Body.setVelocity(playerBody, {
-          x: -PLAYER_CONST.SPEED,
-          y: playerBody.velocity.y
-        });
-      } else if (inputPayload.right) {
-        Matter.Body.setVelocity(playerBody, {
-          x: PLAYER_CONST.SPEED,
-          y: playerBody.velocity.y
-        });
-      }
-
-      if (inputPayload.up) {
-        Matter.Body.setVelocity(playerBody, {
-          x: playerBody.velocity.x,
-          y: -14
-        });
-      }
+      playerBody.checkForMovements(inputPayload);
     });
 
+    this.setupEnvironment();
+  }
+
+  setupEnvironment() {
     this.engine = Engine.create({
       gravity: { x: 0, y: GRAVITY }
     });
 
-    const ground = Bodies.rectangle(
+    const ground = new GroundBlock(
       GAME_WIDTH / 2,
       GAME_HEIGHT - (GAME_HEIGHT / 5) / 2,
       GAME_WIDTH,
       GAME_HEIGHT / 5,
-      { isStatic: true }
     );
-
-    World.add(this.engine.world, [ground]);
+    ground.addToWorld(this.engine.world);
 
     this.setSimulationInterval((deltaTime) => this.update(deltaTime));
   }
@@ -56,11 +43,11 @@ export class MyRoom extends Room<MyRoomState> {
     Engine.update(this.engine, deltaTime);
 
     this.state.players.forEach((player, id) => {
-      const body = this.playerBodies.get(id);
-      if (!body) return;
+      const playerBody = this.playerBodies.get(id);
+      if (!playerBody) return;
 
-      player.x = body.position.x;
-      player.y = body.position.y;
+      player.x = playerBody.getX();
+      player.y = playerBody.getY();
     });
   }
 
@@ -71,14 +58,8 @@ export class MyRoom extends Room<MyRoomState> {
     player.x = Math.random() * GAME_WIDTH;
     player.y = 0;
 
-    const playerBody = Bodies.rectangle(player.x, player.y, PLAYER_CONST.WIDTH, PLAYER_CONST.WIDTH, {
-      friction: 0,
-      frictionAir: 0.05,
-      frictionStatic: 0 
-    });
-
-    Matter.Body.setInertia(playerBody, Infinity);
-    World.add(this.engine.world, playerBody);
+    const playerBody = new PlayerBody(player.x, player.y);
+    playerBody.addToWorld(this.engine.world);
 
     this.playerBodies.set(client.sessionId, playerBody);
     this.state.players.set(client.sessionId, player);
@@ -87,9 +68,9 @@ export class MyRoom extends Room<MyRoomState> {
   onLeave(client: Client, consented: boolean) {
     console.log(client.sessionId, "left!");
 
-    const body = this.playerBodies.get(client.sessionId);
-    if (body) {
-      World.remove(this.engine.world, body);
+    const playerBody = this.playerBodies.get(client.sessionId);
+    if (playerBody) {
+      playerBody.removeFromWorld(this.engine.world);
       this.playerBodies.delete(client.sessionId);
     }
 
