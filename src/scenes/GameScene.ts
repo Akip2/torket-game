@@ -8,7 +8,13 @@ import { Client, Room, getStateCallbacks } from "colyseus.js";
 
 export default abstract class GameScene extends Phaser.Scene {
     client = new Client("ws://localhost:2567");
-    playerEntities: { [sessionId: string]: any } = {};
+    playerEntities: { [sessionId: string]: Player } = {};
+    inputPayload = {
+        left: false,
+        right: false,
+        up: false,
+        down: false,
+    };
     room!: Room;
 
     keyboard!: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -53,12 +59,21 @@ export default abstract class GameScene extends Phaser.Scene {
             const $ = getStateCallbacks(this.room);
 
             $(this.room.state).players.onAdd((player: any, sessionId: string) => {
+                const playerObject = new Player(this, player.x, player.y);
+                this.playerEntities[sessionId] = playerObject;
                 console.log(player);
+
                 console.log("A player has joined! Their unique session id is", sessionId);
+
+                $(player).onChange(() => {
+                    playerObject.x = player.x;
+                    playerObject.y = player.y;
+                });
             });
 
             $(this.room.state).players.onRemove((player: any, sessionId: string) => {
-                console.log("A player has left! Their unique session id was", sessionId);
+                this.playerEntities[sessionId].destroy();
+                delete this.playerEntities[sessionId];
             });
 
         } catch (e) {
@@ -67,7 +82,7 @@ export default abstract class GameScene extends Phaser.Scene {
 
         this.generateTextures();
 
-        this.player = new Player(this, this.startingX, this.startingY);
+        //this.player = new Player(this, this.startingX, this.startingY);
 
         this.drawTerrain();
         this.createTerrainColliders();
@@ -78,7 +93,17 @@ export default abstract class GameScene extends Phaser.Scene {
     }
 
     update() {
-        this.player?.checkForMovements(this.keyboard);
+        if (!this.room) { return; }
+
+        // send input to the server
+        this.inputPayload.left = this.keyboard.left.isDown;
+        this.inputPayload.right = this.keyboard.right.isDown;
+        this.inputPayload.up = this.keyboard.up.isDown;
+        this.inputPayload.down = this.keyboard.down.isDown;
+        this.room.send("move", this.inputPayload);
+        
+        
+        //this.player?.checkForMovements(this.keyboard);
         this.sceneLogic();
     }
 
