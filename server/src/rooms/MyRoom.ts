@@ -2,8 +2,8 @@ import { Room, Client } from "@colyseus/core";
 import { MyRoomState, Player } from "./schema/MyRoomState";
 import { Engine } from "matter-js"
 import { GAME_HEIGHT, GAME_WIDTH, GRAVITY, PLAYER_CONST } from "@shared/const";
-import PlayerBody from "./bodies/PlayerBody";
-import GroundBlock from "./bodies/GroundBlock";
+import PlayerBody from "../bodies/PlayerBody";
+import GroundBlock from "../bodies/GroundBlock";
 
 export class MyRoom extends Room<MyRoomState> {
   maxClients = 4;
