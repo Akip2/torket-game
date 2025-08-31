@@ -1,5 +1,5 @@
 import Vector from "../data/Vector";
-import { RessourceKeys } from "../enums/RessourceKeys.enum";
+import { RessourceKeys } from "../../../shared/enums/RessourceKeys.enum";
 import type GameScene from "../scenes/GameScene";
 
 export default class Bullet extends Phaser.Physics.Matter.Sprite {

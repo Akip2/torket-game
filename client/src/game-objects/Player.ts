@@ -1,6 +1,6 @@
 import { PLAYER_CONST } from "../../../shared/const";
 import Vector from "../data/Vector";
-import { RessourceKeys } from "../enums/RessourceKeys.enum";
+import { RessourceKeys } from "../../../shared/enums/RessourceKeys.enum";
 import type GameScene from "../scenes/GameScene";
 
 export default class Player extends Phaser.Physics.Matter.Sprite {

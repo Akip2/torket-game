@@ -1,6 +1,6 @@
+import { getTextWidth } from "../../../shared/utils";
 import Button from "../ui/Button"
 import { ButtonStyle } from "../ui/ui-styles";
-import { getTextWidth } from "../utils";
 
 export default class MenuScene extends Phaser.Scene {
     constructor() {

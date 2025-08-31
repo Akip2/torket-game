@@ -1,10 +1,10 @@
 import { DEBUG, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE, TILE_SIZE } from "../../../shared/const";
 import QuadBlock from "../data/QuadBlock";
-import { RessourceKeys } from "../enums/RessourceKeys.enum";
+import { RessourceKeys } from "../../../shared/enums/RessourceKeys.enum";
 import Bullet from "../game-objects/Bullet";
 import Player from "../game-objects/Player";
-import { getExplosionSpriteScale } from "../utils";
 import { Client, Room, getStateCallbacks } from "colyseus.js";
+import { getExplosionSpriteScale } from "../../../shared/utils";
 
 export default abstract class GameScene extends Phaser.Scene {
     client = new Client("ws://localhost:2567");

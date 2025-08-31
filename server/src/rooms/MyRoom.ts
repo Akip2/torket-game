@@ -4,6 +4,9 @@ import { Engine } from "matter-js"
 import { GAME_HEIGHT, GAME_WIDTH, GRAVITY, PLAYER_CONST } from "@shared/const";
 import PlayerBody from "../bodies/PlayerBody";
 import GroundBlock from "../bodies/GroundBlock";
+import Matter from "matter-js";
+import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
+import { parsePlayerLabel } from "@shared/utils";
 
 export class MyRoom extends Room<MyRoomState> {
   maxClients = 4;
@@ -36,7 +39,25 @@ export class MyRoom extends Room<MyRoomState> {
     );
     ground.addToWorld(this.engine.world);
 
+    this.setupCollisionEvents();
     this.setSimulationInterval((deltaTime) => this.update(deltaTime));
+  }
+
+  setupCollisionEvents() {
+    Matter.Events.on(this.engine, "collisionStart", (event) => {
+      for (const pair of event.pairs) {
+        const { bodyA, bodyB } = pair;
+
+        const labels = [bodyA.label, bodyB.label];
+        const playerLabel = labels.find(label => label.startsWith("player:"));
+
+        if (playerLabel && labels.includes(RessourceKeys.Ground)) {
+          const sessionId = parsePlayerLabel(playerLabel).sessionId;
+
+          this.playerBodies.get(sessionId).isOnGround = true;
+        }
+      }
+    });
   }
 
   update(deltaTime: number) {
@@ -58,7 +79,7 @@ export class MyRoom extends Room<MyRoomState> {
     player.x = Math.random() * GAME_WIDTH;
     player.y = 0;
 
-    const playerBody = new PlayerBody(player.x, player.y);
+    const playerBody = new PlayerBody(client.sessionId, player.x, player.y);
     playerBody.addToWorld(this.engine.world);
 
     this.playerBodies.set(client.sessionId, playerBody);
