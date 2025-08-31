@@ -61,13 +61,12 @@ export default abstract class GameScene extends Phaser.Scene {
             $(this.room.state).players.onAdd((player: any, sessionId: string) => {
                 const playerObject = new Player(this, player.x, player.y);
                 this.playerEntities[sessionId] = playerObject;
-                console.log(player);
 
                 console.log("A player has joined! Their unique session id is", sessionId);
 
                 $(player).onChange(() => {
-                    playerObject.x = player.x;
-                    playerObject.y = player.y;
+                    playerObject.setData("serverX", player.x);
+                    playerObject.setData("serverY", player.y);
                 });
             });
 
@@ -101,10 +100,19 @@ export default abstract class GameScene extends Phaser.Scene {
         this.inputPayload.up = this.keyboard.up.isDown;
         this.inputPayload.down = this.keyboard.down.isDown;
         this.room.send("move", this.inputPayload);
-        
-        
+
+
         //this.player?.checkForMovements(this.keyboard);
         this.sceneLogic();
+
+        for (let sessionId in this.playerEntities) {
+            // interpolate all player entities
+            const entity = this.playerEntities[sessionId];
+            const { serverX, serverY } = entity.data.values;
+
+            entity.x = Phaser.Math.Linear(entity.x, serverX, 0.2);
+            entity.y = Phaser.Math.Linear(entity.y, serverY, 0.2);
+        }
     }
 
     setupCollisionEvents() {

@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import MenuScene from "./scenes/MenuScene";
 import TestScene from "./scenes/TestScene";
-import { GAME_HEIGHT, GAME_WIDTH } from "../../shared/const";
+import { GAME_HEIGHT, GAME_WIDTH, GRAVITY } from "../../shared/const";
 
 const config = {
     type: Phaser.AUTO,
@@ -18,7 +18,7 @@ const config = {
     physics: {
         default: 'matter',
         matter: {
-            gravity: { x: 0, y: 0 },
+            gravity: { x: 0, y: GRAVITY },
             debug: false
         }
     },
