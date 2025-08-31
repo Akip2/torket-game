@@ -19,7 +19,8 @@ export default abstract class GameScene extends Phaser.Scene {
 
     keyboard!: Phaser.Types.Input.Keyboard.CursorKeys;
 
-    player!: Player;
+    currentPlayer!: Player;
+    remoteRef!: Phaser.GameObjects.Rectangle;
     startingX: number;
     startingY: number;
 
@@ -64,10 +65,22 @@ export default abstract class GameScene extends Phaser.Scene {
 
                 console.log("A player has joined! Their unique session id is", sessionId);
 
-                $(player).onChange(() => {
-                    playerObject.setData("serverX", player.x);
-                    playerObject.setData("serverY", player.y);
-                });
+                if (sessionId === this.room.sessionId) {
+                    this.currentPlayer = playerObject;
+
+                    this.remoteRef = this.add.rectangle(0, 0, playerObject.width, playerObject.height);
+                    this.remoteRef.setStrokeStyle(1, 0xff0000);
+
+                    $(player).onChange(() => {
+                        this.remoteRef.x = player.x;
+                        this.remoteRef.y = player.y;
+                    });
+                } else {
+                    $(player).onChange(() => {
+                        playerObject.setData("serverX", player.x);
+                        playerObject.setData("serverY", player.y);
+                    });
+                }
             });
 
             $(this.room.state).players.onRemove((_player: any, sessionId: string) => {
@@ -102,10 +115,13 @@ export default abstract class GameScene extends Phaser.Scene {
         this.room.send("move", this.inputPayload);
 
 
-        //this.player?.checkForMovements(this.keyboard);
+        this.currentPlayer?.checkForMovements(this.keyboard);
         this.sceneLogic();
 
         for (const sessionId in this.playerObjects) {
+            if (sessionId === this.room.sessionId) {
+                continue;
+            }
             const playerObject = this.playerObjects[sessionId];
             const { serverX, serverY } = playerObject.data.values;
 
@@ -168,7 +184,7 @@ export default abstract class GameScene extends Phaser.Scene {
         const x = pointer.x;
         const y = pointer.y;
 
-        const bullet = new Bullet(this, this.player.x, this.player.y);
+        const bullet = new Bullet(this, this.currentPlayer.x, this.currentPlayer.y);
         bullet.shoot(x, y, 20);
     }
 
@@ -197,7 +213,7 @@ export default abstract class GameScene extends Phaser.Scene {
 
         this.cameras.main.shake(250, 0.005); // Shake camera
 
-        this.player.push(cx, cy, radius); // Push back player
+        this.currentPlayer.push(cx, cy, radius); // Push back player
     }
 
     drawTerrain() {

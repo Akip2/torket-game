@@ -2,6 +2,8 @@ import config from "@colyseus/tools";
 import { monitor } from "@colyseus/monitor";
 import { playground } from "@colyseus/playground";
 
+const LATENCY = 200;
+
 /**
  * Import your Room files
  */
@@ -14,7 +16,7 @@ export default config({
          * Define your room handlers:
          */
         gameServer.define('my_room', MyRoom);
-
+        gameServer.simulateLatency(LATENCY);
     },
 
     initializeExpress: (app) => {
