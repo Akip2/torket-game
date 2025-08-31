@@ -8,7 +8,7 @@ import { getExplosionSpriteScale } from "../../../shared/utils";
 
 export default abstract class GameScene extends Phaser.Scene {
     client = new Client("ws://localhost:2567");
-    playerEntities: { [sessionId: string]: Player } = {};
+    playerObjects: { [sessionId: string]: Player } = {};
     inputPayload = {
         left: false,
         right: false,
@@ -60,7 +60,7 @@ export default abstract class GameScene extends Phaser.Scene {
 
             $(this.room.state).players.onAdd((player: any, sessionId: string) => {
                 const playerObject = new Player(this, player.x, player.y);
-                this.playerEntities[sessionId] = playerObject;
+                this.playerObjects[sessionId] = playerObject;
 
                 console.log("A player has joined! Their unique session id is", sessionId);
 
@@ -71,8 +71,8 @@ export default abstract class GameScene extends Phaser.Scene {
             });
 
             $(this.room.state).players.onRemove((_player: any, sessionId: string) => {
-                this.playerEntities[sessionId].destroy();
-                delete this.playerEntities[sessionId];
+                this.playerObjects[sessionId].destroy();
+                delete this.playerObjects[sessionId];
             });
 
         } catch (e) {
@@ -105,13 +105,12 @@ export default abstract class GameScene extends Phaser.Scene {
         //this.player?.checkForMovements(this.keyboard);
         this.sceneLogic();
 
-        for (let sessionId in this.playerEntities) {
-            // interpolate all player entities
-            const entity = this.playerEntities[sessionId];
-            const { serverX, serverY } = entity.data.values;
+        for (const sessionId in this.playerObjects) {
+            const playerObject = this.playerObjects[sessionId];
+            const { serverX, serverY } = playerObject.data.values;
 
-            entity.x = Phaser.Math.Linear(entity.x, serverX, 0.2);
-            entity.y = Phaser.Math.Linear(entity.y, serverY, 0.2);
+            playerObject.x = Phaser.Math.Linear(playerObject.x, serverX, 0.175);
+            playerObject.y = Phaser.Math.Linear(playerObject.y, serverY, 0.35);
         }
     }
 
