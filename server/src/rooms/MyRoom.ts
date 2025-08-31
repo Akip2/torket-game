@@ -1,6 +1,7 @@
 import { Room, Client } from "@colyseus/core";
 import { MyRoomState, Player } from "./schema/MyRoomState";
 import Matter, { Bodies, Body, Engine, World } from "matter-js"
+import { GAME_HEIGHT, GAME_WIDTH, GRAVITY, PLAYER_CONST } from "@shared/const";
 
 export class MyRoom extends Room<MyRoomState> {
   maxClients = 4;
@@ -16,12 +17,12 @@ export class MyRoom extends Room<MyRoomState> {
 
       if (inputPayload.left) {
         Matter.Body.setVelocity(playerBody, {
-          x: -3,
+          x: -PLAYER_CONST.SPEED,
           y: playerBody.velocity.y
         });
       } else if (inputPayload.right) {
         Matter.Body.setVelocity(playerBody, {
-          x: 3,
+          x: PLAYER_CONST.SPEED,
           y: playerBody.velocity.y
         });
       }
@@ -35,14 +36,14 @@ export class MyRoom extends Room<MyRoomState> {
     });
 
     this.engine = Engine.create({
-      gravity: { x: 0, y: 1.75 }
+      gravity: { x: 0, y: GRAVITY }
     });
 
     const ground = Bodies.rectangle(
-      1600 / 2,              // centre en X
-      800 - (800 / 5) / 2,   // centre en Y
-      1600,                  // largeur
-      800 / 5,               // hauteur
+      GAME_WIDTH / 2,
+      GAME_HEIGHT - (GAME_HEIGHT / 5) / 2,
+      GAME_WIDTH,
+      GAME_HEIGHT / 5,
       { isStatic: true }
     );
 
@@ -67,10 +68,10 @@ export class MyRoom extends Room<MyRoomState> {
     console.log(client.sessionId, "joined!");
 
     const player = new Player();
-    player.x = Math.random() * 1600;
+    player.x = Math.random() * GAME_WIDTH;
     player.y = 0;
 
-    const playerBody = Bodies.rectangle(player.x, player.y, 32, 32, {
+    const playerBody = Bodies.rectangle(player.x, player.y, PLAYER_CONST.WIDTH, PLAYER_CONST.WIDTH, {
       friction: 0,
       frictionAir: 0.05,
       frictionStatic: 0 

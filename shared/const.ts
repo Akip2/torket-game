@@ -2,7 +2,7 @@ export const DEBUG = false;
 
 export const GAME_WIDTH = 1600;
 export const GAME_HEIGHT = 800;
-export const GRAVITY = -1.75;
+export const GRAVITY = 1.75;
 
 export const TILE_SIZE = 8;
 export const TEXTURE_SIZE = 16;
