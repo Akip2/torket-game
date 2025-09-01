@@ -7,8 +7,11 @@ import GroundBlock from "../bodies/GroundBlock";
 import Matter from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { parsePlayerLabel } from "@shared/utils";
+import { InputPayload } from "src/types";
 
 export class MyRoom extends Room<MyRoomState> {
+      elapsedTime = 0;
+    fixedTimeStep = 1000 / 60;
   maxClients = 4;
   state = new MyRoomState();
 
@@ -17,10 +20,25 @@ export class MyRoom extends Room<MyRoomState> {
 
   onCreate(options: any) {
     this.onMessage("move", (client, inputPayload) => {
+      const player = this.state.players.get(client.sessionId);
+      player.inputQueue.push(inputPayload);
+
+      /*
       const playerBody = this.playerBodies.get(client.sessionId);
       if (!playerBody) return;
 
       playerBody.checkForMovements(inputPayload);
+      */
+    });
+
+    let elapsedTime = 0;
+    this.setSimulationInterval((deltaTime) => {
+      elapsedTime += deltaTime;
+
+      while (elapsedTime >= this.fixedTimeStep) {
+        elapsedTime -= this.fixedTimeStep;
+        this.fixedTick(this.fixedTimeStep);
+      }
     });
 
     this.setupEnvironment();
@@ -40,7 +58,6 @@ export class MyRoom extends Room<MyRoomState> {
     ground.addToWorld(this.engine.world);
 
     this.setupCollisionEvents();
-    this.setSimulationInterval((deltaTime) => this.update(deltaTime));
   }
 
   setupCollisionEvents() {
@@ -60,15 +77,18 @@ export class MyRoom extends Room<MyRoomState> {
     });
   }
 
-  update(deltaTime: number) {
-    Engine.update(this.engine, deltaTime);
-
+  fixedTick(deltaTime: number) {
     this.state.players.forEach((player, id) => {
       const playerBody = this.playerBodies.get(id);
       if (!playerBody) return;
 
-      player.x = playerBody.getX();
-      player.y = playerBody.getY();
+      let input: InputPayload;
+      while (input = player.inputQueue.shift()) {
+        playerBody.checkForMovements(input);
+        Engine.update(this.engine, deltaTime);
+        player.x = playerBody.getX();
+        player.y = playerBody.getY();
+      }
     });
   }
 

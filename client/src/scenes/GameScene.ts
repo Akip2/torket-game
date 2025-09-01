@@ -30,6 +30,9 @@ export default abstract class GameScene extends Phaser.Scene {
 
     debugGraphics: Phaser.GameObjects.Graphics[] = [];
 
+    elapsedTime = 0;
+    fixedTimeStep = 1000 / 60;
+
     constructor(name: string, startingX: number, startingY: number) {
         super(name);
 
@@ -104,7 +107,7 @@ export default abstract class GameScene extends Phaser.Scene {
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => this.clickEvent(pointer));
     }
 
-    update() {
+    fixedTick() {
         if (!this.room) { return; }
 
         // send input to the server
@@ -127,6 +130,19 @@ export default abstract class GameScene extends Phaser.Scene {
 
             playerObject.x = Phaser.Math.Linear(playerObject.x, serverX, 0.175);
             playerObject.y = Phaser.Math.Linear(playerObject.y, serverY, 0.35);
+        }
+    }
+
+
+
+    update(time: number, delta: number): void {
+        // skip loop if not connected yet.
+        if (!this.currentPlayer) { return; }
+
+        this.elapsedTime += delta;
+        while (this.elapsedTime >= this.fixedTimeStep) {
+            this.elapsedTime -= this.fixedTimeStep;
+            this.fixedTick(/*time, this.fixedTimeStep*/);
         }
     }
 
