@@ -1,4 +1,4 @@
-import Vector from "../data/Vector";
+import Vector from "../../../shared/data/Vector";
 import { RessourceKeys } from "../../../shared/enums/RessourceKeys.enum";
 import type GameScene from "../scenes/GameScene";
 
