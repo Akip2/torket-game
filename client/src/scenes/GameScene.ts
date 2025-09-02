@@ -297,6 +297,9 @@ export default abstract class GameScene extends Phaser.Scene {
                 block.height,
                 {
                     isStatic: true,
+                    friction: 0,
+                    frictionAir: 0,
+                    frictionStatic: 0,
                     label: RessourceKeys.Ground
                 }
             );

@@ -77,20 +77,30 @@ export class MyRoom extends Room<MyRoomState> {
     });
   }
 
-  fixedTick(deltaTime: number) {
-    this.state.players.forEach((player, id) => {
-      const playerBody = this.playerBodies.get(id);
-      if (!playerBody) return;
+fixedTick(deltaTime: number) {
+  // 1. Appliquer tous les inputs
+  this.state.players.forEach((player, id) => {
+    const playerBody = this.playerBodies.get(id);
+    if (!playerBody) return;
 
-      let input: InputPayload;
-      while (input = player.inputQueue.shift()) {
-        playerBody.checkForMovements(input);
-        Engine.update(this.engine, deltaTime);
-        player.x = playerBody.getX();
-        player.y = playerBody.getY();
-      }
-    });
-  }
+    let input: InputPayload;
+    while (input = player.inputQueue.shift()) {
+      playerBody.checkForMovements(input);
+    }
+  });
+
+  // 2. Mettre à jour la physique une seule fois
+  Engine.update(this.engine, deltaTime);
+
+  // 3. Synchroniser le state
+  this.state.players.forEach((player, id) => {
+    const playerBody = this.playerBodies.get(id);
+    if (!playerBody) return;
+
+    player.x = playerBody.getX();
+    player.y = playerBody.getY();
+  });
+}
 
   onJoin(client: Client, options: any) {
     console.log(client.sessionId, "joined!");
