@@ -7,128 +7,108 @@ import GroundBlock from "../bodies/GroundBlock";
 import Matter from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { parsePlayerLabel } from "@shared/utils";
-import { InputPayload } from "src/types";
+import { InputPayload } from "@shared/types";
 
 export class MyRoom extends Room<MyRoomState> {
-      elapsedTime = 0;
+    elapsedTime = 0;
     fixedTimeStep = 1000 / 60;
-  maxClients = 4;
-  state = new MyRoomState();
+    maxClients = 4;
+    state = new MyRoomState();
 
-  engine!: Engine;
-  playerBodies: Map<string, PlayerBody> = new Map();
+    engine!: Engine;
+    playerBodies: Map<string, PlayerBody> = new Map();
 
-  onCreate(options: any) {
-    this.onMessage("move", (client, inputPayload) => {
-      const player = this.state.players.get(client.sessionId);
-      player.inputQueue.push(inputPayload);
+    onCreate(options: any) {
+        this.onMessage("move", (client, inputPayload: InputPayload) => {
+            const player = this.state.players.get(client.sessionId);
+            player.inputQueue.push(inputPayload);
+        });
 
-      /*
-      const playerBody = this.playerBodies.get(client.sessionId);
-      if (!playerBody) return;
+        let elapsedTime = 0;
+        this.setSimulationInterval((deltaTime) => {
+            elapsedTime += deltaTime;
+            while (elapsedTime >= this.fixedTimeStep) {
+                elapsedTime -= this.fixedTimeStep;
+                this.fixedTick(this.fixedTimeStep);
+            }
+        });
 
-      playerBody.checkForMovements(inputPayload);
-      */
-    });
+        this.setupEnvironment();
+    }
 
-    let elapsedTime = 0;
-    this.setSimulationInterval((deltaTime) => {
-      elapsedTime += deltaTime;
+    setupEnvironment() {
+        this.engine = Engine.create({
+            gravity: { x: 0, y: GRAVITY }
+        });
 
-      while (elapsedTime >= this.fixedTimeStep) {
-        elapsedTime -= this.fixedTimeStep;
-        this.fixedTick(this.fixedTimeStep);
-      }
-    });
+        const ground = new GroundBlock(
+            GAME_WIDTH / 2,
+            GAME_HEIGHT - (GAME_HEIGHT / 5) / 2,
+            GAME_WIDTH,
+            GAME_HEIGHT / 5,
+        );
+        ground.addToWorld(this.engine.world);
 
-    this.setupEnvironment();
-  }
+        this.setupCollisionEvents();
+    }
 
-  setupEnvironment() {
-    this.engine = Engine.create({
-      gravity: { x: 0, y: GRAVITY }
-    });
+    setupCollisionEvents() {
+        Matter.Events.on(this.engine, "collisionStart", (event) => {
+            for (const pair of event.pairs) {
+                const { bodyA, bodyB } = pair;
+                const labels = [bodyA.label, bodyB.label];
+                const playerLabel = labels.find(label => label.startsWith("player:"));
+                if (playerLabel && labels.includes(RessourceKeys.Ground)) {
+                    const sessionId = parsePlayerLabel(playerLabel).sessionId;
+                    this.playerBodies.get(sessionId).isOnGround = true;
+                }
+            }
+        });
+    }
 
-    const ground = new GroundBlock(
-      GAME_WIDTH / 2,
-      GAME_HEIGHT - (GAME_HEIGHT / 5) / 2,
-      GAME_WIDTH,
-      GAME_HEIGHT / 5,
-    );
-    ground.addToWorld(this.engine.world);
+    fixedTick(deltaTime: number) {
+        // Appliquer les inputs
+        this.state.players.forEach((player, id) => {
+            const playerBody = this.playerBodies.get(id);
+            if (!playerBody) return;
 
-    this.setupCollisionEvents();
-  }
+            let input: InputPayload;
+            while (input = player.inputQueue.shift()) {
+                playerBody.checkForMovements(input);
+                player.timeStamp = input.timeStamp; // réconciliation côté client
+            }
+        });
 
-  setupCollisionEvents() {
-    Matter.Events.on(this.engine, "collisionStart", (event) => {
-      for (const pair of event.pairs) {
-        const { bodyA, bodyB } = pair;
+        Engine.update(this.engine, deltaTime);
 
-        const labels = [bodyA.label, bodyB.label];
-        const playerLabel = labels.find(label => label.startsWith("player:"));
+        // Synchronisation
+        this.state.players.forEach((player, id) => {
+            const playerBody = this.playerBodies.get(id);
+            if (!playerBody) return;
+            player.x = playerBody.getX();
+            player.y = playerBody.getY();
+        });
+    }
 
-        if (playerLabel && labels.includes(RessourceKeys.Ground)) {
-          const sessionId = parsePlayerLabel(playerLabel).sessionId;
+    onJoin(client: Client, options: any) {
+        const player = new Player();
+        player.x = Math.random() * GAME_WIDTH;
+        player.y = 0;
+        player.timeStamp = 0;
+        const playerBody = new PlayerBody(client.sessionId, player.x, player.y);
+        playerBody.addToWorld(this.engine.world);
+        this.playerBodies.set(client.sessionId, playerBody);
+        this.state.players.set(client.sessionId, player);
+    }
 
-          this.playerBodies.get(sessionId).isOnGround = true;
+    onLeave(client: Client, consented: boolean) {
+        const playerBody = this.playerBodies.get(client.sessionId);
+        if (playerBody) {
+            playerBody.removeFromWorld(this.engine.world);
+            this.playerBodies.delete(client.sessionId);
         }
-      }
-    });
-  }
-
-fixedTick(deltaTime: number) {
-  // 1. Appliquer tous les inputs
-  this.state.players.forEach((player, id) => {
-    const playerBody = this.playerBodies.get(id);
-    if (!playerBody) return;
-
-    let input: InputPayload;
-    while (input = player.inputQueue.shift()) {
-      playerBody.checkForMovements(input);
-    }
-  });
-
-  // 2. Mettre à jour la physique une seule fois
-  Engine.update(this.engine, deltaTime);
-
-  // 3. Synchroniser le state
-  this.state.players.forEach((player, id) => {
-    const playerBody = this.playerBodies.get(id);
-    if (!playerBody) return;
-
-    player.x = playerBody.getX();
-    player.y = playerBody.getY();
-  });
-}
-
-  onJoin(client: Client, options: any) {
-    console.log(client.sessionId, "joined!");
-
-    const player = new Player();
-    player.x = Math.random() * GAME_WIDTH;
-    player.y = 0;
-
-    const playerBody = new PlayerBody(client.sessionId, player.x, player.y);
-    playerBody.addToWorld(this.engine.world);
-
-    this.playerBodies.set(client.sessionId, playerBody);
-    this.state.players.set(client.sessionId, player);
-  }
-
-  onLeave(client: Client, consented: boolean) {
-    console.log(client.sessionId, "left!");
-
-    const playerBody = this.playerBodies.get(client.sessionId);
-    if (playerBody) {
-      playerBody.removeFromWorld(this.engine.world);
-      this.playerBodies.delete(client.sessionId);
+        this.state.players.delete(client.sessionId);
     }
 
-    this.state.players.delete(client.sessionId);
-  }
-
-  onDispose() {
-    console.log("room", this.roomId, "disposing...");
-  }
+    onDispose() {}
 }

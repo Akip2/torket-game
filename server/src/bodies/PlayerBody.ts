@@ -1,6 +1,6 @@
 import { PLAYER_CONST } from "@shared/const";
 import Matter, { Bodies, Body } from "matter-js";
-import { InputPayload } from "src/types";
+import { InputPayload } from "@shared/types";
 import GameBody from "./GameBody";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 

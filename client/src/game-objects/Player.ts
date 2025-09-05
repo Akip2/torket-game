@@ -1,6 +1,7 @@
 import { PLAYER_CONST } from "../../../shared/const";
 import Vector from "../../../shared/data/Vector";
 import { RessourceKeys } from "../../../shared/enums/RessourceKeys.enum";
+import type { InputPayload } from "../../../shared/types";
 import type GameScene from "../scenes/GameScene";
 
 export default class Player extends Phaser.Physics.Matter.Sprite {
@@ -25,11 +26,11 @@ export default class Player extends Phaser.Physics.Matter.Sprite {
         return Math.abs(this.body.velocity.y) < 0.1 && this.isOnGround;
     }
 
-    checkForMovements(keyboard: Phaser.Types.Input.Keyboard.CursorKeys) {
-        if (keyboard.left.isDown || keyboard.right.isDown) {
+    checkForMovements(inputPayload: InputPayload) {
+        if (inputPayload.right|| inputPayload.left) {
             this.isMoving = true;
 
-            if (keyboard.left.isDown) { //Left
+            if (inputPayload.left) { //Left
                 this.setVelocityX(-PLAYER_CONST.SPEED);
             } else { //Right
                 this.setVelocityX(PLAYER_CONST.SPEED);
@@ -39,7 +40,7 @@ export default class Player extends Phaser.Physics.Matter.Sprite {
             this.setVelocityX(0);
         }
 
-        if (keyboard.up.isDown && this.canJump()) {
+        if (inputPayload.up && this.canJump()) {
             this.isOnGround = false;
             this.setVelocityY(PLAYER_CONST.JUMP);
         }

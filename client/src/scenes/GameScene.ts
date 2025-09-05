@@ -5,16 +5,12 @@ import Player from "../game-objects/Player";
 import { Client, Room, getStateCallbacks } from "colyseus.js";
 import { getExplosionSpriteScale } from "../../../shared/utils";
 import QuadBlock from "../../../shared/data/QuadBlock";
+import type { InputPayload } from "../../../shared/types";
 
 export default abstract class GameScene extends Phaser.Scene {
+    localInputBuffer: InputPayload[] = [];
     client = new Client("ws://localhost:2567");
     playerObjects: { [sessionId: string]: Player } = {};
-    inputPayload = {
-        left: false,
-        right: false,
-        up: false,
-        down: false,
-    };
     room!: Room;
 
     keyboard!: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -33,12 +29,10 @@ export default abstract class GameScene extends Phaser.Scene {
     elapsedTime = 0;
     fixedTimeStep = 1000 / 60;
 
-    constructor(name: string, startingX: number, startingY: number) {
+     constructor(name: string, startingX: number, startingY: number) {
         super(name);
-
         this.startingX = startingX;
         this.startingY = startingY;
-
         this.root = new QuadBlock(
             0,
             GAME_HEIGHT - GAME_HEIGHT / 5,
@@ -51,32 +45,43 @@ export default abstract class GameScene extends Phaser.Scene {
         this.keyboard = this.input.keyboard!.createCursorKeys();
         this.load.image(RessourceKeys.Ground, `assets/ground/ground_${TEXTURE_SIZE}.png`);
         this.load.image(RessourceKeys.Particle, 'assets/explosion/particle.png');
-
         this.loadAdditionalRessources();
     }
 
     async create() {
         try {
             this.room = await this.client.joinOrCreate("my_room");
-            console.log("Joined successfully!");
-
             const $ = getStateCallbacks(this.room);
 
             $(this.room.state).players.onAdd((player: any, sessionId: string) => {
                 const playerObject = new Player(this, player.x, player.y);
                 this.playerObjects[sessionId] = playerObject;
 
-                console.log("A player has joined! Their unique session id is", sessionId);
-
                 if (sessionId === this.room.sessionId) {
                     this.currentPlayer = playerObject;
-
                     this.remoteRef = this.add.rectangle(0, 0, playerObject.width, playerObject.height);
                     this.remoteRef.setStrokeStyle(1, 0xff0000);
 
                     $(player).onChange(() => {
-                        this.remoteRef.x = player.x;
-                        this.remoteRef.y = player.y;
+                        // Réconciliation: Correction si position serveur trop différente
+                        const serverX = player.x;
+                        const serverY = player.y;
+                        const predictedX = this.currentPlayer.x;
+                        const predictedY = this.currentPlayer.y;
+                        const THRESHOLD = 2;
+
+                        if (Math.abs(serverX - predictedX) > THRESHOLD || Math.abs(serverY - predictedY) > THRESHOLD) {
+                            this.currentPlayer.x = serverX;
+                            this.currentPlayer.y = serverY;
+                            // Buffer: retire les inputs déjà validés
+                            this.localInputBuffer = this.localInputBuffer.filter(input => input.timeStamp > player.timeStamp);
+                            // Réapplique les inputs non validés pour fluidité
+                            for (const input of this.localInputBuffer) {
+                                this.currentPlayer.checkForMovements(input);
+                            }
+                        }
+                        this.remoteRef.x = serverX;
+                        this.remoteRef.y = serverY;
                     });
                 } else {
                     $(player).onChange(() => {
@@ -96,12 +101,8 @@ export default abstract class GameScene extends Phaser.Scene {
         }
 
         this.generateTextures();
-
-        //this.player = new Player(this, this.startingX, this.startingY);
-
         this.drawTerrain();
         this.createTerrainColliders();
-
         this.setupCollisionEvents();
 
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => this.clickEvent(pointer));
@@ -110,39 +111,34 @@ export default abstract class GameScene extends Phaser.Scene {
     fixedTick() {
         if (!this.room) { return; }
 
-        // send input to the server
-        this.inputPayload.left = this.keyboard.left.isDown;
-        this.inputPayload.right = this.keyboard.right.isDown;
-        this.inputPayload.up = this.keyboard.up.isDown;
-        this.inputPayload.down = this.keyboard.down.isDown;
-        this.room.send("move", this.inputPayload);
+        const inputPayload = {
+            left: this.keyboard.left.isDown,
+            right: this.keyboard.right.isDown,
+            up: this.keyboard.up.isDown,
+            down: this.keyboard.down.isDown,
+            timeStamp: Date.now()
+        };
 
+        this.room.send("move", inputPayload);
+        this.localInputBuffer.push(inputPayload);
 
-        this.currentPlayer?.checkForMovements(this.keyboard);
-        this.sceneLogic();
+        this.currentPlayer?.checkForMovements(inputPayload);
 
         for (const sessionId in this.playerObjects) {
-            if (sessionId === this.room.sessionId) {
-                continue;
-            }
+            if (sessionId === this.room.sessionId) continue;
             const playerObject = this.playerObjects[sessionId];
             const { serverX, serverY } = playerObject.data.values;
-
             playerObject.x = Phaser.Math.Linear(playerObject.x, serverX, 0.175);
             playerObject.y = Phaser.Math.Linear(playerObject.y, serverY, 0.35);
         }
     }
 
-
-
     update(time: number, delta: number): void {
-        // skip loop if not connected yet.
         if (!this.currentPlayer) { return; }
-
         this.elapsedTime += delta;
         while (this.elapsedTime >= this.fixedTimeStep) {
             this.elapsedTime -= this.fixedTimeStep;
-            this.fixedTick(/*time, this.fixedTimeStep*/);
+            this.fixedTick();
         }
     }
 

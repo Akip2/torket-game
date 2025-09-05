@@ -3,4 +3,5 @@ export type InputPayload = {
     down: boolean,
     right: boolean;
     left: boolean;
+    timeStamp: number;
 }
