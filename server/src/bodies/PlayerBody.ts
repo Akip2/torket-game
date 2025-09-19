@@ -31,9 +31,11 @@ export default class PlayerBody extends GameBody {
             this.isMoving = true;
 
             if (inputPayload.left) {
-                this.setVelocity(-PLAYER_CONST.SPEED, this.body.velocity.y);
+                this.setPosition(this.getX() - PLAYER_CONST.SPEED, this.getY());
+                //this.setVelocity(-PLAYER_CONST.SPEED, this.body.velocity.y);
             } else {
-                this.setVelocity(PLAYER_CONST.SPEED, this.body.velocity.y);
+                this.setPosition(this.getX() + PLAYER_CONST.SPEED, this.getY());
+                //this.setVelocity(PLAYER_CONST.SPEED, this.body.velocity.y);
             }
         } else if (this.isMoving) {
             this.isMoving = false;

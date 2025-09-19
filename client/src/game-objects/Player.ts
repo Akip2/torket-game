@@ -31,13 +31,16 @@ export default class Player extends Phaser.Physics.Matter.Sprite {
             this.isMoving = true;
 
             if (inputPayload.left) { //Left
-                this.setVelocityX(-PLAYER_CONST.SPEED);
+                this.setPosition(this.x - PLAYER_CONST.SPEED, this.y)
+                //this.setVelocityX(-PLAYER_CONST.SPEED);
             } else { //Right
-                this.setVelocityX(PLAYER_CONST.SPEED);
+                this.setPosition(this.x + PLAYER_CONST.SPEED, this.y)
+
+                //this.setVelocityX(PLAYER_CONST.SPEED);
             }
         } else if (this.isMoving) {
             this.isMoving = false;
-            this.setVelocityX(0);
+            //his.setVelocityX(0);
         }
 
         if (inputPayload.up && this.canJump()) {
