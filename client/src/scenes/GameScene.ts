@@ -63,7 +63,6 @@ export default abstract class GameScene extends Phaser.Scene {
                     this.remoteRef.setStrokeStyle(1, 0xff0000);
 
                     $(player).onChange(() => {
-                        // Réconciliation: Correction si position serveur trop différente
                         const serverX = player.x;
                         const serverY = player.y;
                         const predictedX = this.currentPlayer.x;
@@ -73,11 +72,10 @@ export default abstract class GameScene extends Phaser.Scene {
                         if (Math.abs(serverX - predictedX) > THRESHOLD || Math.abs(serverY - predictedY) > THRESHOLD) {
                             this.currentPlayer.x = serverX;
                             this.currentPlayer.y = serverY;
-                            // Buffer: retire les inputs déjà validés
                             this.localInputBuffer = this.localInputBuffer.filter(input => input.timeStamp > player.timeStamp);
-                            // Réapplique les inputs non validés pour fluidité
+
                             for (const input of this.localInputBuffer) {
-                                this.currentPlayer.checkForMovements(input);
+                                this.currentPlayer.checkForMovements(input, true);
                             }
                         }
                         this.remoteRef.x = serverX;

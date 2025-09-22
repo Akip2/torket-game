@@ -15,7 +15,7 @@ export default class PlayerBody extends GameBody {
             friction: 0,
             frictionAir: 0.05,
             frictionStatic: 0,
-            label: `${RessourceKeys.Player}:${sessionId}`
+            label: `${RessourceKeys.Player}:${sessionId}`,
         });
         Matter.Body.setInertia(this.body, Infinity);
 
@@ -31,11 +31,9 @@ export default class PlayerBody extends GameBody {
             this.isMoving = true;
 
             if (inputPayload.left) {
-                this.setPosition(this.getX() - PLAYER_CONST.SPEED, this.getY());
-                //this.setVelocity(-PLAYER_CONST.SPEED, this.body.velocity.y);
+                this.setVelocity(-PLAYER_CONST.SPEED, this.body.velocity.y);
             } else {
-                this.setPosition(this.getX() + PLAYER_CONST.SPEED, this.getY());
-                //this.setVelocity(PLAYER_CONST.SPEED, this.body.velocity.y);
+                this.setVelocity(PLAYER_CONST.SPEED, this.body.velocity.y);
             }
         } else if (this.isMoving) {
             this.isMoving = false;

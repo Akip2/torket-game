@@ -12,7 +12,7 @@ export default class Player extends Phaser.Physics.Matter.Sprite {
         super(scene.matter.world, x, y, RessourceKeys.Player);
 
         this.setFixedRotation();
-        this.setFriction(0,0.05,0)
+        this.setFriction(0, 0.05, 0)
 
         scene.add.existing(this);
         (this.body as MatterJS.BodyType).label = RessourceKeys.Player;
@@ -26,26 +26,31 @@ export default class Player extends Phaser.Physics.Matter.Sprite {
         return Math.abs(this.body.velocity.y) < 0.1 && this.isOnGround;
     }
 
-    checkForMovements(inputPayload: InputPayload) {
-        if (inputPayload.right|| inputPayload.left) {
+    checkForMovements(inputPayload: InputPayload, instantly: boolean = false) {
+        if (inputPayload.right || inputPayload.left) {
             this.isMoving = true;
 
             if (inputPayload.left) { //Left
-                this.setPosition(this.x - PLAYER_CONST.SPEED, this.y)
-                //this.setVelocityX(-PLAYER_CONST.SPEED);
+                this.moveHorizontally(-PLAYER_CONST.SPEED, instantly);
             } else { //Right
-                this.setPosition(this.x + PLAYER_CONST.SPEED, this.y)
-
-                //this.setVelocityX(PLAYER_CONST.SPEED);
+                this.moveHorizontally(PLAYER_CONST.SPEED, instantly);
             }
         } else if (this.isMoving) {
             this.isMoving = false;
-            //his.setVelocityX(0);
+            this.setVelocityX(0);
         }
 
         if (inputPayload.up && this.canJump()) {
             this.isOnGround = false;
             this.setVelocityY(PLAYER_CONST.JUMP);
+        }
+    }
+
+    moveHorizontally(speed: number, instantly: boolean = false) {
+        if (instantly) {
+            this.setPosition(this.x + speed, this.y);
+        } else {
+            this.setVelocityX(speed);
         }
     }
 
