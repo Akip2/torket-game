@@ -1,21 +1,22 @@
 import { DEBUG, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE, TILE_SIZE } from "../../../shared/const";
 import { RessourceKeys } from "../../../shared/enums/RessourceKeys.enum";
 import Bullet from "../game-objects/Bullet";
-import Player from "../game-objects/Player";
+import PlayerClient from "../game-objects/PlayerClient";
 import { Client, Room, getStateCallbacks } from "colyseus.js";
 import { getExplosionSpriteScale } from "../../../shared/utils";
 import QuadBlock from "../../../shared/data/QuadBlock";
 import type { InputPayload } from "../../../shared/types";
+import { movePlayerFromInputs, pushPlayer } from "../../../shared/logics/player-logic";
 
 export default abstract class GameScene extends Phaser.Scene {
     localInputBuffer: InputPayload[] = [];
     client = new Client("ws://localhost:2567");
-    playerObjects: { [sessionId: string]: Player } = {};
+    playerObjects: { [sessionId: string]: PlayerClient } = {};
     room!: Room;
 
     keyboard!: Phaser.Types.Input.Keyboard.CursorKeys;
 
-    currentPlayer!: Player;
+    currentPlayer!: PlayerClient;
     remoteRef!: Phaser.GameObjects.Rectangle;
     startingX: number;
     startingY: number;
@@ -54,7 +55,7 @@ export default abstract class GameScene extends Phaser.Scene {
             const $ = getStateCallbacks(this.room);
 
             $(this.room.state).players.onAdd((player: any, sessionId: string) => {
-                const playerObject = new Player(this, player.x, player.y);
+                const playerObject = new PlayerClient(this, player.x, player.y);
                 this.playerObjects[sessionId] = playerObject;
 
                 if (sessionId === this.room.sessionId) {
@@ -75,7 +76,7 @@ export default abstract class GameScene extends Phaser.Scene {
                             this.localInputBuffer = this.localInputBuffer.filter(input => input.timeStamp > player.timeStamp);
 
                             for (const input of this.localInputBuffer) {
-                                this.currentPlayer.checkForMovements(input, true);
+                                movePlayerFromInputs(this.currentPlayer, input, true);
                             }
                         }
                         this.remoteRef.x = serverX;
@@ -120,7 +121,7 @@ export default abstract class GameScene extends Phaser.Scene {
         this.room.send("move", inputPayload);
         this.localInputBuffer.push(inputPayload);
 
-        this.currentPlayer?.checkForMovements(inputPayload);
+        movePlayerFromInputs(this.currentPlayer, inputPayload);
 
         for (const sessionId in this.playerObjects) {
             if (sessionId === this.room.sessionId) continue;
@@ -155,7 +156,7 @@ export default abstract class GameScene extends Phaser.Scene {
                 }
 
                 if (labels.includes(RessourceKeys.Player) && labels.includes(RessourceKeys.Ground)) {
-                    const player = (bodyA.label === RessourceKeys.Player ? bodyA.gameObject : bodyB.gameObject) as Player;
+                    const player = (bodyA.label === RessourceKeys.Player ? bodyA.gameObject : bodyB.gameObject) as PlayerClient;
                     player.isOnGround = true;
                 }
             }
@@ -223,7 +224,7 @@ export default abstract class GameScene extends Phaser.Scene {
 
         this.cameras.main.shake(250, 0.005); // Shake camera
 
-        this.currentPlayer.push(cx, cy, radius); // Push back player
+        pushPlayer(this.currentPlayer, cx, cy, radius);
     }
 
     drawTerrain() {

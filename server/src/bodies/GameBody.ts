@@ -15,8 +15,24 @@ export default abstract class GameBody {
         Matter.Body.setPosition(this.body, { x, y });
     }
 
+    getVelocity() {
+        return this.body.velocity;
+    }
+
+    getPosition() {
+        return this.body.position;
+    }
+
     setVelocity(x: number, y: number) {
         Matter.Body.setVelocity(this.body, { x, y });
+    }
+
+    setVelocityY(y: number): void {
+        this.setVelocity(this.body.velocity.x, y);
+    }
+
+    setVelocityX(x: number): void {
+        this.setVelocity(x, this.body.velocity.y);
     }
 
     addToWorld(world: World) {

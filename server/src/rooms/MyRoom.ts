@@ -2,12 +2,13 @@ import { Room, Client } from "@colyseus/core";
 import { MyRoomState, Player } from "./schema/MyRoomState";
 import { Engine } from "matter-js"
 import { GAME_HEIGHT, GAME_WIDTH, GRAVITY, PLAYER_CONST } from "@shared/const";
-import PlayerBody from "../bodies/PlayerBody";
+import PlayerServer from "../bodies/PlayerServer";
 import GroundBlock from "../bodies/GroundBlock";
 import Matter from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { parsePlayerLabel } from "@shared/utils";
 import { InputPayload } from "@shared/types";
+import { movePlayerFromInputs } from "@shared/logics/player-logic";
 
 export class MyRoom extends Room<MyRoomState> {
     elapsedTime = 0;
@@ -16,7 +17,7 @@ export class MyRoom extends Room<MyRoomState> {
     state = new MyRoomState();
 
     engine!: Engine;
-    playerBodies: Map<string, PlayerBody> = new Map();
+    playerBodies: Map<string, PlayerServer> = new Map();
 
     onCreate(options: any) {
         this.onMessage("move", (client, inputPayload: InputPayload) => {
@@ -74,7 +75,8 @@ export class MyRoom extends Room<MyRoomState> {
 
             let input: InputPayload;
             while (input = player.inputQueue.shift()) {
-                playerBody.checkForMovements(input);
+                movePlayerFromInputs(playerBody, input);
+                //playerBody.checkForMovements(input);
                 player.timeStamp = input.timeStamp; // réconciliation côté client
             }
         });
@@ -95,7 +97,7 @@ export class MyRoom extends Room<MyRoomState> {
         player.x = Math.random() * GAME_WIDTH;
         player.y = 0;
         player.timeStamp = 0;
-        const playerBody = new PlayerBody(client.sessionId, player.x, player.y);
+        const playerBody = new PlayerServer(client.sessionId, player.x, player.y);
         playerBody.addToWorld(this.engine.world);
         this.playerBodies.set(client.sessionId, playerBody);
         this.state.players.set(client.sessionId, player);
