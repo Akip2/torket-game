@@ -1,6 +1,7 @@
+import { BasicBody } from "@shared/interfaces/BasicBody";
 import Matter, { World, Body } from "matter-js";
 
-export default abstract class GameBody {
+export default abstract class GameBody implements BasicBody {
     body: Body;
 
     getX() {

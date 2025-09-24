@@ -15,3 +15,7 @@ export const PLAYER_CONST = {
     SPEED: 3,
     JUMP: -14
 }
+
+export const BULLER_CONST = {
+    RADIUS: 4
+}

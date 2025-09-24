@@ -5,3 +5,9 @@ export type InputPayload = {
     left: boolean;
     timeStamp: number;
 }
+
+export type ShootInfo = {
+    force: number,
+    x: number,
+    y: number
+}

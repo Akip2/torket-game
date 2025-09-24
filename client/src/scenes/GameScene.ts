@@ -1,12 +1,13 @@
-import { DEBUG, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE, TILE_SIZE } from "../../../shared/const";
+import { BULLER_CONST, DEBUG, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE, TILE_SIZE } from "../../../shared/const";
 import { RessourceKeys } from "../../../shared/enums/RessourceKeys.enum";
-import Bullet from "../game-objects/Bullet";
+import BulletClient from "../game-objects/BulletClient";
 import PlayerClient from "../game-objects/PlayerClient";
 import { Client, Room, getStateCallbacks } from "colyseus.js";
 import { getExplosionSpriteScale } from "../../../shared/utils";
 import QuadBlock from "../../../shared/data/QuadBlock";
 import type { InputPayload } from "../../../shared/types";
 import { movePlayerFromInputs, pushPlayer } from "../../../shared/logics/player-logic";
+import { shoot } from "../../../shared/logics/bullet-logic";
 
 export default abstract class GameScene extends Phaser.Scene {
     localInputBuffer: InputPayload[] = [];
@@ -30,7 +31,7 @@ export default abstract class GameScene extends Phaser.Scene {
     elapsedTime = 0;
     fixedTimeStep = 1000 / 60;
 
-     constructor(name: string, startingX: number, startingY: number) {
+    constructor(name: string, startingX: number, startingY: number) {
         super(name);
         this.startingX = startingX;
         this.startingY = startingY;
@@ -147,7 +148,7 @@ export default abstract class GameScene extends Phaser.Scene {
                 const labels = [bodyA.label, bodyB.label];
 
                 if (labels.includes(RessourceKeys.Bullet) && labels.includes(RessourceKeys.Ground)) {
-                    const bullet = (bodyA.label === RessourceKeys.Bullet ? bodyA.gameObject : bodyB.gameObject) as Bullet;
+                    const bullet = (bodyA.label === RessourceKeys.Bullet ? bodyA.gameObject : bodyB.gameObject) as BulletClient;
 
                     if (bullet) {
                         this.explodeTerrain(bullet.x, bullet.y, EXPLOSION_RADIUS);
@@ -181,22 +182,29 @@ export default abstract class GameScene extends Phaser.Scene {
         g.destroy();
     }
 
-    generateBulletTexture(size = 4) {
+    generateBulletTexture(radius = BULLER_CONST.RADIUS) {
         const g = this.add.graphics();
 
         g.fillStyle(0xFFFFFF, 1);
-        g.fillCircle(size, size, size);
+        g.fillCircle(radius, radius, radius);
 
-        g.generateTexture(RessourceKeys.Bullet, size * 2, size * 2);
+        g.generateTexture(RessourceKeys.Bullet, radius * 2, radius * 2);
         g.destroy();
     }
 
     clickEvent(pointer: Phaser.Input.Pointer) {
         const x = pointer.x;
         const y = pointer.y;
+        const force = 20;
 
-        const bullet = new Bullet(this, this.currentPlayer.x, this.currentPlayer.y);
-        bullet.shoot(x, y, 20);
+        this.room.send("shoot", {
+            x: x,
+            y: y,
+            force: force,
+        })
+
+        const bullet = new BulletClient(this, this.currentPlayer.x, this.currentPlayer.y);
+        shoot(bullet, x, y, force);
     }
 
     explodeTerrain(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
@@ -224,7 +232,10 @@ export default abstract class GameScene extends Phaser.Scene {
 
         this.cameras.main.shake(250, 0.005); // Shake camera
 
-        pushPlayer(this.currentPlayer, cx, cy, radius);
+        for (const sessionId in this.playerObjects) {
+            const playerObject = this.playerObjects[sessionId];
+            pushPlayer(playerObject, cx, cy, radius);
+        }
     }
 
     drawTerrain() {

@@ -1,4 +1,5 @@
 import { GAME_HEIGHT, GAME_WIDTH, TILE_SIZE } from "../const";
+import { circleIntersectsRectangle } from "../utils";
 
 export default class QuadBlock {
     x: number;
@@ -73,10 +74,12 @@ export default class QuadBlock {
     }
 
     destroy(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
-        const rect = new Phaser.Geom.Rectangle(this.x, this.y, this.width, this.height);
-        const circle = new Phaser.Geom.Circle(cx, cy, radius);
+        const rectX = this.x;
+        const rectY = this.y;
+        const rectW = this.width;
+        const rectH = this.height;
 
-        if (!Phaser.Geom.Intersects.CircleToRectangle(circle, rect)) return;
+        if (!circleIntersectsRectangle(cx, cy, radius, rectX, rectY, rectW, rectH)) return;
 
         if (this.width <= minSize || this.height <= minSize) {
             this.turnEmpty();

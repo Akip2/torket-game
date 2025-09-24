@@ -1,15 +1,17 @@
 import { Room, Client } from "@colyseus/core";
 import { MyRoomState, Player } from "./schema/MyRoomState";
-import { Engine } from "matter-js"
-import { GAME_HEIGHT, GAME_WIDTH, GRAVITY } from "@shared/const";
+import { Engine, World } from "matter-js"
+import { BULLER_CONST, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, GRAVITY, TILE_SIZE } from "@shared/const";
 import PlayerServer from "../bodies/PlayerServer";
 import TerrainBlock from "../bodies/TerrainBlock";
 import Matter from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { parsePlayerLabel } from "@shared/utils";
-import { InputPayload } from "@shared/types";
-import { movePlayerFromInputs } from "@shared/logics/player-logic";
+import { InputPayload, ShootInfo } from "@shared/types";
+import { movePlayerFromInputs, pushPlayer } from "@shared/logics/player-logic";
 import QuadBlock from "@shared/data/QuadBlock";
+import BullerServer from "src/bodies/BulletServer";
+import { shoot } from "@shared/logics/bullet-logic";
 
 export class MyRoom extends Room<MyRoomState> {
     elapsedTime = 0;
@@ -27,6 +29,14 @@ export class MyRoom extends Room<MyRoomState> {
         this.onMessage("move", (client, inputPayload: InputPayload) => {
             const player = this.state.players.get(client.sessionId);
             player.inputQueue.push(inputPayload);
+        });
+
+        this.onMessage("shoot", (client, shootInfo: ShootInfo) => {
+            const playerBody = this.playerBodies.get(client.sessionId);
+            const bullet = new BullerServer(playerBody.getX(), playerBody.getY(), BULLER_CONST.RADIUS);
+            bullet.addToWorld(this.engine.world);
+
+            shoot(bullet, shootInfo.x, shootInfo.y, shootInfo.force);
         });
 
         let elapsedTime = 0;
@@ -63,11 +73,30 @@ export class MyRoom extends Room<MyRoomState> {
                 const { bodyA, bodyB } = pair;
                 const labels = [bodyA.label, bodyB.label];
                 const playerLabel = labels.find(label => label.startsWith("player:"));
+
+                if (labels.includes(RessourceKeys.Bullet) && labels.includes(RessourceKeys.Ground)) {
+                    const bullet = (bodyA.label === RessourceKeys.Bullet ? bodyA : bodyB);
+
+                    if (bullet) {
+                        this.explodeTerrain(bullet.position.x, bullet.position.y, EXPLOSION_RADIUS);
+                        World.remove(this.engine.world, bullet);
+                    }
+                }
+
                 if (playerLabel && labels.includes(RessourceKeys.Ground)) {
                     const sessionId = parsePlayerLabel(playerLabel).sessionId;
                     this.playerBodies.get(sessionId).isOnGround = true;
                 }
             }
+        });
+    }
+
+    explodeTerrain(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
+        this.root.destroy(cx, cy, radius, minSize);
+        this.recreateTerrain();
+
+        this.playerBodies.forEach(p => {
+            pushPlayer(p, cx, cy, radius);
         });
     }
 
@@ -123,6 +152,7 @@ export class MyRoom extends Room<MyRoomState> {
 
     recreateTerrain() {
         this.terrainBlocks.forEach(t => t.removeFromWorld(this.engine.world));
+        this.terrainBlocks = [];
         this.createTerrain();
     }
 
