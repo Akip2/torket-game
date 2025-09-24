@@ -1,14 +1,15 @@
 import { Room, Client } from "@colyseus/core";
 import { MyRoomState, Player } from "./schema/MyRoomState";
 import { Engine } from "matter-js"
-import { GAME_HEIGHT, GAME_WIDTH, GRAVITY, PLAYER_CONST } from "@shared/const";
+import { GAME_HEIGHT, GAME_WIDTH, GRAVITY } from "@shared/const";
 import PlayerServer from "../bodies/PlayerServer";
-import GroundBlock from "../bodies/GroundBlock";
+import TerrainBlock from "../bodies/TerrainBlock";
 import Matter from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { parsePlayerLabel } from "@shared/utils";
 import { InputPayload } from "@shared/types";
 import { movePlayerFromInputs } from "@shared/logics/player-logic";
+import QuadBlock from "@shared/data/QuadBlock";
 
 export class MyRoom extends Room<MyRoomState> {
     elapsedTime = 0;
@@ -18,6 +19,9 @@ export class MyRoom extends Room<MyRoomState> {
 
     engine!: Engine;
     playerBodies: Map<string, PlayerServer> = new Map();
+
+    root: QuadBlock;
+    terrainBlocks: TerrainBlock[] = [];
 
     onCreate(options: any) {
         this.onMessage("move", (client, inputPayload: InputPayload) => {
@@ -42,14 +46,14 @@ export class MyRoom extends Room<MyRoomState> {
             gravity: { x: 0, y: GRAVITY }
         });
 
-        const ground = new GroundBlock(
-            GAME_WIDTH / 2,
-            GAME_HEIGHT - (GAME_HEIGHT / 5) / 2,
+        this.root = new QuadBlock(
+            0,
+            GAME_HEIGHT - GAME_HEIGHT / 5,
             GAME_WIDTH,
             GAME_HEIGHT / 5,
         );
-        ground.addToWorld(this.engine.world);
 
+        this.createTerrain();
         this.setupCollisionEvents();
     }
 
@@ -76,7 +80,6 @@ export class MyRoom extends Room<MyRoomState> {
             let input: InputPayload;
             while (input = player.inputQueue.shift()) {
                 movePlayerFromInputs(playerBody, input);
-                //playerBody.checkForMovements(input);
                 player.timeStamp = input.timeStamp; // réconciliation côté client
             }
         });
@@ -112,5 +115,34 @@ export class MyRoom extends Room<MyRoomState> {
         this.state.players.delete(client.sessionId);
     }
 
-    onDispose() {}
+    onDispose() { }
+
+    createTerrain() {
+        this.createTerrainBlock(this.root);
+    }
+
+    recreateTerrain() {
+        this.terrainBlocks.forEach(t => t.removeFromWorld(this.engine.world));
+        this.createTerrain();
+    }
+
+    createTerrainBlock(block: QuadBlock) {
+        if (block.isEmpty()) return;
+
+        if (block.filled) {
+            const terrainBlock = new TerrainBlock(
+                block.x + block.width / 2,
+                block.y + block.height / 2,
+                block.width,
+                block.height
+            )
+
+            this.terrainBlocks.push(terrainBlock);
+            terrainBlock.addToWorld(this.engine.world);
+        } else if (block.hasChildren()) {
+            for (const child of block.children) {
+                this.createTerrainBlock(child);
+            }
+        }
+    }
 }
