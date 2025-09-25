@@ -1,9 +1,9 @@
 import { PLAYER_CONST } from "../const";
 import Vector from "../data/Vector";
-import type { Player } from "../interfaces/Player";
+import type { IPlayer } from "../interfaces/Player.interface";
 import type { InputPayload } from "../types";
 
-export function movePlayerFromInputs(player: Player, inputPayload: InputPayload, instantly: boolean = false) {
+export function movePlayerFromInputs(player: IPlayer, inputPayload: InputPayload, instantly: boolean = false) {
     if (inputPayload.right || inputPayload.left) {
         player.isMoving = true;
 
@@ -23,11 +23,11 @@ export function movePlayerFromInputs(player: Player, inputPayload: InputPayload,
     }
 }
 
-export function canPlayerJump(player: Player) {
+export function canPlayerJump(player: IPlayer) {
     return Math.abs(player.getVelocity().y) < 0.1 && player.isOnGround;
 }
 
-export function pushPlayer(player: Player, cx: number, cy: number, radius: number) {
+export function pushPlayer(player: IPlayer, cx: number, cy: number, radius: number) {
     const playerPosition = player.getPosition();
     const pushVector = new Vector(playerPosition.x - cx, playerPosition.y - cy);
     const dist = pushVector.getNorm();

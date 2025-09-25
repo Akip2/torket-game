@@ -1,8 +1,8 @@
 import { RessourceKeys } from "../../../shared/enums/RessourceKeys.enum";
-import type { Player } from "../../../shared/interfaces/Player";
+import type { IPlayer } from "../../../shared/interfaces/Player.interface";
 import type GameScene from "../scenes/GameScene";
 
-export default class PlayerClient extends Phaser.Physics.Matter.Sprite implements Player {
+export default class PlayerClient extends Phaser.Physics.Matter.Sprite implements IPlayer {
     isMoving: boolean;
     isOnGround: boolean;
 

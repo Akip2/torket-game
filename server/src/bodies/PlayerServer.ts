@@ -2,9 +2,9 @@ import { PLAYER_CONST } from "@shared/const";
 import Matter, { Bodies, Body } from "matter-js";
 import GameBody from "./GameBody";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
-import { Player } from "@shared/interfaces/Player";
+import { IPlayer } from "@shared/interfaces/Player.interface";
 
-export default class PlayerServer extends GameBody implements Player {
+export default class PlayerServer extends GameBody implements IPlayer {
     isMoving: boolean;
     isOnGround: boolean;
 
