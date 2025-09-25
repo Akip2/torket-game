@@ -1,4 +1,4 @@
-import { GAME_HEIGHT, GAME_WIDTH } from "../../../shared/const";
+import { GAME_HEIGHT, GAME_WIDTH } from "@shared/const";
 import GameScene from "./GameScene";
 
 export default class TestScene extends GameScene {

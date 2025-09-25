@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import MenuScene from "./scenes/MenuScene";
 import TestScene from "./scenes/TestScene";
-import { GAME_HEIGHT, GAME_WIDTH, GRAVITY } from "../../shared/const";
+import { GAME_HEIGHT, GAME_WIDTH, GRAVITY } from "@shared/const";
 
 const config = {
     type: Phaser.AUTO,

@@ -1,4 +1,4 @@
-import { getTextWidth } from "../../../shared/utils";
+import { getTextWidth } from "@shared/utils";
 import Button from "../ui/Button"
 import { ButtonStyle } from "../ui/ui-styles";
 

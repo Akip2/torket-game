@@ -1,5 +1,5 @@
-import { RessourceKeys } from "../../../shared/enums/RessourceKeys.enum";
-import type { IBasicBody } from "../../../shared/interfaces/BasicBody.interface";
+import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
+import type { IBasicBody } from "@shared/interfaces/BasicBody.interface";
 import type GameScene from "../scenes/GameScene";
 
 export default class BulletClient extends Phaser.Physics.Matter.Sprite implements IBasicBody{

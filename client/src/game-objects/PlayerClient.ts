@@ -1,5 +1,5 @@
-import { RessourceKeys } from "../../../shared/enums/RessourceKeys.enum";
-import type { IPlayer } from "../../../shared/interfaces/Player.interface";
+import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
+import type { IPlayer } from "@shared/interfaces/Player.interface";
 import type GameScene from "../scenes/GameScene";
 
 export default class PlayerClient extends Phaser.Physics.Matter.Sprite implements IPlayer {

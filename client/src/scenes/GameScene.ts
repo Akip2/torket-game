@@ -1,14 +1,14 @@
-import { BULLER_CONST, DEBUG, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE, TILE_SIZE } from "../../../shared/const";
-import { RessourceKeys } from "../../../shared/enums/RessourceKeys.enum";
+import { BULLER_CONST, DEBUG, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE, TILE_SIZE } from "@shared/const";
+import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import BulletClient from "../game-objects/BulletClient";
 import PlayerClient from "../game-objects/PlayerClient";
 import { Client, Room, getStateCallbacks } from "colyseus.js";
-import { getExplosionSpriteScale } from "../../../shared/utils";
-import QuadBlock from "../../../shared/data/QuadBlock";
-import type { InputPayload } from "../../../shared/types";
-import { movePlayerFromInputs, pushPlayer } from "../../../shared/logics/player-logic";
-import { shoot } from "../../../shared/logics/bullet-logic";
-import { RequestTypes } from "../../../shared/enums/RequestTypes.enum";
+import { getExplosionSpriteScale } from "@shared/utils";
+import QuadBlock from "@shared/data/QuadBlock";
+import type { InputPayload } from "@shared/types";
+import { movePlayerFromInputs, pushPlayer } from "@shared/logics/player-logic";
+import { shoot } from "@shared/logics/bullet-logic";
+import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 
 export default abstract class GameScene extends Phaser.Scene {
     localInputBuffer: InputPayload[] = [];
