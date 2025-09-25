@@ -134,7 +134,7 @@ export default abstract class GameScene extends Phaser.Scene {
         }
     }
 
-    update(time: number, delta: number): void {
+    update(_time: number, delta: number): void {
         if (!this.currentPlayer) { return; }
         this.elapsedTime += delta;
         while (this.elapsedTime >= this.fixedTimeStep) {
