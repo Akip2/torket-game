@@ -22,7 +22,7 @@ export default class PlayerServer extends GameBody implements IPlayer {
         this.isMoving = false;
     }
 
-    moveHorizontally(speed: number, instantly: boolean): void {
+    moveHorizontally(speed: number): void {
         this.setVelocityX(speed);
     }
 }
