@@ -8,6 +8,7 @@ import QuadBlock from "../../../shared/data/QuadBlock";
 import type { InputPayload } from "../../../shared/types";
 import { movePlayerFromInputs, pushPlayer } from "../../../shared/logics/player-logic";
 import { shoot } from "../../../shared/logics/bullet-logic";
+import { RequestTypes } from "../../../shared/enums/RequestTypes.enum";
 
 export default abstract class GameScene extends Phaser.Scene {
     localInputBuffer: InputPayload[] = [];
@@ -119,7 +120,7 @@ export default abstract class GameScene extends Phaser.Scene {
             timeStamp: Date.now()
         };
 
-        this.room.send("move", inputPayload);
+        this.room.send(RequestTypes.Move, inputPayload);
         this.localInputBuffer.push(inputPayload);
 
         movePlayerFromInputs(this.currentPlayer, inputPayload);
@@ -197,7 +198,7 @@ export default abstract class GameScene extends Phaser.Scene {
         const y = pointer.y;
         const force = 20;
 
-        this.room.send("shoot", {
+        this.room.send(RequestTypes.Shoot, {
             x: x,
             y: y,
             force: force,

@@ -12,6 +12,7 @@ import { movePlayerFromInputs, pushPlayer } from "@shared/logics/player-logic";
 import QuadBlock from "@shared/data/QuadBlock";
 import BullerServer from "src/bodies/BulletServer";
 import { shoot } from "@shared/logics/bullet-logic";
+import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 
 export class MyRoom extends Room<MyRoomState> {
     elapsedTime = 0;
@@ -26,12 +27,12 @@ export class MyRoom extends Room<MyRoomState> {
     terrainBlocks: TerrainBlock[] = [];
 
     onCreate(options: any) {
-        this.onMessage("move", (client, inputPayload: InputPayload) => {
+        this.onMessage(RequestTypes.Move, (client, inputPayload: InputPayload) => {
             const player = this.state.players.get(client.sessionId);
             player.inputQueue.push(inputPayload);
         });
 
-        this.onMessage("shoot", (client, shootInfo: ShootInfo) => {
+        this.onMessage(RequestTypes.Shoot, (client, shootInfo: ShootInfo) => {
             const playerBody = this.playerBodies.get(client.sessionId);
             const bullet = new BullerServer(playerBody.getX(), playerBody.getY(), BULLER_CONST.RADIUS);
             bullet.addToWorld(this.engine.world);
