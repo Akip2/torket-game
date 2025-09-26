@@ -1,15 +1,15 @@
 import { TILE_SIZE } from "@shared/const";
 import QuadBlock from "@shared/data/QuadBlock";
-import { Engine } from "matter-js";
 import TerrainBlock from "src/bodies/TerrainBlock";
+import PhysicsManager from "./PhysicsManager";
 
 export default class TerrainManager {
-    engine: Engine;
+    physicsManager: PhysicsManager;
     root: QuadBlock;
     terrainBlocks: TerrainBlock[] = [];
 
-    constructor(engine: Engine, root: QuadBlock) {
-        this.engine = engine;
+    constructor(physicsManager: PhysicsManager, root: QuadBlock) {
+        this.physicsManager = physicsManager;
         this.root = root;
     }
 
@@ -18,7 +18,7 @@ export default class TerrainManager {
     }
 
     recreateTerrain() {
-        this.terrainBlocks.forEach(t => t.removeFromWorld(this.engine.world));
+        this.terrainBlocks.forEach(t => this.physicsManager.remove(t));
         this.terrainBlocks = [];
         this.createTerrain();
     }
@@ -35,7 +35,7 @@ export default class TerrainManager {
             )
 
             this.terrainBlocks.push(terrainBlock);
-            terrainBlock.addToWorld(this.engine.world);
+            this.physicsManager.add(terrainBlock);
         } else if (block.hasChildren()) {
             for (const child of block.children) {
                 this.createTerrainBlock(child);

@@ -1,7 +1,6 @@
 import { Room, Client } from "@colyseus/core";
 import { MyRoomState, Player } from "./schema/MyRoomState";
-import { Engine, World } from "matter-js"
-import { BULLER_CONST, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, GRAVITY, TILE_SIZE } from "@shared/const";
+import { BULLER_CONST, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TILE_SIZE } from "@shared/const";
 import PlayerServer from "../bodies/PlayerServer";
 import Matter from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
@@ -13,17 +12,17 @@ import BullerServer from "src/bodies/BulletServer";
 import { shoot } from "@shared/logics/bullet-logic";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import TerrainManager from "src/managers/TerrainManager";
+import PhysicsManager from "src/managers/PhysicsManager";
 
 export class MyRoom extends Room<MyRoomState> {
-    elapsedTime = 0;
     fixedTimeStep = 1000 / 60;
     maxClients = 4;
     state = new MyRoomState();
 
-    engine!: Engine;
     playerBodies: Map<string, PlayerServer> = new Map();
 
     terrainManager: TerrainManager;
+    physicsManager: PhysicsManager = new PhysicsManager();
 
     onCreate(options: any) {
         this.onMessage(RequestTypes.Move, (client, inputPayload: InputPayload) => {
@@ -34,7 +33,7 @@ export class MyRoom extends Room<MyRoomState> {
         this.onMessage(RequestTypes.Shoot, (client, shootInfo: ShootInfo) => {
             const playerBody = this.playerBodies.get(client.sessionId);
             const bullet = new BullerServer(playerBody.getX(), playerBody.getY(), BULLER_CONST.RADIUS);
-            bullet.addToWorld(this.engine.world);
+            this.physicsManager.add(bullet);
 
             shoot(bullet, shootInfo.x, shootInfo.y, shootInfo.force);
         });
@@ -48,7 +47,7 @@ export class MyRoom extends Room<MyRoomState> {
             }
         });
 
-        this.setupEnvironment();
+        this.setupCollisionEvents();
         this.setupTerrain();
     }
 
@@ -60,30 +59,23 @@ export class MyRoom extends Room<MyRoomState> {
             GAME_HEIGHT / 5,
         );
 
-        this.terrainManager = new TerrainManager(this.engine, defaultMap);
+        this.terrainManager = new TerrainManager(this.physicsManager, defaultMap);
         this.terrainManager.createTerrain();
     }
 
-    setupEnvironment() {
-        this.engine = Engine.create({
-            gravity: { x: 0, y: GRAVITY }
-        });
-        this.setupCollisionEvents();
-    }
-
     setupCollisionEvents() {
-        Matter.Events.on(this.engine, "collisionStart", (event) => {
+        Matter.Events.on(this.physicsManager.engine, "collisionStart", (event) => {
             for (const pair of event.pairs) {
                 const { bodyA, bodyB } = pair;
                 const labels = [bodyA.label, bodyB.label];
-                const playerLabel = labels.find(label => label.startsWith("player:"));
+                const playerLabel = labels.find(label => label.startsWith(`${RessourceKeys.Player}:`));
 
                 if (labels.includes(RessourceKeys.Bullet) && labels.includes(RessourceKeys.Ground)) {
                     const bullet = (bodyA.label === RessourceKeys.Bullet ? bodyA : bodyB);
 
                     if (bullet) {
                         this.explode(bullet.position.x, bullet.position.y, EXPLOSION_RADIUS);
-                        World.remove(this.engine.world, bullet);
+                        this.physicsManager.removeBrut(bullet);
                     }
                 }
 
@@ -107,7 +99,7 @@ export class MyRoom extends Room<MyRoomState> {
             }
         });
 
-        Engine.update(this.engine, deltaTime);
+        this.physicsManager.update(deltaTime);
 
         this.state.players.forEach((player, id) => {
             const playerBody = this.playerBodies.get(id);
@@ -122,8 +114,10 @@ export class MyRoom extends Room<MyRoomState> {
         player.x = Math.random() * GAME_WIDTH;
         player.y = 0;
         player.timeStamp = 0;
+
         const playerBody = new PlayerServer(client.sessionId, player.x, player.y);
-        playerBody.addToWorld(this.engine.world);
+        this.physicsManager.add(playerBody);
+
         this.playerBodies.set(client.sessionId, playerBody);
         this.state.players.set(client.sessionId, player);
     }
@@ -131,7 +125,7 @@ export class MyRoom extends Room<MyRoomState> {
     onLeave(client: Client, consented: boolean) {
         const playerBody = this.playerBodies.get(client.sessionId);
         if (playerBody) {
-            playerBody.removeFromWorld(this.engine.world);
+            this.physicsManager.remove(playerBody);
             this.playerBodies.delete(client.sessionId);
         }
         this.state.players.delete(client.sessionId);
