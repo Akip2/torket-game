@@ -3,7 +3,6 @@ import { MyRoomState, Player } from "./schema/MyRoomState";
 import { Engine, World } from "matter-js"
 import { BULLER_CONST, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, GRAVITY, TILE_SIZE } from "@shared/const";
 import PlayerServer from "../bodies/PlayerServer";
-import TerrainBlock from "../bodies/TerrainBlock";
 import Matter from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { parsePlayerLabel } from "@shared/utils";
@@ -13,6 +12,7 @@ import QuadBlock from "@shared/data/QuadBlock";
 import BullerServer from "src/bodies/BulletServer";
 import { shoot } from "@shared/logics/bullet-logic";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
+import TerrainManager from "src/managers/TerrainManager";
 
 export class MyRoom extends Room<MyRoomState> {
     elapsedTime = 0;
@@ -23,8 +23,7 @@ export class MyRoom extends Room<MyRoomState> {
     engine!: Engine;
     playerBodies: Map<string, PlayerServer> = new Map();
 
-    root: QuadBlock;
-    terrainBlocks: TerrainBlock[] = [];
+    terrainManager: TerrainManager;
 
     onCreate(options: any) {
         this.onMessage(RequestTypes.Move, (client, inputPayload: InputPayload) => {
@@ -50,21 +49,25 @@ export class MyRoom extends Room<MyRoomState> {
         });
 
         this.setupEnvironment();
+        this.setupTerrain();
     }
 
-    setupEnvironment() {
-        this.engine = Engine.create({
-            gravity: { x: 0, y: GRAVITY }
-        });
-
-        this.root = new QuadBlock(
+    setupTerrain() {
+        const defaultMap = new QuadBlock(
             0,
             GAME_HEIGHT - GAME_HEIGHT / 5,
             GAME_WIDTH,
             GAME_HEIGHT / 5,
         );
 
-        this.createTerrain();
+        this.terrainManager = new TerrainManager(this.engine, defaultMap);
+        this.terrainManager.createTerrain();
+    }
+
+    setupEnvironment() {
+        this.engine = Engine.create({
+            gravity: { x: 0, y: GRAVITY }
+        });
         this.setupCollisionEvents();
     }
 
@@ -79,7 +82,7 @@ export class MyRoom extends Room<MyRoomState> {
                     const bullet = (bodyA.label === RessourceKeys.Bullet ? bodyA : bodyB);
 
                     if (bullet) {
-                        this.explodeTerrain(bullet.position.x, bullet.position.y, EXPLOSION_RADIUS);
+                        this.explode(bullet.position.x, bullet.position.y, EXPLOSION_RADIUS);
                         World.remove(this.engine.world, bullet);
                     }
                 }
@@ -92,17 +95,7 @@ export class MyRoom extends Room<MyRoomState> {
         });
     }
 
-    explodeTerrain(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
-        this.root.destroy(cx, cy, radius, minSize);
-        this.recreateTerrain();
-
-        this.playerBodies.forEach(p => {
-            pushPlayer(p, cx, cy, radius);
-        });
-    }
-
     fixedTick(deltaTime: number) {
-        // Appliquer les inputs
         this.state.players.forEach((player, id) => {
             const playerBody = this.playerBodies.get(id);
             if (!playerBody) return;
@@ -110,13 +103,12 @@ export class MyRoom extends Room<MyRoomState> {
             let input: InputPayload;
             while (input = player.inputQueue.shift()) {
                 movePlayerFromInputs(playerBody, input);
-                player.timeStamp = input.timeStamp; // réconciliation côté client
+                player.timeStamp = input.timeStamp;
             }
         });
 
         Engine.update(this.engine, deltaTime);
 
-        // Synchronisation
         this.state.players.forEach((player, id) => {
             const playerBody = this.playerBodies.get(id);
             if (!playerBody) return;
@@ -147,33 +139,10 @@ export class MyRoom extends Room<MyRoomState> {
 
     onDispose() { }
 
-    createTerrain() {
-        this.createTerrainBlock(this.root);
-    }
-
-    recreateTerrain() {
-        this.terrainBlocks.forEach(t => t.removeFromWorld(this.engine.world));
-        this.terrainBlocks = [];
-        this.createTerrain();
-    }
-
-    createTerrainBlock(block: QuadBlock) {
-        if (block.isEmpty()) return;
-
-        if (block.filled) {
-            const terrainBlock = new TerrainBlock(
-                block.x + block.width / 2,
-                block.y + block.height / 2,
-                block.width,
-                block.height
-            )
-
-            this.terrainBlocks.push(terrainBlock);
-            terrainBlock.addToWorld(this.engine.world);
-        } else if (block.hasChildren()) {
-            for (const child of block.children) {
-                this.createTerrainBlock(child);
-            }
-        }
+    explode(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
+        this.terrainManager.explodeTerrain(cx, cy, EXPLOSION_RADIUS);
+        this.playerBodies.forEach(p => {
+            pushPlayer(p, cx, cy, radius);
+        });
     }
 }
