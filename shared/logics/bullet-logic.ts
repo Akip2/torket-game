@@ -1,7 +1,7 @@
 import Vector from "../data/Vector";
-import type { BasicBody } from "../interfaces/BasicBody"
+import type { IBasicBody } from "../interfaces/BasicBody.interface"
 
-export function shoot(bullet: BasicBody, x: number, y: number, force: number) {
+export function shoot(bullet: IBasicBody, x: number, y: number, force: number) {
     const bulletPosition = bullet.getPosition();
 
     const bulletVector = new Vector(

@@ -1,111 +1,114 @@
-import { BULLER_CONST, DEBUG, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE, TILE_SIZE } from "../../../shared/const";
-import { RessourceKeys } from "../../../shared/enums/RessourceKeys.enum";
+import { EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE, TILE_SIZE } from "@shared/const";
+import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import BulletClient from "../game-objects/BulletClient";
 import PlayerClient from "../game-objects/PlayerClient";
 import { Client, Room, getStateCallbacks } from "colyseus.js";
-import { getExplosionSpriteScale } from "../../../shared/utils";
-import QuadBlock from "../../../shared/data/QuadBlock";
-import type { InputPayload } from "../../../shared/types";
-import { movePlayerFromInputs, pushPlayer } from "../../../shared/logics/player-logic";
-import { shoot } from "../../../shared/logics/bullet-logic";
+import type { InputPayload } from "@shared/types";
+import { movePlayerFromInputs, pushPlayer } from "@shared/logics/player-logic";
+import { shoot } from "@shared/logics/bullet-logic";
+import { RequestTypes } from "@shared/enums/RequestTypes.enum";
+import TextureManager from "../managers/TextureManager";
+import TerrainManager from "../managers/TerrainManager";
+import QuadBlock from "@shared/data/QuadBlock";
+import { getExplosionSpriteScale } from "@shared/utils";
 
-export default abstract class GameScene extends Phaser.Scene {
-    localInputBuffer: InputPayload[] = [];
+export default class GameScene extends Phaser.Scene {
     client = new Client("ws://localhost:2567");
-    playerObjects: { [sessionId: string]: PlayerClient } = {};
     room!: Room;
-
-    keyboard!: Phaser.Types.Input.Keyboard.CursorKeys;
-
-    currentPlayer!: PlayerClient;
-    remoteRef!: Phaser.GameObjects.Rectangle;
-    startingX: number;
-    startingY: number;
-
-    root: QuadBlock;
-    terrainColliders: MatterJS.BodyType[] = [];
-    terrainSprites: Phaser.GameObjects.TileSprite[] = [];
 
     debugGraphics: Phaser.GameObjects.Graphics[] = [];
 
     elapsedTime = 0;
     fixedTimeStep = 1000 / 60;
 
-    constructor(name: string, startingX: number, startingY: number) {
+    localInputBuffer: InputPayload[] = [];
+    keyboard!: Phaser.Types.Input.Keyboard.CursorKeys;
+
+    playerObjects: { [sessionId: string]: PlayerClient } = {};
+    currentPlayer!: PlayerClient;
+    remoteRef!: Phaser.GameObjects.Rectangle;
+
+    terrainManager!: TerrainManager;
+
+    constructor(name: string) {
         super(name);
-        this.startingX = startingX;
-        this.startingY = startingY;
-        this.root = new QuadBlock(
-            0,
-            GAME_HEIGHT - GAME_HEIGHT / 5,
-            GAME_WIDTH,
-            GAME_HEIGHT / 5,
-        );
     }
 
     preload() {
         this.keyboard = this.input.keyboard!.createCursorKeys();
         this.load.image(RessourceKeys.Ground, `assets/ground/ground_${TEXTURE_SIZE}.png`);
         this.load.image(RessourceKeys.Particle, 'assets/explosion/particle.png');
-        this.loadAdditionalRessources();
     }
 
     async create() {
         try {
-            this.room = await this.client.joinOrCreate("my_room");
-            const $ = getStateCallbacks(this.room);
-
-            $(this.room.state).players.onAdd((player: any, sessionId: string) => {
-                const playerObject = new PlayerClient(this, player.x, player.y);
-                this.playerObjects[sessionId] = playerObject;
-
-                if (sessionId === this.room.sessionId) {
-                    this.currentPlayer = playerObject;
-                    this.remoteRef = this.add.rectangle(0, 0, playerObject.width, playerObject.height);
-                    this.remoteRef.setStrokeStyle(1, 0xff0000);
-
-                    $(player).onChange(() => {
-                        const serverX = player.x;
-                        const serverY = player.y;
-                        const predictedX = this.currentPlayer.x;
-                        const predictedY = this.currentPlayer.y;
-                        const THRESHOLD = 2;
-
-                        if (Math.abs(serverX - predictedX) > THRESHOLD || Math.abs(serverY - predictedY) > THRESHOLD) {
-                            this.currentPlayer.x = serverX;
-                            this.currentPlayer.y = serverY;
-                            this.localInputBuffer = this.localInputBuffer.filter(input => input.timeStamp > player.timeStamp);
-
-                            for (const input of this.localInputBuffer) {
-                                movePlayerFromInputs(this.currentPlayer, input, true);
-                            }
-                        }
-                        this.remoteRef.x = serverX;
-                        this.remoteRef.y = serverY;
-                    });
-                } else {
-                    $(player).onChange(() => {
-                        playerObject.setData("serverX", player.x);
-                        playerObject.setData("serverY", player.y);
-                    });
-                }
-            });
-
-            $(this.room.state).players.onRemove((_player: any, sessionId: string) => {
-                this.playerObjects[sessionId].destroy();
-                delete this.playerObjects[sessionId];
-            });
-
+            await this.setupRoomEvents();
         } catch (e) {
-            console.error(e);
+            console.log(e);
+            throw e;
         }
 
-        this.generateTextures();
-        this.drawTerrain();
-        this.createTerrainColliders();
+        new TextureManager(this.add).generateTextures();
+
+        const defaultMap = new QuadBlock(
+            0,
+            GAME_HEIGHT - GAME_HEIGHT / 5,
+            GAME_WIDTH,
+            GAME_HEIGHT / 5,
+        );
+        this.terrainManager = new TerrainManager(this, defaultMap);
+
+        this.terrainManager.drawTerrain();
+        this.terrainManager.createTerrainColliders();
         this.setupCollisionEvents();
 
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => this.clickEvent(pointer));
+    }
+
+    async setupRoomEvents() {
+        this.room = await this.client.joinOrCreate("my_room");
+        const $ = getStateCallbacks(this.room);
+
+        $(this.room.state).players.onAdd((player: any, sessionId: string) => {
+            const playerObject = new PlayerClient(this, player.x, player.y);
+            this.playerObjects[sessionId] = playerObject;
+
+            if (sessionId === this.room.sessionId) {
+                this.currentPlayer = playerObject;
+                this.remoteRef = this.add.rectangle(0, 0, playerObject.width, playerObject.height);
+                this.remoteRef.setStrokeStyle(1, 0xff0000);
+
+                $(player).onChange(() => {
+                    const serverX = player.x;
+                    const serverY = player.y;
+                    const predictedX = this.currentPlayer.x;
+                    const predictedY = this.currentPlayer.y;
+                    const THRESHOLD = 2;
+
+                    if (Math.abs(serverX - predictedX) > THRESHOLD || Math.abs(serverY - predictedY) > THRESHOLD) {
+                        this.currentPlayer.x = serverX;
+                        this.currentPlayer.y = serverY;
+                        this.localInputBuffer = this.localInputBuffer.filter(input => input.timeStamp > player.timeStamp);
+
+                        for (const input of this.localInputBuffer) {
+                            movePlayerFromInputs(this.currentPlayer, input, true);
+                        }
+                    }
+                    this.remoteRef.x = serverX;
+                    this.remoteRef.y = serverY;
+                });
+            } else {
+                $(player).onChange(() => {
+                    playerObject.setData("serverX", player.x);
+                    playerObject.setData("serverY", player.y);
+                });
+            }
+        });
+
+        $(this.room.state).players.onRemove((_player: any, sessionId: string) => {
+            this.playerObjects[sessionId].destroy();
+            delete this.playerObjects[sessionId];
+        });
     }
 
     fixedTick() {
@@ -119,7 +122,7 @@ export default abstract class GameScene extends Phaser.Scene {
             timeStamp: Date.now()
         };
 
-        this.room.send("move", inputPayload);
+        this.room.send(RequestTypes.Move, inputPayload);
         this.localInputBuffer.push(inputPayload);
 
         movePlayerFromInputs(this.currentPlayer, inputPayload);
@@ -133,7 +136,7 @@ export default abstract class GameScene extends Phaser.Scene {
         }
     }
 
-    update(time: number, delta: number): void {
+    update(_time: number, delta: number): void {
         if (!this.currentPlayer) { return; }
         this.elapsedTime += delta;
         while (this.elapsedTime >= this.fixedTimeStep) {
@@ -151,7 +154,7 @@ export default abstract class GameScene extends Phaser.Scene {
                     const bullet = (bodyA.label === RessourceKeys.Bullet ? bodyA.gameObject : bodyB.gameObject) as BulletClient;
 
                     if (bullet) {
-                        this.explodeTerrain(bullet.x, bullet.y, EXPLOSION_RADIUS);
+                        this.explode(bullet.x, bullet.y, EXPLOSION_RADIUS);
                         bullet.destroy();
                     }
                 }
@@ -164,50 +167,7 @@ export default abstract class GameScene extends Phaser.Scene {
         });
     }
 
-    generateTextures() {
-        this.generatePlayerTexture();
-        this.generateBulletTexture();
-    }
-
-    generatePlayerTexture(size = 32, baseColor = 0x3498db) {
-        const g = this.add.graphics();
-
-        g.fillStyle(baseColor, 1);
-        g.fillRect(0, 0, size, size);
-
-        g.lineStyle(size / 4, 0x21618c, 1);
-        g.strokeRect(0, 0, size, size);
-
-        g.generateTexture(RessourceKeys.Player, size, size);
-        g.destroy();
-    }
-
-    generateBulletTexture(radius = BULLER_CONST.RADIUS) {
-        const g = this.add.graphics();
-
-        g.fillStyle(0xFFFFFF, 1);
-        g.fillCircle(radius, radius, radius);
-
-        g.generateTexture(RessourceKeys.Bullet, radius * 2, radius * 2);
-        g.destroy();
-    }
-
-    clickEvent(pointer: Phaser.Input.Pointer) {
-        const x = pointer.x;
-        const y = pointer.y;
-        const force = 20;
-
-        this.room.send("shoot", {
-            x: x,
-            y: y,
-            force: force,
-        })
-
-        const bullet = new BulletClient(this, this.currentPlayer.x, this.currentPlayer.y);
-        shoot(bullet, x, y, force);
-    }
-
-    explodeTerrain(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
+    explode(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
         //Explosion particles
         const scale = getExplosionSpriteScale(radius);
         const speedCoef = Math.max(scale * 0.5, 1);
@@ -226,9 +186,7 @@ export default abstract class GameScene extends Phaser.Scene {
 
         emitter.explode(10 + Math.random() * 5);
 
-        this.root.destroy(cx, cy, radius, minSize); // Destroy terrain
-
-        this.redrawTerrain();
+        this.terrainManager.explodeTerrain(cx, cy, radius, minSize);
 
         this.cameras.main.shake(250, 0.005); // Shake camera
 
@@ -238,88 +196,18 @@ export default abstract class GameScene extends Phaser.Scene {
         }
     }
 
-    drawTerrain() {
-        this.drawQuadBlock(this.root);
+    clickEvent(pointer: Phaser.Input.Pointer) {
+        const x = pointer.x;
+        const y = pointer.y;
+        const force = 20;
+
+        this.room.send(RequestTypes.Shoot, {
+            x: x,
+            y: y,
+            force: force,
+        })
+
+        const bullet = new BulletClient(this, this.currentPlayer.x, this.currentPlayer.y);
+        shoot(bullet, x, y, force);
     }
-
-    drawQuadBlock(block: QuadBlock) {
-        if (block.isEmpty()) return;
-
-        if (block.filled) {
-            const x = block.x;
-            const y = block.y;
-            const width = block.width;
-            const height = block.height;
-
-            const sprite = this.add.tileSprite(
-                x, y,
-                width, height,
-                RessourceKeys.Ground
-            ).setOrigin(0);
-
-            sprite.tilePositionX = block.x % TEXTURE_SIZE;
-            sprite.tilePositionY = block.y % TEXTURE_SIZE;
-
-            this.terrainSprites.push(sprite);
-
-            if (DEBUG) {
-                const g = this.add.graphics()
-                    .lineStyle(1, 0x00ff00)
-                    .strokeRect(block.x, block.y, block.width, block.height);
-                this.debugGraphics.push(g);
-            }
-        } else if (block.hasChildren()) {
-            for (const child of block.children!) {
-                this.drawQuadBlock(child);
-            }
-        }
-    }
-
-    redrawTerrain() {
-        this.debugGraphics.forEach(g => g.destroy());
-        this.debugGraphics = [];
-
-        this.terrainSprites.forEach(s => s.destroy());
-        this.terrainSprites = [];
-
-        this.drawTerrain();
-
-        this.terrainColliders.forEach(c => this.matter.world.remove(c))
-        this.createTerrainColliders();
-    }
-
-    createTerrainColliders() {
-        this.createQuadBlockCollider(this.root);
-    }
-
-    createQuadBlockCollider(block: QuadBlock) {
-        if (block.isEmpty()) return;
-
-        if (block.filled) {
-            const collider = this.matter.add.rectangle(
-                block.x + block.width / 2,
-                block.y + block.height / 2,
-                block.width,
-                block.height,
-                {
-                    isStatic: true,
-                    friction: 0,
-                    frictionAir: 0,
-                    frictionStatic: 0,
-                    label: RessourceKeys.Ground
-                }
-            );
-
-            //this.physics.add.existing(collider, true);
-            this.terrainColliders.push(collider);
-        } else if (block.hasChildren()) {
-            for (const child of block.children) {
-                this.createQuadBlockCollider(child);
-            }
-        }
-    }
-
-    loadAdditionalRessources() { }
-
-    sceneLogic() { }
 }
