@@ -10,7 +10,7 @@ import { movePlayerFromInputs, pushPlayer } from "@shared/logics/player-logic";
 import { shoot } from "@shared/logics/bullet-logic";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 
-export default abstract class GameScene extends Phaser.Scene {
+export default class GameScene extends Phaser.Scene {
     localInputBuffer: InputPayload[] = [];
     client = new Client("ws://localhost:2567");
     playerObjects: { [sessionId: string]: PlayerClient } = {};
@@ -20,8 +20,6 @@ export default abstract class GameScene extends Phaser.Scene {
 
     currentPlayer!: PlayerClient;
     remoteRef!: Phaser.GameObjects.Rectangle;
-    startingX: number;
-    startingY: number;
 
     root: QuadBlock;
     terrainColliders: MatterJS.BodyType[] = [];
@@ -32,10 +30,8 @@ export default abstract class GameScene extends Phaser.Scene {
     elapsedTime = 0;
     fixedTimeStep = 1000 / 60;
 
-    constructor(name: string, startingX: number, startingY: number) {
+    constructor(name: string) {
         super(name);
-        this.startingX = startingX;
-        this.startingY = startingY;
         this.root = new QuadBlock(
             0,
             GAME_HEIGHT - GAME_HEIGHT / 5,
@@ -48,57 +44,14 @@ export default abstract class GameScene extends Phaser.Scene {
         this.keyboard = this.input.keyboard!.createCursorKeys();
         this.load.image(RessourceKeys.Ground, `assets/ground/ground_${TEXTURE_SIZE}.png`);
         this.load.image(RessourceKeys.Particle, 'assets/explosion/particle.png');
-        this.loadAdditionalRessources();
     }
 
-    async create() {
+    create() {
         try {
-            this.room = await this.client.joinOrCreate("my_room");
-            const $ = getStateCallbacks(this.room);
-
-            $(this.room.state).players.onAdd((player: any, sessionId: string) => {
-                const playerObject = new PlayerClient(this, player.x, player.y);
-                this.playerObjects[sessionId] = playerObject;
-
-                if (sessionId === this.room.sessionId) {
-                    this.currentPlayer = playerObject;
-                    this.remoteRef = this.add.rectangle(0, 0, playerObject.width, playerObject.height);
-                    this.remoteRef.setStrokeStyle(1, 0xff0000);
-
-                    $(player).onChange(() => {
-                        const serverX = player.x;
-                        const serverY = player.y;
-                        const predictedX = this.currentPlayer.x;
-                        const predictedY = this.currentPlayer.y;
-                        const THRESHOLD = 2;
-
-                        if (Math.abs(serverX - predictedX) > THRESHOLD || Math.abs(serverY - predictedY) > THRESHOLD) {
-                            this.currentPlayer.x = serverX;
-                            this.currentPlayer.y = serverY;
-                            this.localInputBuffer = this.localInputBuffer.filter(input => input.timeStamp > player.timeStamp);
-
-                            for (const input of this.localInputBuffer) {
-                                movePlayerFromInputs(this.currentPlayer, input, true);
-                            }
-                        }
-                        this.remoteRef.x = serverX;
-                        this.remoteRef.y = serverY;
-                    });
-                } else {
-                    $(player).onChange(() => {
-                        playerObject.setData("serverX", player.x);
-                        playerObject.setData("serverY", player.y);
-                    });
-                }
-            });
-
-            $(this.room.state).players.onRemove((_player: any, sessionId: string) => {
-                this.playerObjects[sessionId].destroy();
-                delete this.playerObjects[sessionId];
-            });
-
+            this.setupRoomEvents();
         } catch (e) {
-            console.error(e);
+            console.log(e);
+            throw e;
         }
 
         this.generateTextures();
@@ -107,6 +60,52 @@ export default abstract class GameScene extends Phaser.Scene {
         this.setupCollisionEvents();
 
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => this.clickEvent(pointer));
+    }
+
+    async setupRoomEvents() {
+        this.room = await this.client.joinOrCreate("my_room");
+        const $ = getStateCallbacks(this.room);
+
+        $(this.room.state).players.onAdd((player: any, sessionId: string) => {
+            const playerObject = new PlayerClient(this, player.x, player.y);
+            this.playerObjects[sessionId] = playerObject;
+
+            if (sessionId === this.room.sessionId) {
+                this.currentPlayer = playerObject;
+                this.remoteRef = this.add.rectangle(0, 0, playerObject.width, playerObject.height);
+                this.remoteRef.setStrokeStyle(1, 0xff0000);
+
+                $(player).onChange(() => {
+                    const serverX = player.x;
+                    const serverY = player.y;
+                    const predictedX = this.currentPlayer.x;
+                    const predictedY = this.currentPlayer.y;
+                    const THRESHOLD = 2;
+
+                    if (Math.abs(serverX - predictedX) > THRESHOLD || Math.abs(serverY - predictedY) > THRESHOLD) {
+                        this.currentPlayer.x = serverX;
+                        this.currentPlayer.y = serverY;
+                        this.localInputBuffer = this.localInputBuffer.filter(input => input.timeStamp > player.timeStamp);
+
+                        for (const input of this.localInputBuffer) {
+                            movePlayerFromInputs(this.currentPlayer, input, true);
+                        }
+                    }
+                    this.remoteRef.x = serverX;
+                    this.remoteRef.y = serverY;
+                });
+            } else {
+                $(player).onChange(() => {
+                    playerObject.setData("serverX", player.x);
+                    playerObject.setData("serverY", player.y);
+                });
+            }
+        });
+
+        $(this.room.state).players.onRemove((_player: any, sessionId: string) => {
+            this.playerObjects[sessionId].destroy();
+            delete this.playerObjects[sessionId];
+        });
     }
 
     fixedTick() {
@@ -311,7 +310,6 @@ export default abstract class GameScene extends Phaser.Scene {
                 }
             );
 
-            //this.physics.add.existing(collider, true);
             this.terrainColliders.push(collider);
         } else if (block.hasChildren()) {
             for (const child of block.children) {
@@ -319,8 +317,4 @@ export default abstract class GameScene extends Phaser.Scene {
             }
         }
     }
-
-    loadAdditionalRessources() { }
-
-    sceneLogic() { }
 }
