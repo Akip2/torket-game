@@ -3,7 +3,7 @@ import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import BulletClient from "../game-objects/BulletClient";
 import PlayerClient from "../game-objects/PlayerClient";
 import { Client, Room, getStateCallbacks } from "colyseus.js";
-import type { InputPayload } from "@shared/types";
+import type { InputPayload, QuadBlockType } from "@shared/types";
 import { movePlayerFromInputs, pushPlayer } from "@shared/logics/player-logic";
 import { shoot } from "@shared/logics/bullet-logic";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
@@ -67,6 +67,10 @@ export default class GameScene extends Phaser.Scene {
 
     async setupRoomEvents() {
         this.room = await this.client.joinOrCreate("my_room");
+
+        //this.terrainManager.constructQuadBlock();
+        //this.terrainManager.redrawTerrain();
+
         const $ = getStateCallbacks(this.room);
 
         $(this.room.state).players.onAdd((player: any, sessionId: string) => {
@@ -111,7 +115,9 @@ export default class GameScene extends Phaser.Scene {
         });
 
         $(this.room.state).terrain.onChange(() => {
-            console.log("terrain change");
+            const newTree = this.room.state.terrain[0];
+            this.terrainManager.constructQuadBlock(newTree);
+            this.terrainManager.redrawTerrain();
         })
     }
 

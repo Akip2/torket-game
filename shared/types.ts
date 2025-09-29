@@ -11,3 +11,12 @@ export type ShootInfo = {
     x: number,
     y: number
 }
+
+export type QuadBlockType = {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    filled: boolean;
+    children: QuadBlockType[]
+}

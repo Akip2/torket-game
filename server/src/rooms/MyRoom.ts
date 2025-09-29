@@ -147,6 +147,10 @@ export class MyRoom extends Room<MyRoomState> {
      */
     updateTerrain() {
         this.state.terrain.clear();
+
+        const newOne = this.terrainManager.getQuadBlockState();
         this.state.terrain.push(this.terrainManager.getQuadBlockState());
+
+        console.log(newOne);
     }
 }
