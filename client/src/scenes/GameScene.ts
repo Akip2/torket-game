@@ -109,6 +109,10 @@ export default class GameScene extends Phaser.Scene {
             this.playerObjects[sessionId].destroy();
             delete this.playerObjects[sessionId];
         });
+
+        $(this.room.state).terrain.onChange(() => {
+            console.log("terrain change");
+        })
     }
 
     fixedTick() {

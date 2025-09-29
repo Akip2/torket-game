@@ -138,5 +138,15 @@ export class MyRoom extends Room<MyRoomState> {
         this.playerBodies.forEach(p => {
             pushPlayer(p, cx, cy, radius);
         });
+
+        this.updateTerrain();
+    }
+
+    /**
+     * Updates terrain reference and sends it to client
+     */
+    updateTerrain() {
+        this.state.terrain.clear();
+        this.state.terrain.push(this.terrainManager.getQuadBlockState());
     }
 }
