@@ -32,10 +32,18 @@ export class MyRoom extends Room<MyRoomState> {
 
         this.onMessage(RequestTypes.Shoot, (client, shootInfo: ShootInfo) => {
             const playerBody = this.playerBodies.get(client.sessionId);
-            const bullet = new BullerServer(playerBody.getX(), playerBody.getY(), BULLER_CONST.RADIUS);
+
+            const originX = playerBody.getX();
+            const originY = playerBody.getY();
+
+            const bullet = new BullerServer(originX, originY, BULLER_CONST.RADIUS);
             this.physicsManager.add(bullet);
 
-            shoot(bullet, shootInfo.x, shootInfo.y, shootInfo.force);
+            shoot(bullet, shootInfo.targetX, shootInfo.targetY, shootInfo.force);
+
+            shootInfo.originX = originX;
+            shootInfo.originY = originY;
+            this.broadcast(RequestTypes.Shoot, shootInfo, { except: client });
         });
 
         let elapsedTime = 0;
@@ -120,6 +128,8 @@ export class MyRoom extends Room<MyRoomState> {
 
         this.playerBodies.set(client.sessionId, playerBody);
         this.state.players.set(client.sessionId, player);
+
+        client.send(RequestTypes.TerrainSynchro, this.terrainManager.root); // Sending terrain to connecting client
     }
 
     onLeave(client: Client, consented: boolean) {
@@ -138,5 +148,9 @@ export class MyRoom extends Room<MyRoomState> {
         this.playerBodies.forEach(p => {
             pushPlayer(p, cx, cy, radius);
         });
+    }
+
+    synchronizeTerrain() {
+        this.broadcast(RequestTypes.TerrainSynchro, this.terrainManager.root);
     }
 }

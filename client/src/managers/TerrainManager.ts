@@ -1,7 +1,8 @@
-import type QuadBlock from "@shared/data/QuadBlock";
+import QuadBlock from "@shared/data/QuadBlock";
 import type GameScene from "../scenes/GameScene";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { DEBUG, TEXTURE_SIZE, TILE_SIZE } from "@shared/const";
+import type { QuadBlockType } from "@shared/types";
 
 export default class TerrainManager {
     scene: GameScene;
@@ -98,5 +99,13 @@ export default class TerrainManager {
                 this.createQuadBlockCollider(child);
             }
         }
+    }
+
+    quadBlockTypeToQuadBlock(blockType: QuadBlockType): QuadBlock {
+        return new QuadBlock(blockType.x, blockType.y, blockType.width, blockType.height, blockType.filled, blockType.children.map((child) => this.quadBlockTypeToQuadBlock(child)));
+    }
+    
+    constructQuadBlock(blockType: QuadBlockType) {
+        this.root = this.quadBlockTypeToQuadBlock(blockType);
     }
 }

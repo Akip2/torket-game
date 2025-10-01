@@ -3,7 +3,7 @@ import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import BulletClient from "../game-objects/BulletClient";
 import PlayerClient from "../game-objects/PlayerClient";
 import { Client, Room, getStateCallbacks } from "colyseus.js";
-import type { InputPayload } from "@shared/types";
+import type { InputPayload, ShootInfo } from "@shared/types";
 import { movePlayerFromInputs, pushPlayer } from "@shared/logics/player-logic";
 import { shoot } from "@shared/logics/bullet-logic";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
@@ -67,6 +67,10 @@ export default class GameScene extends Phaser.Scene {
 
     async setupRoomEvents() {
         this.room = await this.client.joinOrCreate("my_room");
+
+        //this.terrainManager.constructQuadBlock();
+        //this.terrainManager.redrawTerrain();
+
         const $ = getStateCallbacks(this.room);
 
         $(this.room.state).players.onAdd((player: any, sessionId: string) => {
@@ -108,6 +112,15 @@ export default class GameScene extends Phaser.Scene {
         $(this.room.state).players.onRemove((_player: any, sessionId: string) => {
             this.playerObjects[sessionId].destroy();
             delete this.playerObjects[sessionId];
+        });
+
+        this.room.onMessage(RequestTypes.TerrainSynchro, (quadBlock) => {
+            this.terrainManager.constructQuadBlock(quadBlock);
+            this.terrainManager.redrawTerrain();
+        });
+
+        this.room.onMessage(RequestTypes.Shoot, (shootInfo) => {
+            this.shootBullet(shootInfo);
         });
     }
 
@@ -196,18 +209,21 @@ export default class GameScene extends Phaser.Scene {
         }
     }
 
+    shootBullet(shootInfo: ShootInfo) {
+        const bullet = new BulletClient(this, shootInfo.originX, shootInfo.originY);
+        shoot(bullet, shootInfo.targetX, shootInfo.targetY, shootInfo.force);
+    }
+
     clickEvent(pointer: Phaser.Input.Pointer) {
-        const x = pointer.x;
-        const y = pointer.y;
-        const force = 20;
+        const shootInfo = {
+            targetX: pointer.x,
+            targetY: pointer.y,
+            force: 20,
+            originX: this.currentPlayer.x,
+            originY: this.currentPlayer.y
+        }
 
-        this.room.send(RequestTypes.Shoot, {
-            x: x,
-            y: y,
-            force: force,
-        })
-
-        const bullet = new BulletClient(this, this.currentPlayer.x, this.currentPlayer.y);
-        shoot(bullet, x, y, force);
+        this.room.send(RequestTypes.Shoot, shootInfo);
+        this.shootBullet(shootInfo);
     }
 }
