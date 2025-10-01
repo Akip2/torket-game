@@ -3,7 +3,7 @@ import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import BulletClient from "../game-objects/BulletClient";
 import PlayerClient from "../game-objects/PlayerClient";
 import { Client, Room, getStateCallbacks } from "colyseus.js";
-import type { InputPayload, QuadBlockType } from "@shared/types";
+import type { InputPayload } from "@shared/types";
 import { movePlayerFromInputs, pushPlayer } from "@shared/logics/player-logic";
 import { shoot } from "@shared/logics/bullet-logic";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
@@ -114,11 +114,10 @@ export default class GameScene extends Phaser.Scene {
             delete this.playerObjects[sessionId];
         });
 
-        $(this.room.state).terrain.onChange(() => {
-            const newTree = this.room.state.terrain[0];
-            this.terrainManager.constructQuadBlock(newTree);
+        this.room.onMessage(RequestTypes.TerrainSynchro, (quadBlock) => {
+            this.terrainManager.constructQuadBlock(quadBlock);
             this.terrainManager.redrawTerrain();
-        })
+        });
     }
 
     fixedTick() {

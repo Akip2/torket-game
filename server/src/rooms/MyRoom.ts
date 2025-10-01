@@ -120,6 +120,8 @@ export class MyRoom extends Room<MyRoomState> {
 
         this.playerBodies.set(client.sessionId, playerBody);
         this.state.players.set(client.sessionId, player);
+
+        client.send(RequestTypes.TerrainSynchro, this.terrainManager.root); // Sending terrain to connecting client
     }
 
     onLeave(client: Client, consented: boolean) {
@@ -138,19 +140,9 @@ export class MyRoom extends Room<MyRoomState> {
         this.playerBodies.forEach(p => {
             pushPlayer(p, cx, cy, radius);
         });
-
-        this.updateTerrain();
     }
 
-    /**
-     * Updates terrain reference and sends it to client
-     */
-    updateTerrain() {
-        this.state.terrain.clear();
-
-        const newOne = this.terrainManager.getQuadBlockState();
-        this.state.terrain.push(this.terrainManager.getQuadBlockState());
-
-        console.log(newOne);
+    synchronizeTerrain() {
+        this.broadcast(RequestTypes.TerrainSynchro, this.terrainManager.root);
     }
 }

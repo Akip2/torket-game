@@ -2,9 +2,6 @@ import { TILE_SIZE } from "@shared/const";
 import QuadBlock from "@shared/data/QuadBlock";
 import TerrainBlock from "src/bodies/TerrainBlock";
 import PhysicsManager from "./PhysicsManager";
-import { QuadBlockState } from "src/rooms/schema/MyRoomState";
-import { ArraySchema } from "@colyseus/schema";
-
 
 export default class TerrainManager {
     physicsManager: PhysicsManager;
@@ -49,19 +46,5 @@ export default class TerrainManager {
     explodeTerrain(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
         this.root.destroy(cx, cy, radius, minSize);
         this.recreateTerrain();
-    }
-
-    quadBlockToState(block: QuadBlock) {
-        const state = new QuadBlockState(block.x, block.y, block.width, block.height, block.filled);
-
-        state.children = new ArraySchema(
-            ...block.children.map(child => this.quadBlockToState(child))
-        );
-
-        return state;
-    }
-
-    getQuadBlockState() {
-        return this.quadBlockToState(this.root);
     }
 }
