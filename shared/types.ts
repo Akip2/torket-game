@@ -8,8 +8,12 @@ export type InputPayload = {
 
 export type ShootInfo = {
     force: number,
-    x: number,
-    y: number
+
+    originX: number,
+    originY: number,
+    
+    targetX: number,
+    targetY: number
 }
 
 export type QuadBlockType = {
