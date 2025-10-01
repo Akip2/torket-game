@@ -9,7 +9,7 @@ import { InputPayload, ShootInfo } from "@shared/types";
 import { movePlayerFromInputs, pushPlayer } from "@shared/logics/player-logic";
 import QuadBlock from "@shared/data/QuadBlock";
 import BullerServer from "src/bodies/BulletServer";
-import { shoot } from "@shared/logics/bullet-logic";
+import { generateBulletOriginPosition, shoot } from "@shared/logics/bullet-logic";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import TerrainManager from "src/managers/TerrainManager";
 import PhysicsManager from "src/managers/PhysicsManager";
@@ -33,16 +33,15 @@ export class MyRoom extends Room<MyRoomState> {
         this.onMessage(RequestTypes.Shoot, (client, shootInfo: ShootInfo) => {
             const playerBody = this.playerBodies.get(client.sessionId);
 
-            const originX = playerBody.getX();
-            const originY = playerBody.getY();
+            const originPosition = generateBulletOriginPosition(playerBody.getX(), playerBody.getY(), shootInfo.targetX, shootInfo.targetY);
 
-            const bullet = new BullerServer(originX, originY, BULLER_CONST.RADIUS);
+            const bullet = new BullerServer(originPosition.x, originPosition.y, BULLER_CONST.RADIUS);
             this.physicsManager.add(bullet);
 
             shoot(bullet, shootInfo.targetX, shootInfo.targetY, shootInfo.force);
 
-            shootInfo.originX = originX;
-            shootInfo.originY = originY;
+            shootInfo.originX = originPosition.x;
+            shootInfo.originY = originPosition.y;
             this.broadcast(RequestTypes.Shoot, shootInfo, { except: client });
         });
 
@@ -78,7 +77,9 @@ export class MyRoom extends Room<MyRoomState> {
                 const labels = [bodyA.label, bodyB.label];
                 const playerLabel = labels.find(label => label.startsWith(`${RessourceKeys.Player}:`));
 
-                if (labels.includes(RessourceKeys.Bullet) && labels.includes(RessourceKeys.Ground)) {
+                const hasPlayerCollision = playerLabel ? true : false;
+
+                if (labels.includes(RessourceKeys.Bullet) && (labels.includes(RessourceKeys.Ground) || hasPlayerCollision)) {
                     const bullet = (bodyA.label === RessourceKeys.Bullet ? bodyA : bodyB);
 
                     if (bullet) {
@@ -87,7 +88,7 @@ export class MyRoom extends Room<MyRoomState> {
                     }
                 }
 
-                if (playerLabel && labels.includes(RessourceKeys.Ground)) {
+                if (hasPlayerCollision && labels.includes(RessourceKeys.Ground)) {
                     const sessionId = parsePlayerLabel(playerLabel).sessionId;
                     this.playerBodies.get(sessionId).isOnGround = true;
                 }
