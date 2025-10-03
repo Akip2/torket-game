@@ -1,4 +1,4 @@
-import { EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE, TILE_SIZE } from "@shared/const";
+import { BULLER_CONST, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, GRAVITY, TEXTURE_SIZE, TILE_SIZE } from "@shared/const";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import BulletClient from "../game-objects/BulletClient";
 import PlayerClient from "../game-objects/PlayerClient";
@@ -11,6 +11,7 @@ import TextureManager from "../managers/TextureManager";
 import TerrainManager from "../managers/TerrainManager";
 import QuadBlock from "@shared/data/QuadBlock";
 import { getExplosionSpriteScale } from "@shared/utils";
+import Vector from "@shared/data/Vector";
 
 export default class GameScene extends Phaser.Scene {
     client = new Client("ws://localhost:2567");
@@ -29,6 +30,7 @@ export default class GameScene extends Phaser.Scene {
     remoteRef!: Phaser.GameObjects.Rectangle;
 
     terrainManager!: TerrainManager;
+    trajectoryDrawer!: Phaser.GameObjects.Graphics;
 
     constructor(name: string) {
         super(name);
@@ -67,9 +69,6 @@ export default class GameScene extends Phaser.Scene {
 
     async setupRoomEvents() {
         this.room = await this.client.joinOrCreate("my_room");
-
-        //this.terrainManager.constructQuadBlock();
-        //this.terrainManager.redrawTerrain();
 
         const $ = getStateCallbacks(this.room);
 
@@ -225,11 +224,46 @@ export default class GameScene extends Phaser.Scene {
             originY: originPosition.y
         }
 
+        this.drawTrajectory(shootInfo);
+
         this.shootBulletFromInfo(shootInfo);
         this.room.send(RequestTypes.Shoot, shootInfo);
     }
 
     clickEvent(pointer: Phaser.Input.Pointer) {
         this.shootBullet(pointer.x, pointer.y);
+    }
+
+    drawTrajectory(shootInfo: ShootInfo) {
+        this.trajectoryDrawer?.destroy();
+        this.trajectoryDrawer = this.add.graphics();
+        this.trajectoryDrawer.fillStyle(0xffffff, 0.9);
+
+        const gravityStep = GRAVITY * 0.001 * this.fixedTimeStep * this.fixedTimeStep;
+        const frictionFactor = 1 - BULLER_CONST.AIR_FRICTION;
+
+        let x = shootInfo.originX;
+        let y = shootInfo.originY;
+
+        const normalizedVector = new Vector(
+            shootInfo.targetX - x,
+            shootInfo.targetY - y
+        ).getNormalizedVector();
+
+        let vx = normalizedVector.x * shootInfo.force;
+        let vy = normalizedVector.y * shootInfo.force;
+
+        const maxSteps = 100;
+        for (let i = 0; i < maxSteps; i++) {
+            vx = vx * frictionFactor;
+            vy = vy * frictionFactor + gravityStep;
+
+            x += vx;
+            y += vy;
+
+            if (x < -100 || x > GAME_WIDTH + 100 || y > GAME_HEIGHT + 100) break;
+
+            this.trajectoryDrawer.fillCircle(x, y, 2);
+        }
     }
 }

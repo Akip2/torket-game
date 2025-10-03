@@ -17,5 +17,6 @@ export const PLAYER_CONST = {
 }
 
 export const BULLER_CONST = {
-    RADIUS: 4
+    RADIUS: 4,
+    AIR_FRICTION: 0.01
 }
