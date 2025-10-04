@@ -10,6 +10,8 @@ export const TEXTURE_SIZE = 16;
 export const EXPLOSION_SPRITE_SIZE = 32;
 export const EXPLOSION_RADIUS = 28;
 
+export const TIME_STEP = 1000 / 60;
+
 export const PLAYER_CONST = {
     WIDTH: 32,
     SPEED: 3,

@@ -33,3 +33,7 @@ export function circleIntersectsRectangle(
 
   return (dx * dx + dy * dy) <= (radius * radius);
 }
+
+export function wait(ms: number) {
+    return new Promise<void>(resolve => setTimeout(resolve, ms));
+}
