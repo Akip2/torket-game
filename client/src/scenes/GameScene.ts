@@ -1,17 +1,16 @@
-import { BULLER_CONST, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, GRAVITY, TEXTURE_SIZE, TILE_SIZE } from "@shared/const";
+import { EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE, TILE_SIZE, TIME_STEP } from "@shared/const";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import BulletClient from "../game-objects/BulletClient";
 import PlayerClient from "../game-objects/PlayerClient";
 import { Client, Room, getStateCallbacks } from "colyseus.js";
-import type { InputPayload, ShootInfo } from "@shared/types";
+import type { InputPayload } from "@shared/types";
 import { movePlayerFromInputs, pushPlayer } from "@shared/logics/player-logic";
-import { generateBulletOriginPosition, shoot } from "@shared/logics/bullet-logic";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import TextureManager from "../managers/TextureManager";
 import TerrainManager from "../managers/TerrainManager";
 import QuadBlock from "@shared/data/QuadBlock";
 import { getExplosionSpriteScale } from "@shared/utils";
-import Vector from "@shared/data/Vector";
+import ShotManager from "../managers/ShotManager";
 
 export default class GameScene extends Phaser.Scene {
     client = new Client("ws://localhost:2567");
@@ -20,7 +19,6 @@ export default class GameScene extends Phaser.Scene {
     debugGraphics: Phaser.GameObjects.Graphics[] = [];
 
     elapsedTime = 0;
-    fixedTimeStep = 1000 / 60;
 
     localInputBuffer: InputPayload[] = [];
     keyboard!: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -30,7 +28,7 @@ export default class GameScene extends Phaser.Scene {
     remoteRef!: Phaser.GameObjects.Rectangle;
 
     terrainManager!: TerrainManager;
-    trajectoryDrawer!: Phaser.GameObjects.Graphics;
+    shotManager!: ShotManager;
 
     constructor(name: string) {
         super(name);
@@ -59,12 +57,15 @@ export default class GameScene extends Phaser.Scene {
             GAME_HEIGHT / 5,
         );
         this.terrainManager = new TerrainManager(this, defaultMap);
+        this.shotManager = new ShotManager(this);
 
         this.terrainManager.drawTerrain();
         this.terrainManager.createTerrainColliders();
         this.setupCollisionEvents();
 
-        this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => this.clickEvent(pointer));
+        this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => this.pointerDownEvent(pointer));
+        this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => this.pointerUpEvent(pointer));
+        this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => this.pointerMoveEvent(pointer));
     }
 
     async setupRoomEvents() {
@@ -119,7 +120,7 @@ export default class GameScene extends Phaser.Scene {
         });
 
         this.room.onMessage(RequestTypes.Shoot, (shootInfo) => {
-            this.shootBulletFromInfo(shootInfo);
+            this.shotManager.shootBulletFromInfo(shootInfo);
         });
     }
 
@@ -151,8 +152,8 @@ export default class GameScene extends Phaser.Scene {
     update(_time: number, delta: number): void {
         if (!this.currentPlayer) { return; }
         this.elapsedTime += delta;
-        while (this.elapsedTime >= this.fixedTimeStep) {
-            this.elapsedTime -= this.fixedTimeStep;
+        while (this.elapsedTime >= TIME_STEP) {
+            this.elapsedTime -= TIME_STEP;
             this.fixedTick();
         }
     }
@@ -208,62 +209,22 @@ export default class GameScene extends Phaser.Scene {
         }
     }
 
-    shootBulletFromInfo(shootInfo: ShootInfo) {
-        const bullet = new BulletClient(this, shootInfo.originX, shootInfo.originY);
-        shoot(bullet, shootInfo.targetX, shootInfo.targetY, shootInfo.force);
+    pointerDownEvent(pointer: Phaser.Input.Pointer) {
+        this.shotManager.setTargetPosition(pointer.x, pointer.y);
+        this.shotManager.setStartingPosition(this.currentPlayer.x, this.currentPlayer.y);
+
+        this.shotManager.chargeShot();
     }
 
-    shootBullet(targetX: number, targetY: number, force: number = 20) {
-        const originPosition = generateBulletOriginPosition(this.currentPlayer.x, this.currentPlayer.y, targetX, targetY);
+    pointerUpEvent(pointer: Phaser.Input.Pointer) {
+        this.shotManager.setTargetPosition(pointer.x, pointer.y);
+        this.shotManager.setStartingPosition(this.currentPlayer.x, this.currentPlayer.y);
 
-        const shootInfo = {
-            targetX: targetX,
-            targetY: targetY,
-            force: force,
-            originX: originPosition.x,
-            originY: originPosition.y
-        }
-
-        this.drawTrajectory(shootInfo);
-
-        this.shootBulletFromInfo(shootInfo);
-        this.room.send(RequestTypes.Shoot, shootInfo);
+        this.shotManager.releaseShot();
     }
 
-    clickEvent(pointer: Phaser.Input.Pointer) {
-        this.shootBullet(pointer.x, pointer.y);
-    }
-
-    drawTrajectory(shootInfo: ShootInfo) {
-        this.trajectoryDrawer?.destroy();
-        this.trajectoryDrawer = this.add.graphics();
-        this.trajectoryDrawer.fillStyle(0xffffff, 0.9);
-
-        const gravityStep = GRAVITY * 0.001 * this.fixedTimeStep * this.fixedTimeStep;
-        const frictionFactor = 1 - BULLER_CONST.AIR_FRICTION;
-
-        let x = shootInfo.originX;
-        let y = shootInfo.originY;
-
-        const normalizedVector = new Vector(
-            shootInfo.targetX - x,
-            shootInfo.targetY - y
-        ).getNormalizedVector();
-
-        let vx = normalizedVector.x * shootInfo.force;
-        let vy = normalizedVector.y * shootInfo.force;
-
-        const maxSteps = 100;
-        for (let i = 0; i < maxSteps; i++) {
-            vx = vx * frictionFactor;
-            vy = vy * frictionFactor + gravityStep;
-
-            x += vx;
-            y += vy;
-
-            if (x < -100 || x > GAME_WIDTH + 100 || y > GAME_HEIGHT + 100) break;
-
-            this.trajectoryDrawer.fillCircle(x, y, 2);
-        }
+    pointerMoveEvent(pointer: Phaser.Input.Pointer) {
+        this.shotManager.setTargetPosition(pointer.x, pointer.y);
+        this.shotManager.setStartingPosition(this.currentPlayer.x, this.currentPlayer.y);
     }
 }
