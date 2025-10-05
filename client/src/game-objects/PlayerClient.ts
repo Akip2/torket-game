@@ -27,11 +27,16 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     updateGunPlacement(targetPosition: { x: number, y: number }) {
         const dx = targetPosition.x - this.x;
         const dy = targetPosition.y - this.y;
-        const angle = Math.atan2(dy, dx);
+        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
 
+        if (Math.abs(angle) > 90) {
+            this.gun.setScale(1, -1);
+        } else {
+            this.gun.setScale(1, 1);
+        }
 
         this.gun.setPosition(this.x, this.y);
-        this.gun.setAngle(angle * 180 / Math.PI);
+        this.gun.setAngle(angle);
     }
 
     getPosition(): { x: number; y: number; } {
