@@ -6,6 +6,10 @@ export class Player extends Schema {
 
   @type("number") x: number;
   @type("number") y: number;
+
+  @type("number") mouseX: number;
+  @type("number") mouseY: number;
+  
   @type("number") timeStamp: number;
 }
 

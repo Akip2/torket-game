@@ -1,6 +1,6 @@
 import { Room, Client } from "@colyseus/core";
 import { MyRoomState, Player } from "./schema/MyRoomState";
-import { BULLER_CONST, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TILE_SIZE } from "@shared/const";
+import { BULLER_CONST, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TILE_SIZE, TIME_STEP } from "@shared/const";
 import PlayerServer from "../bodies/PlayerServer";
 import Matter from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
@@ -15,7 +15,6 @@ import TerrainManager from "src/managers/TerrainManager";
 import PhysicsManager from "src/managers/PhysicsManager";
 
 export class MyRoom extends Room<MyRoomState> {
-    fixedTimeStep = 1000 / 60;
     maxClients = 4;
     state = new MyRoomState();
 
@@ -48,9 +47,9 @@ export class MyRoom extends Room<MyRoomState> {
         let elapsedTime = 0;
         this.setSimulationInterval((deltaTime) => {
             elapsedTime += deltaTime;
-            while (elapsedTime >= this.fixedTimeStep) {
-                elapsedTime -= this.fixedTimeStep;
-                this.fixedTick(this.fixedTimeStep);
+            while (elapsedTime >= TIME_STEP) {
+                elapsedTime -= TIME_STEP;
+                this.fixedTick(TIME_STEP);
             }
         });
 
@@ -105,6 +104,9 @@ export class MyRoom extends Room<MyRoomState> {
             while (input = player.inputQueue.shift()) {
                 movePlayerFromInputs(playerBody, input);
                 player.timeStamp = input.timeStamp;
+
+                player.mouseX = input.mousePosition.x;
+                player.mouseY = input.mousePosition.y;
             }
         });
 

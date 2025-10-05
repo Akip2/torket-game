@@ -3,6 +3,12 @@ export type InputPayload = {
     down: boolean,
     right: boolean;
     left: boolean;
+
+    mousePosition: {
+        x: number,
+        y: number
+    },
+    
     timeStamp: number;
 }
 
