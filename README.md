@@ -38,6 +38,7 @@ cd client && npm install
 cd ../server && npm install
 cd ..
 ```
+---
 
 ## 🏃‍♂️ Run the Project
 
@@ -84,6 +85,7 @@ Then open your browser at:
 ```arduino
 http://localhost:5173/
 ```
+---
 
 ## 🔧 Configuration
 
@@ -96,6 +98,7 @@ http://localhost:2567/
 You can modify these settings in:
 - `client/src/scenes/GameScene.ts` → `new Client("ws://localhost:2567")`
 - `server/src/index.ts` → server port configuration
+---
 
 ## 🎮 Controls
 
