@@ -13,6 +13,7 @@ const config = {
 
     scale: {
         mode: Phaser.Scale.NONE,
+        resolution: window.devicePixelRatio,
     },
 
     physics: {
@@ -24,8 +25,9 @@ const config = {
     },
 
     render: {
-        antialias: false,
-        roundPixels: true
+        antialias: true,
+        roundPixels: false,
+        pixelArt: false
     },
 
     scene: [

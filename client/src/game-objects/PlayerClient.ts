@@ -1,10 +1,13 @@
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import type { IPlayer } from "@shared/interfaces/Player.interface";
 import type GameScene from "../scenes/GameScene";
+import Gun from "./Gun";
 
 export default class PlayerClient extends Phaser.Physics.Matter.Sprite implements IPlayer {
     isMoving: boolean;
     isOnGround: boolean;
+
+    gun: Gun;
 
     constructor(scene: GameScene, x: number, y: number) {
         super(scene.matter.world, x, y, RessourceKeys.Player);
@@ -17,6 +20,23 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
 
         this.isMoving = false;
         this.isOnGround = false;
+
+        this.gun = new Gun(scene, x, y);
+    }
+
+    updateGunPlacement(targetPosition: { x: number, y: number }) {
+        const dx = targetPosition.x - this.x;
+        const dy = targetPosition.y - this.y;
+        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+        if (Math.abs(angle) > 90) {
+            this.gun.setScale(1, -1);
+        } else {
+            this.gun.setScale(1, 1);
+        }
+
+        this.gun.setPosition(this.x, this.y);
+        this.gun.setAngle(angle);
     }
 
     getPosition(): { x: number; y: number; } {

@@ -30,6 +30,8 @@ export default class GameScene extends Phaser.Scene {
     terrainManager!: TerrainManager;
     shotManager!: ShotManager;
 
+    currentMousePosition: { x: number, y: number } = { x: 0, y: 0 }
+
     constructor(name: string) {
         super(name);
     }
@@ -105,6 +107,10 @@ export default class GameScene extends Phaser.Scene {
                 $(player).onChange(() => {
                     playerObject.setData("serverX", player.x);
                     playerObject.setData("serverY", player.y);
+                    playerObject.setData("mousePosition", {
+                        x: player.mouseX,
+                        y: player.mouseY
+                    });
                 });
             }
         });
@@ -132,6 +138,8 @@ export default class GameScene extends Phaser.Scene {
             right: this.keyboard.right.isDown,
             up: this.keyboard.up.isDown,
             down: this.keyboard.down.isDown,
+
+            mousePosition: this.currentMousePosition,
             timeStamp: Date.now()
         };
 
@@ -140,12 +148,16 @@ export default class GameScene extends Phaser.Scene {
 
         movePlayerFromInputs(this.currentPlayer, inputPayload);
 
+        this.currentPlayer.updateGunPlacement(this.currentMousePosition);
+
         for (const sessionId in this.playerObjects) {
             if (sessionId === this.room.sessionId) continue;
             const playerObject = this.playerObjects[sessionId];
-            const { serverX, serverY } = playerObject.data.values;
+            const { serverX, serverY, mousePosition } = playerObject.data.values;
             playerObject.x = Phaser.Math.Linear(playerObject.x, serverX, 0.175);
             playerObject.y = Phaser.Math.Linear(playerObject.y, serverY, 0.35);
+
+            playerObject.updateGunPlacement(mousePosition);
         }
     }
 
@@ -226,5 +238,10 @@ export default class GameScene extends Phaser.Scene {
     pointerMoveEvent(pointer: Phaser.Input.Pointer) {
         this.shotManager.setTargetPosition(pointer.x, pointer.y);
         this.shotManager.setStartingPosition(this.currentPlayer.x, this.currentPlayer.y);
+
+        this.currentMousePosition = {
+            x: pointer.x,
+            y: pointer.y
+        }
     }
 }
