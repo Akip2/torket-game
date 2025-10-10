@@ -9,6 +9,9 @@ export class Player extends Schema {
 
   @type("number") mouseX: number;
   @type("number") mouseY: number;
+
+  @type("boolean") isAlive: boolean = true;
+  @type("number") hp: number;
   
   @type("number") timeStamp: number;
 }

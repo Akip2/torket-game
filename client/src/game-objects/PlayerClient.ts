@@ -2,10 +2,14 @@ import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import type { IPlayer } from "@shared/interfaces/Player.interface";
 import type GameScene from "../scenes/GameScene";
 import Gun from "./Gun";
+import { PLAYER_CONST } from "@shared/const";
 
 export default class PlayerClient extends Phaser.Physics.Matter.Sprite implements IPlayer {
     isMoving: boolean;
     isOnGround: boolean;
+
+    hp: number = PLAYER_CONST.MAX_HP;
+    isAlive: boolean = true;
 
     gun: Gun;
 

@@ -4,7 +4,7 @@ import BulletClient from "../game-objects/BulletClient";
 import PlayerClient from "../game-objects/PlayerClient";
 import { Client, Room, getStateCallbacks } from "colyseus.js";
 import type { InputPayload } from "@shared/types";
-import { movePlayerFromInputs, pushPlayer } from "@shared/logics/player-logic";
+import { applyDamage, movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import TextureManager from "../managers/TextureManager";
 import TerrainManager from "../managers/TerrainManager";
@@ -105,6 +105,9 @@ export default class GameScene extends Phaser.Scene {
                 });
             } else {
                 $(player).onChange(() => {
+                    playerObject.hp = player.hp;
+                    playerObject.isAlive = player.isAlive;
+
                     playerObject.setData("serverX", player.x);
                     playerObject.setData("serverY", player.y);
                     playerObject.setData("mousePosition", {
@@ -176,11 +179,23 @@ export default class GameScene extends Phaser.Scene {
                 const labels = [bodyA.label, bodyB.label];
 
                 if (labels.includes(RessourceKeys.Bullet) && (labels.includes(RessourceKeys.Ground) || labels.includes(RessourceKeys.Player))) {
-                    const bullet = (bodyA.label === RessourceKeys.Bullet ? bodyA.gameObject : bodyB.gameObject) as BulletClient;
+                    let bullet, otherBody;
+
+                    if (bodyA.label === RessourceKeys.Bullet) {
+                        bullet = bodyA.gameObject as BulletClient;
+                        otherBody = bodyB;
+                    } else {
+                        bullet = bodyB.gameObject as BulletClient;
+                        otherBody = bodyA;
+                    }
 
                     if (bullet) {
                         this.explode(bullet.x, bullet.y, EXPLOSION_RADIUS);
                         bullet.destroy();
+
+                        if (otherBody.label === RessourceKeys.Player) {
+                            applyDamage(otherBody.gameObject as PlayerClient, true);
+                        }
                     }
                 }
 
@@ -217,7 +232,8 @@ export default class GameScene extends Phaser.Scene {
 
         for (const sessionId in this.playerObjects) {
             const playerObject = this.playerObjects[sessionId];
-            pushPlayer(playerObject, cx, cy, radius);
+
+            playerReactToExplosion(playerObject, cx, cy, radius);
         }
     }
 

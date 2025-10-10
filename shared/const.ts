@@ -8,17 +8,20 @@ export const TILE_SIZE = 8;
 export const TEXTURE_SIZE = 16;
 
 export const EXPLOSION_SPRITE_SIZE = 32;
-export const EXPLOSION_RADIUS = 28;
+export const EXPLOSION_RADIUS = 50;
 
 export const TIME_STEP = 1000 / 60;
 
 export const PLAYER_CONST = {
     WIDTH: 32,
     SPEED: 3,
-    JUMP: -14
+    JUMP: -14,
+    MAX_HP: 100
 }
 
 export const BULLER_CONST = {
     RADIUS: 4,
     AIR_FRICTION: 0.01
 }
+
+export const DAMAGE_BASE = 20;
