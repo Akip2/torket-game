@@ -79,12 +79,19 @@ export default class GameScene extends Phaser.Scene {
             const playerObject = new PlayerClient(this, player.x, player.y);
             this.playerObjects[sessionId] = playerObject;
 
+            const playerInstantUpdate = (player: any) => {
+                playerObject.hp = player.hp;
+                playerObject.isAlive = player.isAlive;
+            }
+
             if (sessionId === this.room.sessionId) {
                 this.currentPlayer = playerObject;
                 this.remoteRef = this.add.rectangle(0, 0, playerObject.width, playerObject.height);
                 this.remoteRef.setStrokeStyle(1, 0xff0000);
 
                 $(player).onChange(() => {
+                    playerInstantUpdate(player);
+                    
                     const serverX = player.x;
                     const serverY = player.y;
                     const predictedX = this.currentPlayer.x;
@@ -105,8 +112,7 @@ export default class GameScene extends Phaser.Scene {
                 });
             } else {
                 $(player).onChange(() => {
-                    playerObject.hp = player.hp;
-                    playerObject.isAlive = player.isAlive;
+                    playerInstantUpdate(player);
 
                     playerObject.setData("serverX", player.x);
                     playerObject.setData("serverY", player.y);
@@ -151,16 +157,19 @@ export default class GameScene extends Phaser.Scene {
 
         movePlayerFromInputs(this.currentPlayer, inputPayload);
 
-        this.currentPlayer.updateGunPlacement(this.currentMousePosition);
-
         for (const sessionId in this.playerObjects) {
-            if (sessionId === this.room.sessionId) continue;
             const playerObject = this.playerObjects[sessionId];
-            const { serverX, serverY, mousePosition } = playerObject.data.values;
-            playerObject.x = Phaser.Math.Linear(playerObject.x, serverX, 0.175);
-            playerObject.y = Phaser.Math.Linear(playerObject.y, serverY, 0.35);
+            if (sessionId !== this.room.sessionId) {
+                const { serverX, serverY, mousePosition } = playerObject.data.values;
+                playerObject.x = Phaser.Math.Linear(playerObject.x, serverX, 0.175);
+                playerObject.y = Phaser.Math.Linear(playerObject.y, serverY, 0.35);
 
-            playerObject.updateGunPlacement(mousePosition);
+                playerObject.updateGunPlacement(mousePosition);
+            } else {
+                playerObject.updateGunPlacement(this.currentMousePosition);
+            }
+            
+            playerObject.updateHealthBar();
         }
     }
 

@@ -112,6 +112,8 @@ export class MyRoom extends Room<MyRoomState> {
 
                 player.mouseX = input.mousePosition.x;
                 player.mouseY = input.mousePosition.y;
+
+                player.hp = playerBody.hp;
             }
         });
 

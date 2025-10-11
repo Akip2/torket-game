@@ -30,3 +30,14 @@ export type QuadBlockType = {
     filled: boolean;
     children: QuadBlockType[]
 }
+
+export type BarStyleType = {
+    mainColor: number;
+    backgroundColor: number;
+
+    height: number;
+    width: number;
+
+    marginX: number;
+    marginY: number;
+}
