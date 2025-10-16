@@ -62,4 +62,10 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
             this.setVelocityX(speed);
         }
     }
+
+    destroy(fromScene?: boolean): void {
+        this.gun?.destroy(fromScene);
+        this.healthBar?.destroy(fromScene);
+        super.destroy(fromScene);
+    }
 }
