@@ -24,6 +24,21 @@ export class MyRoom extends Room<MyRoomState> {
     physicsManager: PhysicsManager = new PhysicsManager();
 
     onCreate(options: any) {
+        let elapsedTime = 0;
+        this.setSimulationInterval((deltaTime) => {
+            elapsedTime += deltaTime;
+            while (elapsedTime >= TIME_STEP) {
+                elapsedTime -= TIME_STEP;
+                this.fixedTick(TIME_STEP);
+            }
+        });
+
+        this.setupMessages();
+        this.setupCollisionEvents();
+        this.setupTerrain();
+    }
+
+    setupMessages() {
         this.onMessage(RequestTypes.Move, (client, inputPayload: InputPayload) => {
             const player = this.state.players.get(client.sessionId);
             player.inputQueue.push(inputPayload);
@@ -47,18 +62,6 @@ export class MyRoom extends Room<MyRoomState> {
         this.onMessage(RequestTypes.TerrainSynchro, (client) => {
             this.synchronizeTerrain(client);
         });
-
-        let elapsedTime = 0;
-        this.setSimulationInterval((deltaTime) => {
-            elapsedTime += deltaTime;
-            while (elapsedTime >= TIME_STEP) {
-                elapsedTime -= TIME_STEP;
-                this.fixedTick(TIME_STEP);
-            }
-        });
-
-        this.setupCollisionEvents();
-        this.setupTerrain();
     }
 
     setupTerrain() {
@@ -142,7 +145,7 @@ export class MyRoom extends Room<MyRoomState> {
         this.playerBodies.set(client.sessionId, playerBody);
         this.state.players.set(client.sessionId, player);
 
-        client.send(RequestTypes.TerrainSynchro, this.terrainManager.root); // Sending terrain to connecting client
+        this.synchronizeTerrain(client); // Sending terrain to connecting client
     }
 
     onLeave(client: Client, consented: boolean) {
