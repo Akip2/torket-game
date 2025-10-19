@@ -1,4 +1,4 @@
-import { PLAYER_CONST } from "../const";
+import { DAMAGE_BASE, PLAYER_CONST } from "../const";
 import Vector from "../data/Vector";
 import type { IPlayer } from "../interfaces/Player.interface";
 import type { InputPayload } from "../types";
@@ -27,22 +27,45 @@ export function canPlayerJump(player: IPlayer) {
     return Math.abs(player.getVelocity().y) < 0.1 && player.isOnGround;
 }
 
-export function pushPlayer(player: IPlayer, cx: number, cy: number, radius: number) {
+export function isPlayerInRadius(player: IPlayer, cx: number, cy: number, radius: number) {
+    return getPlayerDistanceFromPoint(player, cx, cy) <= radius * 0.9;
+}
+
+export function playerReactToExplosion(player: IPlayer, cx: number, cy: number, radius: number) {
+    if (isPlayerInRadius(player, cx, cy, radius)) {
+        pushPlayer(player, cx, cy, radius);
+        applyDamage(player, false);
+    }
+}
+
+export function getPlayerDistanceFromPoint(player: IPlayer, cx: number, cy: number) {
     const playerPosition = player.getPosition();
-    const pushVector = new Vector(playerPosition.x - cx, playerPosition.y - cy);
-    const dist = pushVector.getNorm();
+
+    const closestX = Math.max(playerPosition.x - PLAYER_CONST.WIDTH / 2, Math.min(cx, playerPosition.x + PLAYER_CONST.WIDTH / 2));
+    const closestY = Math.max(playerPosition.y - PLAYER_CONST.WIDTH / 2, Math.min(cy, playerPosition.y + PLAYER_CONST.WIDTH / 2));
+    const distVect = new Vector(closestX - cx, closestY - cy);
+
+    return distVect.getNorm();
+}
+
+export function pushPlayer(player: IPlayer, cx: number, cy: number, radius: number) {
+    const dist = getPlayerDistanceFromPoint(player, cx, cy);
 
     if (dist < radius) {
-        let normalizedPushVector: Vector;
-
-        if (dist === 0) {
-            const angle = Math.random() * Math.PI * 2;
-            normalizedPushVector = new Vector(Math.cos(angle), Math.sin(angle));
-        } else {
-            normalizedPushVector = pushVector.getNormalizedVector();
-        }
-        const force = (1 - dist / radius) * (10 + radius / 2.5);
+        const playerPosition = player.getPosition();
+        const normalizedPushVector = new Vector(playerPosition.x - cx, playerPosition.y - cy).getNormalizedVector();
+        const force = (1 - dist / radius) * 10;
 
         player.setVelocity(normalizedPushVector.x * force, normalizedPushVector.y * force);
+    }
+}
+
+export function applyDamage(player: IPlayer, directHit: boolean, damageBonus: number = 0) {
+    const damage = (DAMAGE_BASE + damageBonus) * (directHit ? 2 : 1);
+
+    player.hp -= damage;
+
+    if (player.hp <= 0) {
+        player.isAlive = false;
     }
 }

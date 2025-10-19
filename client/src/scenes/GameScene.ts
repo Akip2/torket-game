@@ -4,7 +4,7 @@ import BulletClient from "../game-objects/BulletClient";
 import PlayerClient from "../game-objects/PlayerClient";
 import { Client, Room, getStateCallbacks } from "colyseus.js";
 import type { InputPayload } from "@shared/types";
-import { movePlayerFromInputs, pushPlayer } from "@shared/logics/player-logic";
+import { applyDamage, movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import TextureManager from "../managers/TextureManager";
 import TerrainManager from "../managers/TerrainManager";
@@ -13,6 +13,7 @@ import { getExplosionSpriteScale } from "@shared/utils";
 import ShotManager from "../managers/ShotManager";
 
 export default class GameScene extends Phaser.Scene {
+    active: boolean = true;
     client = new Client("ws://localhost:2567");
     room!: Room;
 
@@ -68,10 +69,20 @@ export default class GameScene extends Phaser.Scene {
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => this.pointerDownEvent(pointer));
         this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => this.pointerUpEvent(pointer));
         this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => this.pointerMoveEvent(pointer));
+
+        document.addEventListener("visibilitychange", async () => {
+            if (document.hidden) {
+                this.active = false;
+            } else {
+                this.active = true;
+                this.room.send(RequestTypes.TerrainSynchro);
+            }
+        });
+
     }
 
     async setupRoomEvents() {
-        this.room = await this.client.joinOrCreate("my_room");
+        if(!this.room) this.room = await this.client.joinOrCreate("my_room");
 
         const $ = getStateCallbacks(this.room);
 
@@ -79,12 +90,19 @@ export default class GameScene extends Phaser.Scene {
             const playerObject = new PlayerClient(this, player.x, player.y);
             this.playerObjects[sessionId] = playerObject;
 
+            const playerInstantUpdate = (player: any) => {
+                playerObject.hp = player.hp;
+                playerObject.isAlive = player.isAlive;
+            }
+
             if (sessionId === this.room.sessionId) {
                 this.currentPlayer = playerObject;
                 this.remoteRef = this.add.rectangle(0, 0, playerObject.width, playerObject.height);
                 this.remoteRef.setStrokeStyle(1, 0xff0000);
 
                 $(player).onChange(() => {
+                    playerInstantUpdate(player);
+
                     const serverX = player.x;
                     const serverY = player.y;
                     const predictedX = this.currentPlayer.x;
@@ -105,6 +123,8 @@ export default class GameScene extends Phaser.Scene {
                 });
             } else {
                 $(player).onChange(() => {
+                    playerInstantUpdate(player);
+
                     playerObject.setData("serverX", player.x);
                     playerObject.setData("serverY", player.y);
                     playerObject.setData("mousePosition", {
@@ -126,7 +146,7 @@ export default class GameScene extends Phaser.Scene {
         });
 
         this.room.onMessage(RequestTypes.Shoot, (shootInfo) => {
-            this.shotManager.shootBulletFromInfo(shootInfo);
+            if(this.active) this.shotManager.shootBulletFromInfo(shootInfo);
         });
     }
 
@@ -148,16 +168,19 @@ export default class GameScene extends Phaser.Scene {
 
         movePlayerFromInputs(this.currentPlayer, inputPayload);
 
-        this.currentPlayer.updateGunPlacement(this.currentMousePosition);
-
         for (const sessionId in this.playerObjects) {
-            if (sessionId === this.room.sessionId) continue;
             const playerObject = this.playerObjects[sessionId];
-            const { serverX, serverY, mousePosition } = playerObject.data.values;
-            playerObject.x = Phaser.Math.Linear(playerObject.x, serverX, 0.175);
-            playerObject.y = Phaser.Math.Linear(playerObject.y, serverY, 0.35);
+            if (sessionId !== this.room.sessionId) {
+                const { serverX, serverY, mousePosition } = playerObject.data.values;
+                playerObject.x = Phaser.Math.Linear(playerObject.x, serverX, 0.175);
+                playerObject.y = Phaser.Math.Linear(playerObject.y, serverY, 0.35);
 
-            playerObject.updateGunPlacement(mousePosition);
+                playerObject.updateGunPlacement(mousePosition);
+            } else {
+                playerObject.updateGunPlacement(this.currentMousePosition);
+            }
+
+            playerObject.updateHealthBar();
         }
     }
 
@@ -176,11 +199,23 @@ export default class GameScene extends Phaser.Scene {
                 const labels = [bodyA.label, bodyB.label];
 
                 if (labels.includes(RessourceKeys.Bullet) && (labels.includes(RessourceKeys.Ground) || labels.includes(RessourceKeys.Player))) {
-                    const bullet = (bodyA.label === RessourceKeys.Bullet ? bodyA.gameObject : bodyB.gameObject) as BulletClient;
+                    let bullet, otherBody;
+
+                    if (bodyA.label === RessourceKeys.Bullet) {
+                        bullet = bodyA.gameObject as BulletClient;
+                        otherBody = bodyB;
+                    } else {
+                        bullet = bodyB.gameObject as BulletClient;
+                        otherBody = bodyA;
+                    }
 
                     if (bullet) {
                         this.explode(bullet.x, bullet.y, EXPLOSION_RADIUS);
                         bullet.destroy();
+
+                        if (otherBody.label === RessourceKeys.Player) {
+                            applyDamage(otherBody.gameObject as PlayerClient, true);
+                        }
                     }
                 }
 
@@ -217,7 +252,8 @@ export default class GameScene extends Phaser.Scene {
 
         for (const sessionId in this.playerObjects) {
             const playerObject = this.playerObjects[sessionId];
-            pushPlayer(playerObject, cx, cy, radius);
+
+            playerReactToExplosion(playerObject, cx, cy, radius);
         }
     }
 

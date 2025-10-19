@@ -1,12 +1,12 @@
 import { Room, Client } from "@colyseus/core";
 import { MyRoomState, Player } from "./schema/MyRoomState";
-import { BULLER_CONST, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TILE_SIZE, TIME_STEP } from "@shared/const";
+import { BULLER_CONST, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, PLAYER_CONST, TILE_SIZE, TIME_STEP } from "@shared/const";
 import PlayerServer from "../bodies/PlayerServer";
 import Matter from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { parsePlayerLabel } from "@shared/utils";
 import { InputPayload, ShootInfo } from "@shared/types";
-import { movePlayerFromInputs, pushPlayer } from "@shared/logics/player-logic";
+import { applyDamage, isPlayerInRadius, movePlayerFromInputs, playerReactToExplosion, pushPlayer } from "@shared/logics/player-logic";
 import QuadBlock from "@shared/data/QuadBlock";
 import BullerServer from "src/bodies/BulletServer";
 import { generateBulletOriginPosition, shoot } from "@shared/logics/bullet-logic";
@@ -42,6 +42,10 @@ export class MyRoom extends Room<MyRoomState> {
             shootInfo.originX = originPosition.x;
             shootInfo.originY = originPosition.y;
             this.broadcast(RequestTypes.Shoot, shootInfo, { except: client });
+        });
+
+        this.onMessage(RequestTypes.TerrainSynchro, (client) => {
+            this.synchronizeTerrain(client);
         });
 
         let elapsedTime = 0;
@@ -84,6 +88,11 @@ export class MyRoom extends Room<MyRoomState> {
                     if (bullet) {
                         this.explode(bullet.position.x, bullet.position.y, EXPLOSION_RADIUS);
                         this.physicsManager.removeBrut(bullet);
+
+                        if (hasPlayerCollision) {
+                            const sessionId = parsePlayerLabel(playerLabel).sessionId;
+                            applyDamage(this.playerBodies.get(sessionId), true);
+                        }
                     }
                 }
 
@@ -107,6 +116,8 @@ export class MyRoom extends Room<MyRoomState> {
 
                 player.mouseX = input.mousePosition.x;
                 player.mouseY = input.mousePosition.y;
+
+                player.hp = playerBody.hp;
             }
         });
 
@@ -125,6 +136,7 @@ export class MyRoom extends Room<MyRoomState> {
         player.x = Math.random() * GAME_WIDTH;
         player.y = 0;
         player.timeStamp = 0;
+        player.hp = PLAYER_CONST.MAX_HP;
 
         const playerBody = new PlayerServer(client.sessionId, player.x, player.y);
         this.physicsManager.add(playerBody);
@@ -149,11 +161,15 @@ export class MyRoom extends Room<MyRoomState> {
     explode(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
         this.terrainManager.explodeTerrain(cx, cy, EXPLOSION_RADIUS);
         this.playerBodies.forEach(p => {
-            pushPlayer(p, cx, cy, radius);
+            playerReactToExplosion(p, cx, cy, radius);
         });
     }
 
-    synchronizeTerrain() {
-        this.broadcast(RequestTypes.TerrainSynchro, this.terrainManager.root);
+    synchronizeTerrain(client?: Client) {
+        if (client) {
+            client.send(RequestTypes.TerrainSynchro, this.terrainManager.root);
+        } else {
+            this.broadcast(RequestTypes.TerrainSynchro, this.terrainManager.root);
+        }
     }
 }

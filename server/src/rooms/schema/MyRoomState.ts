@@ -7,8 +7,11 @@ export class Player extends Schema {
   @type("number") x: number;
   @type("number") y: number;
 
-  @type("number") mouseX: number;
-  @type("number") mouseY: number;
+  @type("number") mouseX: number = 0;
+  @type("number") mouseY: number = 0;
+
+  @type("boolean") isAlive: boolean = true;
+  @type("number") hp: number;
   
   @type("number") timeStamp: number;
 }

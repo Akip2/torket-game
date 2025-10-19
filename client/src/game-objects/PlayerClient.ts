@@ -2,12 +2,19 @@ import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import type { IPlayer } from "@shared/interfaces/Player.interface";
 import type GameScene from "../scenes/GameScene";
 import Gun from "./Gun";
+import { PLAYER_CONST } from "@shared/const";
+import Bar from "../ui/Bar";
+import { BarStyle } from "../ui/ui-styles";
 
 export default class PlayerClient extends Phaser.Physics.Matter.Sprite implements IPlayer {
     isMoving: boolean;
     isOnGround: boolean;
 
+    hp: number = PLAYER_CONST.MAX_HP;
+    isAlive: boolean = true;
+
     gun: Gun;
+    healthBar: Bar;
 
     constructor(scene: GameScene, x: number, y: number) {
         super(scene.matter.world, x, y, RessourceKeys.Player);
@@ -22,6 +29,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.isOnGround = false;
 
         this.gun = new Gun(scene, x, y);
+        this.healthBar = new Bar(scene, this.x, this.y, 1, BarStyle.Player);
     }
 
     updateGunPlacement(targetPosition: { x: number, y: number }) {
@@ -39,6 +47,10 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.gun.setAngle(angle);
     }
 
+    updateHealthBar() {
+        this.healthBar.updateGraphics(this.x, this.y, this.hp / PLAYER_CONST.MAX_HP);
+    }
+
     getPosition(): { x: number; y: number; } {
         return { x: this.x, y: this.y };
     }
@@ -49,5 +61,11 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         } else {
             this.setVelocityX(speed);
         }
+    }
+
+    destroy(fromScene?: boolean): void {
+        this.gun?.destroy(fromScene);
+        this.healthBar?.destroy(fromScene);
+        super.destroy(fromScene);
     }
 }

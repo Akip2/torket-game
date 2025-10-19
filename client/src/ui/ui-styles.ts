@@ -8,3 +8,16 @@ export const ButtonStyle = {
         align: "center",
     }
 }
+
+export const BarStyle = {
+    Player: {
+        mainColor: 0x32CD32,
+        backgroundColor: 0xDC143C,
+
+        height: 5,
+        width: 50,
+
+        marginY: -30,
+        marginX: 0,
+    }
+}
