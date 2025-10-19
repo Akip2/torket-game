@@ -1,18 +1,19 @@
 import { Room, Client } from "@colyseus/core";
 import { MyRoomState, Player } from "./schema/MyRoomState";
-import { BULLER_CONST, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, PLAYER_CONST, TILE_SIZE, TIME_STEP } from "@shared/const";
+import { BULLER_CONST, DAMAGE_BASE, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, PLAYER_CONST, TILE_SIZE, TIME_STEP } from "@shared/const";
 import PlayerServer from "../bodies/PlayerServer";
 import Matter from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { parsePlayerLabel } from "@shared/utils";
 import { InputPayload, ShootInfo } from "@shared/types";
-import { applyDamage, isPlayerInRadius, movePlayerFromInputs, playerReactToExplosion, pushPlayer } from "@shared/logics/player-logic";
+import { isPlayerInRadius, movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
 import QuadBlock from "@shared/data/QuadBlock";
 import BullerServer from "src/bodies/BulletServer";
 import { generateBulletOriginPosition, shoot } from "@shared/logics/bullet-logic";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import TerrainManager from "src/managers/TerrainManager";
 import PhysicsManager from "src/managers/PhysicsManager";
+import { IPlayer } from "@shared/interfaces/Player.interface";
 
 export class MyRoom extends Room<MyRoomState> {
     maxClients = 4;
@@ -91,7 +92,7 @@ export class MyRoom extends Room<MyRoomState> {
 
                         if (hasPlayerCollision) {
                             const sessionId = parsePlayerLabel(playerLabel).sessionId;
-                            applyDamage(this.playerBodies.get(sessionId), true);
+                            this.applyDamage(this.playerBodies.get(sessionId), sessionId, true);
                         }
                     }
                 }
@@ -116,8 +117,6 @@ export class MyRoom extends Room<MyRoomState> {
 
                 player.mouseX = input.mousePosition.x;
                 player.mouseY = input.mousePosition.y;
-
-                player.hp = playerBody.hp;
             }
         });
 
@@ -160,16 +159,41 @@ export class MyRoom extends Room<MyRoomState> {
 
     explode(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
         this.terrainManager.explodeTerrain(cx, cy, EXPLOSION_RADIUS);
-        this.playerBodies.forEach(p => {
+        this.playerBodies.forEach((p, id) => {
             playerReactToExplosion(p, cx, cy, radius);
+
+            if (isPlayerInRadius(p, cx, cy, radius)) {
+                this.applyDamage(p, id, false);
+            }
+        });
+    }
+
+    applyDamage(playerBody: PlayerServer, playerId: string, directHit: boolean) {
+        const playerRef = this.state.players.get(playerId);
+        const damage = Math.round((DAMAGE_BASE) * (directHit ? 2 : 1) + (Math.random() * 15));
+
+        playerBody.hp -= damage;
+
+        if (playerBody.hp <= 0) {
+            playerBody.hp = 0;
+            playerBody.isAlive = false;
+        }
+
+        playerRef.hp = playerBody.hp;
+        playerRef.isAlive = playerBody.isAlive;
+
+        this.broadcast(RequestTypes.HealthUpdate, {
+            playerId: playerId,
+            hp: playerRef.hp,
         });
     }
 
     synchronizeTerrain(client?: Client) {
+        const content = this.terrainManager.root;
         if (client) {
-            client.send(RequestTypes.TerrainSynchro, this.terrainManager.root);
+            client.send(RequestTypes.TerrainSynchro, content);
         } else {
-            this.broadcast(RequestTypes.TerrainSynchro, this.terrainManager.root);
+            this.broadcast(RequestTypes.TerrainSynchro, content);
         }
     }
 }

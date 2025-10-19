@@ -4,7 +4,7 @@ import BulletClient from "../game-objects/BulletClient";
 import PlayerClient from "../game-objects/PlayerClient";
 import { Client, Room, getStateCallbacks } from "colyseus.js";
 import type { InputPayload } from "@shared/types";
-import { applyDamage, movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
+import { movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import TextureManager from "../managers/TextureManager";
 import TerrainManager from "../managers/TerrainManager";
@@ -82,18 +82,16 @@ export default class GameScene extends Phaser.Scene {
     }
 
     async setupRoomEvents() {
-        if(!this.room) this.room = await this.client.joinOrCreate("my_room");
+        if (!this.room) this.room = await this.client.joinOrCreate("my_room");
 
         const $ = getStateCallbacks(this.room);
 
         $(this.room.state).players.onAdd((player: any, sessionId: string) => {
             const playerObject = new PlayerClient(this, player.x, player.y);
-            this.playerObjects[sessionId] = playerObject;
+            playerObject.hp = player.hp;
+            playerObject.isAlive = player.isAlive;
 
-            const playerInstantUpdate = (player: any) => {
-                playerObject.hp = player.hp;
-                playerObject.isAlive = player.isAlive;
-            }
+            this.playerObjects[sessionId] = playerObject;
 
             if (sessionId === this.room.sessionId) {
                 this.currentPlayer = playerObject;
@@ -101,8 +99,6 @@ export default class GameScene extends Phaser.Scene {
                 this.remoteRef.setStrokeStyle(1, 0xff0000);
 
                 $(player).onChange(() => {
-                    playerInstantUpdate(player);
-
                     const serverX = player.x;
                     const serverY = player.y;
                     const predictedX = this.currentPlayer.x;
@@ -123,8 +119,6 @@ export default class GameScene extends Phaser.Scene {
                 });
             } else {
                 $(player).onChange(() => {
-                    playerInstantUpdate(player);
-
                     playerObject.setData("serverX", player.x);
                     playerObject.setData("serverY", player.y);
                     playerObject.setData("mousePosition", {
@@ -146,7 +140,16 @@ export default class GameScene extends Phaser.Scene {
         });
 
         this.room.onMessage(RequestTypes.Shoot, (shootInfo) => {
-            if(this.active) this.shotManager.shootBulletFromInfo(shootInfo);
+            if (this.active) this.shotManager.shootBulletFromInfo(shootInfo);
+        });
+
+        this.room.onMessage(RequestTypes.HealthUpdate, (healthUpdateInfo) => {
+            const playerObject = this.playerObjects[healthUpdateInfo.playerId];
+            playerObject.hp = healthUpdateInfo.hp;
+            
+            if (playerObject.hp <= 0) {
+                playerObject.isAlive = false;
+            }
         });
     }
 
@@ -199,23 +202,11 @@ export default class GameScene extends Phaser.Scene {
                 const labels = [bodyA.label, bodyB.label];
 
                 if (labels.includes(RessourceKeys.Bullet) && (labels.includes(RessourceKeys.Ground) || labels.includes(RessourceKeys.Player))) {
-                    let bullet, otherBody;
-
-                    if (bodyA.label === RessourceKeys.Bullet) {
-                        bullet = bodyA.gameObject as BulletClient;
-                        otherBody = bodyB;
-                    } else {
-                        bullet = bodyB.gameObject as BulletClient;
-                        otherBody = bodyA;
-                    }
+                    const bullet = (bodyA.label === RessourceKeys.Bullet) ? bodyA.gameObject as BulletClient : bodyB.gameObject as BulletClient;
 
                     if (bullet) {
                         this.explode(bullet.x, bullet.y, EXPLOSION_RADIUS);
                         bullet.destroy();
-
-                        if (otherBody.label === RessourceKeys.Player) {
-                            applyDamage(otherBody.gameObject as PlayerClient, true);
-                        }
                     }
                 }
 
