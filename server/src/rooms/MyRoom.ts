@@ -44,6 +44,10 @@ export class MyRoom extends Room<MyRoomState> {
             this.broadcast(RequestTypes.Shoot, shootInfo, { except: client });
         });
 
+        this.onMessage(RequestTypes.TerrainSynchro, (client) => {
+            this.synchronizeTerrain(client);
+        });
+
         let elapsedTime = 0;
         this.setSimulationInterval((deltaTime) => {
             elapsedTime += deltaTime;
@@ -161,7 +165,11 @@ export class MyRoom extends Room<MyRoomState> {
         });
     }
 
-    synchronizeTerrain() {
-        this.broadcast(RequestTypes.TerrainSynchro, this.terrainManager.root);
+    synchronizeTerrain(client?: Client) {
+        if (client) {
+            client.send(RequestTypes.TerrainSynchro, this.terrainManager.root);
+        } else {
+            this.broadcast(RequestTypes.TerrainSynchro, this.terrainManager.root);
+        }
     }
 }

@@ -13,6 +13,7 @@ import { getExplosionSpriteScale } from "@shared/utils";
 import ShotManager from "../managers/ShotManager";
 
 export default class GameScene extends Phaser.Scene {
+    active: boolean = true;
     client = new Client("ws://localhost:2567");
     room!: Room;
 
@@ -68,10 +69,20 @@ export default class GameScene extends Phaser.Scene {
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => this.pointerDownEvent(pointer));
         this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => this.pointerUpEvent(pointer));
         this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => this.pointerMoveEvent(pointer));
+
+        document.addEventListener("visibilitychange", async () => {
+            if (document.hidden) {
+                this.active = false;
+            } else {
+                this.active = true;
+                this.room.send(RequestTypes.TerrainSynchro);
+            }
+        });
+
     }
 
     async setupRoomEvents() {
-        this.room = await this.client.joinOrCreate("my_room");
+        if(!this.room) this.room = await this.client.joinOrCreate("my_room");
 
         const $ = getStateCallbacks(this.room);
 
@@ -91,7 +102,7 @@ export default class GameScene extends Phaser.Scene {
 
                 $(player).onChange(() => {
                     playerInstantUpdate(player);
-                    
+
                     const serverX = player.x;
                     const serverY = player.y;
                     const predictedX = this.currentPlayer.x;
@@ -135,7 +146,7 @@ export default class GameScene extends Phaser.Scene {
         });
 
         this.room.onMessage(RequestTypes.Shoot, (shootInfo) => {
-            this.shotManager.shootBulletFromInfo(shootInfo);
+            if(this.active) this.shotManager.shootBulletFromInfo(shootInfo);
         });
     }
 
@@ -168,7 +179,7 @@ export default class GameScene extends Phaser.Scene {
             } else {
                 playerObject.updateGunPlacement(this.currentMousePosition);
             }
-            
+
             playerObject.updateHealthBar();
         }
     }
