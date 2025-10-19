@@ -13,7 +13,6 @@ import { generateBulletOriginPosition, shoot } from "@shared/logics/bullet-logic
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import TerrainManager from "src/managers/TerrainManager";
 import PhysicsManager from "src/managers/PhysicsManager";
-import { IPlayer } from "@shared/interfaces/Player.interface";
 
 export class MyRoom extends Room<MyRoomState> {
     maxClients = 4;
@@ -92,7 +91,7 @@ export class MyRoom extends Room<MyRoomState> {
 
                         if (hasPlayerCollision) {
                             const sessionId = parsePlayerLabel(playerLabel).sessionId;
-                            this.applyDamage(this.playerBodies.get(sessionId), sessionId, true);
+                            this.applyDamage(sessionId, true);
                         }
                     }
                 }
@@ -163,24 +162,21 @@ export class MyRoom extends Room<MyRoomState> {
             playerReactToExplosion(p, cx, cy, radius);
 
             if (isPlayerInRadius(p, cx, cy, radius)) {
-                this.applyDamage(p, id, false);
+                this.applyDamage(id, false);
             }
         });
     }
 
-    applyDamage(playerBody: PlayerServer, playerId: string, directHit: boolean) {
+    applyDamage(playerId: string, directHit: boolean) {
         const playerRef = this.state.players.get(playerId);
         const damage = Math.round((DAMAGE_BASE) * (directHit ? 2 : 1) + (Math.random() * 15));
 
-        playerBody.hp -= damage;
+        playerRef.hp -= damage;
 
-        if (playerBody.hp <= 0) {
-            playerBody.hp = 0;
-            playerBody.isAlive = false;
+        if (playerRef.hp <= 0) {
+            playerRef.hp = 0;
+            playerRef.isAlive = false;
         }
-
-        playerRef.hp = playerBody.hp;
-        playerRef.isAlive = playerBody.isAlive;
 
         this.broadcast(RequestTypes.HealthUpdate, {
             playerId: playerId,

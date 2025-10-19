@@ -8,9 +8,6 @@ export default class PlayerServer extends GameBody implements IPlayer {
     isMoving: boolean;
     isOnGround: boolean;
 
-    hp: number = PLAYER_CONST.MAX_HP;
-    isAlive: boolean = true;
-
     constructor(sessionId: string, x: number, y: number, size: number = PLAYER_CONST.WIDTH) {
         super();
 
