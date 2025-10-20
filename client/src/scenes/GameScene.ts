@@ -1,13 +1,11 @@
-import { EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE, TILE_SIZE, TIME_STEP } from "@shared/const";
+import { EXPLOSION_RADIUS, TEXTURE_SIZE, TILE_SIZE, TIME_STEP } from "@shared/const";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import BulletClient from "../game-objects/BulletClient";
 import PlayerClient from "../game-objects/PlayerClient";
 import { Client, Room } from "colyseus.js";
-import { movePlayerFromInputs } from "@shared/logics/player-logic";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import TextureManager from "../managers/TextureManager";
 import TerrainManager from "../managers/TerrainManager";
-import QuadBlock from "@shared/data/QuadBlock";
 import { getExplosionSpriteScale } from "@shared/utils";
 import ShotManager from "../managers/ShotManager";
 import PlayerManager from "../managers/PlayerManager";
@@ -50,32 +48,15 @@ export default class GameScene extends Phaser.Scene {
 
         new TextureManager(this.add).generateTextures();
 
-        const defaultMap = new QuadBlock(
-            0,
-            GAME_HEIGHT - GAME_HEIGHT / 5,
-            GAME_WIDTH,
-            GAME_HEIGHT / 5,
-        );
-        this.terrainManager = new TerrainManager(this, defaultMap);
-        this.shotManager = new ShotManager(this);
-
+        this.terrainManager = new TerrainManager(this);
         this.terrainManager.drawTerrain();
         this.terrainManager.createTerrainColliders();
+
+        this.shotManager = new ShotManager(this);
+
         this.setupCollisionEvents();
-
-        this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => this.pointerDownEvent(pointer));
-        this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => this.pointerUpEvent(pointer));
-        this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => this.pointerMoveEvent(pointer));
-
-        document.addEventListener("visibilitychange", async () => {
-            if (document.hidden) {
-                this.active = false;
-            } else {
-                this.active = true;
-                this.room.send(RequestTypes.TerrainSynchro);
-            }
-        });
-
+        this.setupPointerEvents();
+        this.setupVisibilityHandler();
     }
 
     async setupRoomEvents() {
@@ -96,9 +77,26 @@ export default class GameScene extends Phaser.Scene {
         this.room.onMessage(RequestTypes.HealthUpdate, (healthUpdateInfo) => {
             const playerObject = this.playerManager.getPlayer(healthUpdateInfo.playerId);
             playerObject.hp = healthUpdateInfo.hp;
-            
+
             if (playerObject.hp <= 0) {
                 playerObject.isAlive = false;
+            }
+        });
+    }
+
+    setupPointerEvents() {
+        this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => this.pointerDownEvent(pointer));
+        this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => this.pointerUpEvent(pointer));
+        this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => this.pointerMoveEvent(pointer));
+    }
+
+    setupVisibilityHandler() {
+        document.addEventListener("visibilitychange", async () => {
+            if (document.hidden) {
+                this.active = false;
+            } else {
+                this.active = true;
+                this.room.send(RequestTypes.TerrainSynchro);
             }
         });
     }
@@ -119,14 +117,13 @@ export default class GameScene extends Phaser.Scene {
         this.room.send(RequestTypes.Move, inputPayload);
         this.playerManager.localInputBuffer.push(inputPayload);
 
-        movePlayerFromInputs(this.playerManager.currentPlayer, inputPayload);
+        this.playerManager.handleLocalInput(inputPayload, this.currentMousePosition);
         this.playerManager.updatePlayers();
-        this.playerManager.currentPlayer.updateGunPlacement(this.currentMousePosition);
     }
 
     update(_time: number, delta: number): void {
         if (!this.playerManager || !this.playerManager.currentPlayer) { return; }
-        
+
         this.elapsedTime += delta;
 
         while (this.elapsedTime >= TIME_STEP) {

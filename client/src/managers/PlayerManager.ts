@@ -107,6 +107,11 @@ export default class PlayerManager {
         }
     }
 
+    handleLocalInput(inputPayload: InputPayload, mousePosition: {x: number, y: number}) {
+        movePlayerFromInputs(this.currentPlayer, inputPayload);
+        this.currentPlayer.updateGunPlacement(mousePosition);
+    }
+
     getPlayer(id: string) {
         return this.playerObjects[id];
     }
