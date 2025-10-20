@@ -11,7 +11,7 @@ export default class TerrainManager {
     terrainColliders: MatterJS.BodyType[] = [];
     terrainSprites: Phaser.GameObjects.TileSprite[] = [];
 
-    constructor(scene: GameScene, root: QuadBlock) {
+    constructor(scene: GameScene, root: QuadBlock = new QuadBlock(0, 0)) {
         this.scene = scene;
         this.root = root;
     }

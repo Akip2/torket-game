@@ -1,4 +1,4 @@
-import { DAMAGE_BASE, PLAYER_CONST } from "../const";
+import { PLAYER_CONST } from "../const";
 import Vector from "../data/Vector";
 import type { IPlayer } from "../interfaces/Player.interface";
 import type { InputPayload } from "../types";
@@ -34,7 +34,6 @@ export function isPlayerInRadius(player: IPlayer, cx: number, cy: number, radius
 export function playerReactToExplosion(player: IPlayer, cx: number, cy: number, radius: number) {
     if (isPlayerInRadius(player, cx, cy, radius)) {
         pushPlayer(player, cx, cy, radius);
-        applyDamage(player, false);
     }
 }
 
@@ -57,15 +56,5 @@ export function pushPlayer(player: IPlayer, cx: number, cy: number, radius: numb
         const force = (1 - dist / radius) * 10;
 
         player.setVelocity(normalizedPushVector.x * force, normalizedPushVector.y * force);
-    }
-}
-
-export function applyDamage(player: IPlayer, directHit: boolean, damageBonus: number = 0) {
-    const damage = (DAMAGE_BASE + damageBonus) * (directHit ? 2 : 1);
-
-    player.hp -= damage;
-
-    if (player.hp <= 0) {
-        player.isAlive = false;
     }
 }

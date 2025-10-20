@@ -9,9 +9,13 @@
  * See: https://docs.colyseus.io/server/api/#constructor-options
  */
 import { listen } from "@colyseus/tools";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 // Import Colyseus config
 import app from "./app.config";
 
 // Create and listen on 2567 (or PORT environment variable.)
-listen(app);
+const port = Number(process.env.PORT) || 2567;
+listen(app, port);
