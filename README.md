@@ -20,7 +20,7 @@ All players’ positions and actions are **synchronized in real time** through a
 | **Physics Engine** | [Matter.js](https://brm.io/matter-js/) |
 | **Multiplayer Networking** | [Colyseus](https://www.colyseus.io/) |
 | **Server** | Node.js + TypeScript |
-| **Client** | React + Vite + TypeScript |
+| **Client** | Vite + TypeScript |
 | **Real-Time Communication** | WebSockets (via Colyseus) |
 
 ---
@@ -89,15 +89,33 @@ http://localhost:5173/
 
 ## 🔧 Configuration
 
-- The **Colyseus server** runs by default at:  
+### Default setup
 
-```arduino
-http://localhost:2567/
+- **Colyseus server** runs at:  
+  ```
+  http://localhost:2567/
+  ```
+- **Vite client** runs at:  
+  ```
+  http://localhost:5173/
+  ```
+
+### Environment variables
+
+Both the **client** and **server** use `.env` files for configuration.
+
+#### 🖥️ Server (`/server/.env`)
+```bash
+PORT=2567
 ```
 
-You can modify these settings in:
-- `client/src/scenes/GameScene.ts` → `new Client("ws://localhost:2567")`
-- `server/src/index.ts` → server port configuration
+#### 💻 Client (`/client/.env`)
+```bash
+VITE_SERVER_URL=localhost:2567
+VITE_PORT=5173
+``` 
+Make sure to create both `.env` files manually — they are not included in the repository.
+
 ---
 
 ## 🎮 Controls

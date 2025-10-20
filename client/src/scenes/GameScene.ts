@@ -10,9 +10,11 @@ import { getExplosionSpriteScale } from "@shared/utils";
 import ShotManager from "../managers/ShotManager";
 import PlayerManager from "../managers/PlayerManager";
 
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || "localhost:2567";
+
 export default class GameScene extends Phaser.Scene {
     active: boolean = true;
-    client = new Client("ws://localhost:2567");
+    client = new Client(`ws://${SERVER_URL}`);
     room!: Room;
 
     debugGraphics: Phaser.GameObjects.Graphics[] = [];
