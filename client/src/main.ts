@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import MenuScene from "./scenes/MenuScene";
 import { GAME_HEIGHT, GAME_WIDTH, GRAVITY } from "@shared/const";
 import GameScene from "./scenes/GameScene";
+import MapEditionScene from "./scenes/MapEditionScene";
 
 const config = {
     type: Phaser.AUTO,
@@ -31,6 +32,7 @@ const config = {
     },
 
     scene: [
+        MapEditionScene,
         GameScene,
         MenuScene,
     ]
