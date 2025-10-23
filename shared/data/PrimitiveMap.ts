@@ -4,12 +4,19 @@ export default class PrimitiveMap {
     grid: Uint8Array;
     minTileSize: number;
 
-    constructor(width: number, height: number, tileSize: number) {
-        this.rowSize = width / tileSize;
-        this.columnSize = height / tileSize;
-        this.grid = new Uint8Array(this.rowSize * this.columnSize);
+    constructor(grid: Uint8Array, rowSize: number, columnSize: number, minTileSize: number) {
+        this.grid = grid;
+        this.rowSize = rowSize;
+        this.columnSize = columnSize;
+        this.minTileSize = minTileSize;
+    }
 
-        this.minTileSize = tileSize;
+    static createEmptyMap(width: number, height: number, minTileSize: number) {
+        const rowSize = width / minTileSize;
+        const columnSize = height / minTileSize;
+        const grid = new Uint8Array(rowSize * columnSize);
+
+        return new PrimitiveMap(grid, rowSize, columnSize, minTileSize);
     }
 
     getIndex(x: number, y: number) {
@@ -29,5 +36,16 @@ export default class PrimitiveMap {
 
     isFilled(x: number, y: number) {
         return this.grid[this.getIndex(x, y)] === 1;
+    }
+
+    serialize() {
+        const obj = {
+            rowSize: this.rowSize,
+            columnSize: this.columnSize,
+            minTileSize: this.minTileSize,
+            grid: Array.from(this.grid),
+        };
+
+        return JSON.stringify(obj, null, 2);
     }
 }
