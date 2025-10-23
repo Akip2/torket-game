@@ -11,7 +11,7 @@ export default class MapEditionScene extends Phaser.Scene {
 
     constructor() {
         super("MapEditor");
-        this.currentMap = new PrimitiveMap(GAME_WIDTH, GAME_HEIGHT, TILE_SIZE);
+        this.currentMap = PrimitiveMap.createEmptyMap(GAME_WIDTH, GAME_HEIGHT, TILE_SIZE);
     }
 
     preload() {
@@ -30,6 +30,9 @@ export default class MapEditionScene extends Phaser.Scene {
         this.input.keyboard!.on("keydown-TWO", () => (this.brushSize = 2));
         this.input.keyboard!.on("keydown-THREE", () => (this.brushSize = 3));
         this.input.keyboard!.on("keydown-FOUR", () => (this.brushSize = 4));
+
+        this.input.keyboard!.on("keydown-S", () => this.saveMap());
+        this.input.keyboard!.on("keydown-L", () => this.loadMap());
 
         this.brushPreview = this.add.rectangle(0, 0, TILE_SIZE, TILE_SIZE, 0x00ff00, 0.25)
             .setOrigin(0)
@@ -105,5 +108,69 @@ export default class MapEditionScene extends Phaser.Scene {
             .setSize(tileSize * this.brushSize, tileSize * this.brushSize)
             .setFillStyle(pointer.leftButtonDown() ? 0x00ff00 : 0xff0000, 0.25)
             .setVisible(true);
+    }
+
+    clear() {
+        for (let i = 0; i < this.tiles.length; i++) {
+            this.tiles[i]?.destroy();
+            delete this.tiles[i];
+        }
+
+        this.currentMap = PrimitiveMap.createEmptyMap(GAME_WIDTH, GAME_HEIGHT, TILE_SIZE);
+    }
+
+    drawNewMap() {
+        for (let i = 0; i < this.currentMap.rowSize * this.currentMap.columnSize; i++) {
+            if (this.currentMap.grid[i] === 1) {
+                const x = (i % this.currentMap.rowSize) * this.currentMap.minTileSize;
+                const y = Math.floor(i / this.currentMap.rowSize) * this.currentMap.minTileSize;
+
+                const sprite = this.add.tileSprite(
+                    x,
+                    y,
+                    this.currentMap.minTileSize,
+                    this.currentMap.minTileSize,
+                    RessourceKeys.Ground
+                ).setOrigin(0);
+
+                this.tiles[i] = sprite;
+            }
+        }
+    }
+
+    saveMap() {
+        const json = this.currentMap.serialize();
+
+        const blob = new Blob([json], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "map.json";
+        a.click();
+
+        URL.revokeObjectURL(url);
+    }
+
+    loadMap() {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = ".json";
+
+        input.addEventListener("change", async (event: Event) => {
+            const target = event.target as HTMLInputElement;
+            if (!target.files || target.files.length === 0) return;
+
+            const file = target.files[0];
+            const text = await file.text();
+            const jsonData: PrimitiveMap = JSON.parse(text);
+
+            this.clear();
+
+            this.currentMap = new PrimitiveMap(jsonData.grid, jsonData.rowSize, jsonData.columnSize, jsonData.minTileSize);
+            this.drawNewMap();
+        });
+
+        input.click();
     }
 }
