@@ -5,13 +5,16 @@ import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 export default class MapEditionScene extends Phaser.Scene {
     currentMap: PrimitiveMap;
     tiles: Phaser.GameObjects.TileSprite[] = [];
+    gridGraphics!: Phaser.GameObjects.Graphics;
 
-    brushSize: number = 2; // brush and eraser size in tiles
+    brushSize: number = 2;
     brushPreview!: Phaser.GameObjects.Rectangle;
+
+    mirrorMode: boolean = false;
 
     constructor() {
         super("MapEditor");
-        this.currentMap = PrimitiveMap.createEmptyMap(GAME_WIDTH, GAME_HEIGHT, TILE_SIZE);
+        this.currentMap = PrimitiveMap.createEmptyMap(GAME_WIDTH, GAME_HEIGHT, TILE_SIZE * 2);
     }
 
     preload() {
@@ -19,10 +22,10 @@ export default class MapEditionScene extends Phaser.Scene {
     }
 
     create() {
-        this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => this.doToolAction(pointer));
-        this.input.on("pointermove", (pointer: Phaser.Input.Pointer) => {
-            this.doToolAction(pointer);
-            this.updateBrushPreview(pointer);
+        this.input.on("pointerdown", (p: Phaser.Input.Pointer) => this.doToolAction(p));
+        this.input.on("pointermove", (p: Phaser.Input.Pointer) => {
+            this.doToolAction(p);
+            this.updateBrushPreview(p);
         });
         this.input.mouse?.disableContextMenu();
 
@@ -30,6 +33,11 @@ export default class MapEditionScene extends Phaser.Scene {
         this.input.keyboard!.on("keydown-TWO", () => (this.brushSize = 2));
         this.input.keyboard!.on("keydown-THREE", () => (this.brushSize = 3));
         this.input.keyboard!.on("keydown-FOUR", () => (this.brushSize = 4));
+        this.input.keyboard!.on("keydown-B", () => (this.brushSize = 15));
+
+        this.input.keyboard!.on("keydown-M", () => {
+            this.mirrorMode = !this.mirrorMode;
+        });
 
         this.input.keyboard!.on("keydown-S", () => this.saveMap());
         this.input.keyboard!.on("keydown-L", () => this.loadMap());
@@ -38,6 +46,26 @@ export default class MapEditionScene extends Phaser.Scene {
             .setOrigin(0)
             .setDepth(1000)
             .setVisible(false);
+
+        this.drawGrid();
+    }
+
+    drawGrid() {
+        this.gridGraphics = this.add.graphics();
+        this.gridGraphics.lineStyle(1, 0x333333, 0.3);
+        const step = this.currentMap.minTileSize;
+
+        for (let x = 0; x <= GAME_WIDTH; x += step) {
+            this.gridGraphics.moveTo(x, 0);
+            this.gridGraphics.lineTo(x, GAME_HEIGHT);
+        }
+        for (let y = 0; y <= GAME_HEIGHT; y += step) {
+            this.gridGraphics.moveTo(0, y);
+            this.gridGraphics.lineTo(GAME_WIDTH, y);
+        }
+
+        this.gridGraphics.strokePath();
+        this.gridGraphics.setDepth(999);
     }
 
     doToolAction(pointer: Phaser.Input.Pointer) {
@@ -48,34 +76,45 @@ export default class MapEditionScene extends Phaser.Scene {
         }
     }
 
+    getMirrorX(x: number): number {
+        const tileSize = this.currentMap.minTileSize;
+        const tileX = Math.floor(x / tileSize);
+        const mirroredTileX = this.currentMap.rowSize - 1 - tileX;
+        return mirroredTileX * tileSize;
+    }
+
     paintTiles(x: number, y: number) {
-        const tileX = Math.floor(x / this.currentMap.minTileSize);
-        const tileY = Math.floor(y / this.currentMap.minTileSize);
-
-        for (let dy = 0; dy < this.brushSize; dy++) {
-            for (let dx = 0; dx < this.brushSize; dx++) {
-                const px = (tileX + dx) * this.currentMap.minTileSize;
-                const py = (tileY + dy) * this.currentMap.minTileSize;
-
-                if (!this.currentMap.isFilled(px, py)) {
-                    this.currentMap.add(px, py);
-
-                    const sprite = this.add.tileSprite(
-                        px,
-                        py,
-                        this.currentMap.minTileSize,
-                        this.currentMap.minTileSize,
-                        RessourceKeys.Ground
-                    ).setOrigin(0);
-
-                    const index = this.currentMap.getIndex(px, py);
-                    this.tiles[index] = sprite;
-                }
+        this.applyToTiles(x, y, (px, py) => {
+            if (!this.currentMap.isFilled(px, py)) {
+                this.currentMap.add(px, py);
+                const sprite = this.add.tileSprite(
+                    px,
+                    py,
+                    this.currentMap.minTileSize,
+                    this.currentMap.minTileSize,
+                    RessourceKeys.Ground
+                ).setOrigin(0);
+                const index = this.currentMap.getIndex(px, py);
+                this.tiles[index] = sprite;
             }
-        }
+        });
     }
 
     eraseTiles(x: number, y: number) {
+        this.applyToTiles(x, y, (px, py) => {
+            if (this.currentMap.isFilled(px, py)) {
+                this.currentMap.remove(px, py);
+                const index = this.currentMap.getIndex(px, py);
+                const tile = this.tiles[index];
+                if (tile) {
+                    tile.destroy();
+                    delete this.tiles[index];
+                }
+            }
+        });
+    }
+
+    applyToTiles(x: number, y: number, action: (px: number, py: number) => void) {
         const tileX = Math.floor(x / this.currentMap.minTileSize);
         const tileY = Math.floor(y / this.currentMap.minTileSize);
 
@@ -84,15 +123,11 @@ export default class MapEditionScene extends Phaser.Scene {
                 const px = (tileX + dx) * this.currentMap.minTileSize;
                 const py = (tileY + dy) * this.currentMap.minTileSize;
 
-                if (this.currentMap.isFilled(px, py)) {
-                    this.currentMap.remove(px, py);
+                action(px, py);
 
-                    const index = this.currentMap.getIndex(px, py);
-                    const tile = this.tiles[index];
-                    if (tile) {
-                        tile.destroy();
-                        delete this.tiles[index];
-                    };
+                if (this.mirrorMode) {
+                    const mirrorPx = this.getMirrorX(px);
+                    action(mirrorPx, py);
                 }
             }
         }
@@ -115,7 +150,6 @@ export default class MapEditionScene extends Phaser.Scene {
             this.tiles[i]?.destroy();
             delete this.tiles[i];
         }
-
         this.currentMap = PrimitiveMap.createEmptyMap(GAME_WIDTH, GAME_HEIGHT, TILE_SIZE);
     }
 
@@ -140,15 +174,12 @@ export default class MapEditionScene extends Phaser.Scene {
 
     saveMap() {
         const json = this.currentMap.serialize();
-
         const blob = new Blob([json], { type: "application/json" });
         const url = URL.createObjectURL(blob);
-
         const a = document.createElement("a");
         a.href = url;
         a.download = "map.json";
         a.click();
-
         URL.revokeObjectURL(url);
     }
 
@@ -166,7 +197,6 @@ export default class MapEditionScene extends Phaser.Scene {
             const jsonData: PrimitiveMap = JSON.parse(text);
 
             this.clear();
-
             this.currentMap = new PrimitiveMap(jsonData.grid, jsonData.rowSize, jsonData.columnSize, jsonData.minTileSize);
             this.drawNewMap();
         });
