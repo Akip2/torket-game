@@ -5,7 +5,7 @@ import PlayerServer from "../bodies/PlayerServer";
 import Matter from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { parsePlayerLabel } from "@shared/utils";
-import { InputPayload, ShootInfo } from "@shared/types";
+import { InputPayload, QuadBlockType, ShootInfo } from "@shared/types";
 import { isPlayerInRadius, movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
 import QuadBlock from "@shared/data/QuadBlock";
 import BullerServer from "src/bodies/BulletServer";
@@ -13,6 +13,8 @@ import { generateBulletOriginPosition, shoot } from "@shared/logics/bullet-logic
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import TerrainManager from "src/managers/TerrainManager";
 import PhysicsManager from "src/managers/PhysicsManager";
+import path from "path";
+import { readFile } from "fs/promises";
 
 export class MyRoom extends Room<MyRoomState> {
     maxClients = 4;
@@ -23,7 +25,7 @@ export class MyRoom extends Room<MyRoomState> {
     terrainManager: TerrainManager;
     physicsManager: PhysicsManager = new PhysicsManager();
 
-    onCreate(options: any) {
+    async onCreate(options: any) {
         let elapsedTime = 0;
         this.setSimulationInterval((deltaTime) => {
             elapsedTime += deltaTime;
@@ -35,7 +37,7 @@ export class MyRoom extends Room<MyRoomState> {
 
         this.setupMessages();
         this.setupCollisionEvents();
-        this.setupTerrain();
+        await this.setupTerrain();
     }
 
     setupMessages() {
@@ -64,13 +66,19 @@ export class MyRoom extends Room<MyRoomState> {
         });
     }
 
-    setupTerrain() {
-        const defaultMap = new QuadBlock(
+    async setupTerrain() {
+        const mapPath = path.resolve(__dirname, "../../maps/mushroom.json");
+        const data = await readFile(mapPath, "utf-8");
+        const json: QuadBlockType = JSON.parse(data);
+
+        const defaultMap = QuadBlock.generateQuadBlockFromType(json);
+            
+            /*new QuadBlock(
             0,
             GAME_HEIGHT - GAME_HEIGHT / 5,
             GAME_WIDTH,
             GAME_HEIGHT / 5,
-        );
+        );*/
 
         this.terrainManager = new TerrainManager(this.physicsManager, defaultMap);
         this.terrainManager.createTerrain();

@@ -1,3 +1,4 @@
+import type { QuadBlockType } from "@shared/types";
 import { GAME_HEIGHT, GAME_WIDTH, TILE_SIZE } from "../const";
 import { circleIntersectsRectangle } from "../utils";
 
@@ -23,6 +24,10 @@ export default class QuadBlock {
         this.height = height;
         this.filled = filled;
         this.children = children;
+    }
+    
+    static generateQuadBlockFromType(blockType: QuadBlockType): QuadBlock {
+        return new QuadBlock(blockType.x, blockType.y, blockType.width, blockType.height, blockType.filled, blockType.children.map((child) => QuadBlock.generateQuadBlockFromType(child)));
     }
 
     subdivideHorizontally() {
