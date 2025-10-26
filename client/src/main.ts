@@ -32,7 +32,7 @@ const config = {
     },
 
     scene: [
-        MapEditionScene,
+        //MapEditionScene,
         GameScene,
         MenuScene,
     ]

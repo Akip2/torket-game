@@ -67,18 +67,18 @@ export class MyRoom extends Room<MyRoomState> {
     }
 
     async setupTerrain() {
+        /*
         const mapPath = path.resolve(__dirname, "../../maps/mushroom.json");
         const data = await readFile(mapPath, "utf-8");
         const json: QuadBlockType = JSON.parse(data);
+        */
 
-        const defaultMap = QuadBlock.generateQuadBlockFromType(json);
-            
-            /*new QuadBlock(
+        const defaultMap = new QuadBlock(
             0,
             GAME_HEIGHT - GAME_HEIGHT / 5,
             GAME_WIDTH,
             GAME_HEIGHT / 5,
-        );*/
+        );
 
         this.terrainManager = new TerrainManager(this.physicsManager, defaultMap);
         this.terrainManager.createTerrain();

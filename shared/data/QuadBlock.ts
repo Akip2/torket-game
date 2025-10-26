@@ -18,41 +18,36 @@ export default class QuadBlock {
         filled: boolean = true,
         children: QuadBlock[] = []
     ) {
+        // ⚙️ On arrondit toujours à un multiple de minSize
+        const w = Math.floor(width / TILE_SIZE) * TILE_SIZE;
+        const h = Math.floor(height / TILE_SIZE) * TILE_SIZE;
+
         this.x = x;
         this.y = y;
-        this.width = width;
-        this.height = height;
+        this.width = w;
+        this.height = h;
         this.filled = filled;
         this.children = children;
     }
-    
+
     static generateQuadBlockFromType(blockType: QuadBlockType): QuadBlock {
-        return new QuadBlock(blockType.x, blockType.y, blockType.width, blockType.height, blockType.filled, blockType.children.map((child) => QuadBlock.generateQuadBlockFromType(child)));
+        return new QuadBlock(
+            blockType.x,
+            blockType.y,
+            blockType.width,
+            blockType.height,
+            blockType.filled,
+            blockType.children.map((child) => QuadBlock.generateQuadBlockFromType(child))
+        );
     }
 
-    subdivideHorizontally() {
-        const midX = Math.round(this.x + this.width / 2);
-        const hw = Math.round(this.width / 2);
-
-        this.children = [
-            new QuadBlock(this.x, this.y, hw, this.height),
-            new QuadBlock(midX, this.y, hw, this.height),
-        ];
+    private roundToTileMultiple(value: number, minSize: number): number {
+        return Math.round(value / minSize) * minSize;
     }
 
-    subdivideVertically() {
-        const midY = Math.round(this.y + this.height / 2);
-        const hh = Math.round(this.height / 2);
-
-        this.children = [
-            new QuadBlock(this.x, this.y, this.width, hh),
-            new QuadBlock(this.x, midY, this.width, hh),
-        ];
-    }
-
-    subdivideEqually() {
-        const hw = Math.round(this.width / 2);
-        const hh = Math.round(this.height / 2);
+    subdivideEqually(minSize = TILE_SIZE) {
+        const hw = this.roundToTileMultiple(this.width / 2, minSize);
+        const hh = this.roundToTileMultiple(this.height / 2, minSize);
 
         this.children = [
             new QuadBlock(this.x, this.y, hw, hh),
@@ -62,17 +57,41 @@ export default class QuadBlock {
         ];
     }
 
+    subdivideHorizontally(minSize = TILE_SIZE) {
+        const hw = this.roundToTileMultiple(this.width / 2, minSize);
+        const midX = this.x + hw;
+        this.children = [
+            new QuadBlock(this.x, this.y, hw, this.height),
+            new QuadBlock(midX, this.y, this.width - hw, this.height),
+        ];
+    }
+
+    subdivideVertically(minSize = TILE_SIZE) {
+        const hh = this.roundToTileMultiple(this.height / 2, minSize);
+        const midY = this.y + hh;
+        this.children = [
+            new QuadBlock(this.x, this.y, this.width, hh),
+            new QuadBlock(this.x, midY, this.width, this.height - hh),
+        ];
+    }
+
+    subdivideToSquare(minSize = TILE_SIZE) {
+        if (this.width > this.height && this.width / 2 >= minSize) {
+            this.subdivideHorizontally(minSize);
+        } else if (this.height > this.width && this.height / 2 >= minSize) {
+            this.subdivideVertically(minSize);
+        } else {
+            this.subdivideEqually(minSize);
+        }
+    }
+
     subdivide(minSize = TILE_SIZE) {
         if (this.width <= minSize || this.height <= minSize) return;
 
-        const aspectRatio = this.width / this.height;
-
-        if (aspectRatio > 2) {
-            this.subdivideHorizontally();
-        } else if (aspectRatio < 0.5) {
-            this.subdivideVertically();
+        if (this.width !== this.height) {
+            this.subdivideToSquare(minSize);
         } else {
-            this.subdivideEqually();
+            this.subdivideEqually(minSize);
         }
 
         this.filled = false;
@@ -86,7 +105,7 @@ export default class QuadBlock {
 
         if (!circleIntersectsRectangle(cx, cy, radius, rectX, rectY, rectW, rectH)) return;
 
-        if (this.width <= minSize || this.height <= minSize) {
+        if (Math.min(this.width, this.height) <= minSize) {
             this.turnEmpty();
             return;
         }
@@ -95,10 +114,8 @@ export default class QuadBlock {
             this.subdivide(minSize);
         }
 
-        if (this.hasChildren()) {
-            for (const child of this.children) {
-                child.destroy(cx, cy, radius, minSize);
-            }
+        for (const child of this.children) {
+            child.destroy(cx, cy, radius, minSize);
         }
     }
 
