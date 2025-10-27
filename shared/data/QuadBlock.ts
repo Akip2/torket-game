@@ -7,8 +7,8 @@ export default class QuadBlock {
     y: number;
     width: number;
     height: number;
-    children: QuadBlock[];
     filled: boolean;
+    children: QuadBlock[];
 
     constructor(
         x: number,
@@ -18,7 +18,6 @@ export default class QuadBlock {
         filled: boolean = true,
         children: QuadBlock[] = []
     ) {
-        // ⚙️ On arrondit toujours à un multiple de minSize
         const w = Math.floor(width / TILE_SIZE) * TILE_SIZE;
         const h = Math.floor(height / TILE_SIZE) * TILE_SIZE;
 
@@ -116,6 +115,20 @@ export default class QuadBlock {
 
         for (const child of this.children) {
             child.destroy(cx, cy, radius, minSize);
+        }
+    }
+
+    cleanup() {
+        if (!this.hasChildren()) return;
+
+        for (const child of this.children) {
+            child.cleanup();
+        }
+
+        this.children = this.children.filter(child => !child.isEmpty());
+
+        if (this.children.length === 0) {
+            this.turnEmpty();
         }
     }
 

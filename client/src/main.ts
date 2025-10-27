@@ -32,8 +32,8 @@ const config = {
     },
 
     scene: [
-        //MapEditionScene,
         GameScene,
+        MapEditionScene,
         MenuScene,
     ]
 };

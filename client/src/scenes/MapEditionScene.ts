@@ -1,4 +1,4 @@
-import { GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE, TILE_SIZE } from "@shared/const";
+import { EDITION_TILE_SIZE, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE } from "@shared/const";
 import PrimitiveMap from "@shared/data/PrimitiveMap";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 
@@ -14,7 +14,7 @@ export default class MapEditionScene extends Phaser.Scene {
 
     constructor() {
         super("MapEditor");
-        this.currentMap = PrimitiveMap.createEmptyMap(GAME_WIDTH, GAME_HEIGHT, TILE_SIZE * 2);
+        this.currentMap = PrimitiveMap.createEmptyMap(GAME_WIDTH, GAME_HEIGHT, EDITION_TILE_SIZE);
     }
 
     preload() {
@@ -41,8 +41,9 @@ export default class MapEditionScene extends Phaser.Scene {
 
         this.input.keyboard!.on("keydown-S", () => this.saveMap());
         this.input.keyboard!.on("keydown-L", () => this.loadMap());
+        this.input.keyboard!.on("keydown-E", () => this.export());
 
-        this.brushPreview = this.add.rectangle(0, 0, TILE_SIZE, TILE_SIZE, 0x00ff00, 0.25)
+        this.brushPreview = this.add.rectangle(0, 0, EDITION_TILE_SIZE, EDITION_TILE_SIZE, 0x00ff00, 0.25)
             .setOrigin(0)
             .setDepth(1000)
             .setVisible(false);
@@ -150,7 +151,7 @@ export default class MapEditionScene extends Phaser.Scene {
             this.tiles[i]?.destroy();
             delete this.tiles[i];
         }
-        this.currentMap = PrimitiveMap.createEmptyMap(GAME_WIDTH, GAME_HEIGHT, TILE_SIZE);
+        this.currentMap = PrimitiveMap.createEmptyMap(GAME_WIDTH, GAME_HEIGHT, EDITION_TILE_SIZE);
     }
 
     drawNewMap() {
@@ -202,5 +203,16 @@ export default class MapEditionScene extends Phaser.Scene {
         });
 
         input.click();
+    }
+
+    export() {
+        const json = JSON.stringify(this.currentMap.toQuadBlock(), null, 2);
+        const blob = new Blob([json], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "exported-map.json";
+        a.click();
+        URL.revokeObjectURL(url);
     }
 }

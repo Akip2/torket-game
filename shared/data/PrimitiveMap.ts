@@ -1,3 +1,5 @@
+import QuadBlock from "./QuadBlock";
+
 export default class PrimitiveMap {
     rowSize: number;
     columnSize: number;
@@ -47,5 +49,67 @@ export default class PrimitiveMap {
         };
 
         return JSON.stringify(obj, null, 2);
+    }
+
+    toQuadBlock(): QuadBlock {
+        const result = this.buildQuadBlock(0, 0, this.rowSize, this.columnSize);
+        result.cleanup();
+
+        return result;
+    }
+
+    buildQuadBlock(tileX: number, tileY: number, tilesW: number, tilesH: number): QuadBlock {
+        const x = tileX * this.minTileSize;
+        const y = tileY * this.minTileSize;
+        const width = tilesW * this.minTileSize;
+        const height = tilesH * this.minTileSize;
+
+        const resQuadBlock = new QuadBlock(x, y, width, height);
+
+        if (tilesW === 1 && tilesH === 1) {
+            resQuadBlock.filled = this.isFilled(x, y);
+            return resQuadBlock;
+        }
+
+        let isFilled = true;
+        for (let currentTileY = tileY; currentTileY < tileY + tilesH && isFilled; currentTileY++) {
+            for (let currentTileX = tileX; currentTileX < tileX + tilesW && isFilled; currentTileX++) {
+                isFilled = this.isFilled(currentTileX * this.minTileSize, currentTileY * this.minTileSize);
+            }
+        }
+
+        resQuadBlock.filled = isFilled;
+        if (!isFilled) {
+            if (tilesW !== tilesH) {
+                if (tilesW > tilesH) {
+                    const leftW = Math.floor(tilesW / 2);
+                    const rightW = tilesW - leftW;
+
+                    resQuadBlock.children = [
+                        this.buildQuadBlock(tileX, tileY, leftW, tilesH),
+                        this.buildQuadBlock(tileX + leftW, tileY, rightW, tilesH)
+                    ];
+                } else {
+                    const topH = Math.floor(tilesH / 2);
+                    const bottomH = tilesH - topH;
+
+                    resQuadBlock.children = [
+                        this.buildQuadBlock(tileX, tileY, tilesW, topH),
+                        this.buildQuadBlock(tileX, tileY + topH, tilesW, bottomH)
+                    ];
+                }
+            } else {
+                const half = Math.floor(tilesW / 2);
+
+                resQuadBlock.children = [
+                    this.buildQuadBlock(tileX, tileY, half, half),
+                    this.buildQuadBlock(tileX + half, tileY, tilesW - half, half),
+                    this.buildQuadBlock(tileX, tileY + half, half, tilesH - half),
+                    this.buildQuadBlock(tileX + half, tileY + half, tilesW - half, tilesH - half)
+                ];
+            }
+        }
+
+        return resQuadBlock;
     }
 }
