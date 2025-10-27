@@ -1,6 +1,7 @@
 import { EDITION_TILE_SIZE, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE } from "@shared/const";
 import PrimitiveMap from "@shared/data/PrimitiveMap";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
+import { SceneNames } from "@shared/enums/SceneNames.enum";
 
 export default class MapEditionScene extends Phaser.Scene {
     currentMap: PrimitiveMap;
@@ -13,7 +14,7 @@ export default class MapEditionScene extends Phaser.Scene {
     mirrorMode: boolean = false;
 
     constructor() {
-        super("MapEditor");
+        super(SceneNames.MapEditor);
         this.currentMap = PrimitiveMap.createEmptyMap(GAME_WIDTH, GAME_HEIGHT, EDITION_TILE_SIZE);
     }
 

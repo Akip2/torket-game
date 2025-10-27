@@ -3,6 +3,9 @@ import MenuScene from "./scenes/MenuScene";
 import { GAME_HEIGHT, GAME_WIDTH, GRAVITY } from "@shared/const";
 import GameScene from "./scenes/GameScene";
 import MapEditionScene from "./scenes/MapEditionScene";
+import { SceneNames } from "@shared/enums/SceneNames.enum";
+
+const startSceneName = import.meta.env.VITE_START_SCENE;
 
 const config = {
     type: Phaser.AUTO,
@@ -30,12 +33,15 @@ const config = {
         roundPixels: false,
         pixelArt: false
     },
-
-    scene: [
-        GameScene,
-        MapEditionScene,
-        MenuScene,
-    ]
 };
 
-new Phaser.Game(config);
+const game = new Phaser.Game(config);
+game.scene.add(SceneNames.TitleScreen, MenuScene);
+game.scene.add(SceneNames.Game, GameScene);
+game.scene.add(SceneNames.MapEditor, MapEditionScene);
+
+if (startSceneName) {
+    game.scene.start(startSceneName);
+} else {
+    game.scene.start(SceneNames.Game);
+}

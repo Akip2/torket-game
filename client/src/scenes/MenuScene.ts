@@ -1,14 +1,15 @@
 import { getTextWidth } from "@shared/utils";
 import Button from "../ui/Button"
 import { ButtonStyle } from "../ui/ui-styles";
+import { SceneNames } from "@shared/enums/SceneNames.enum";
 
 export default class MenuScene extends Phaser.Scene {
     constructor() {
-        super('MenuScene')
+        super(SceneNames.TitleScreen)
     }
 
     quickPlay() {
-        this.scene.start("TestScene");
+        this.scene.start(SceneNames.Game);
     }
 
     joinGame() {
