@@ -4,10 +4,7 @@ export type InputPayload = {
     right: boolean;
     left: boolean;
 
-    mousePosition: {
-        x: number,
-        y: number
-    },
+    mousePosition: Position,
     
     timeStamp: number;
 }
@@ -43,7 +40,7 @@ export type BarStyleType = {
 }
 
 export type GameMap = {
-    playerPositions: { x: number, y: number }[],
+    playerPositions: Position[],
     quadTree: QuadBlockType
 }
 
@@ -51,4 +48,9 @@ export type PlayerStartingPosition = {
     x: number,
     y: number,
     playerId?: string
+}
+
+export type Position = {
+    x: number,
+    y: number
 }

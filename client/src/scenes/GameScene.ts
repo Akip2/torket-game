@@ -10,6 +10,7 @@ import { getExplosionSpriteScale } from "@shared/utils";
 import ShotManager from "../managers/ShotManager";
 import PlayerManager from "../managers/PlayerManager";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
+import type { Position } from "@shared/types";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "localhost:2567";
 
@@ -29,7 +30,7 @@ export default class GameScene extends Phaser.Scene {
     terrainManager!: TerrainManager;
     shotManager!: ShotManager;
 
-    currentMousePosition: { x: number, y: number } = { x: 0, y: 0 }
+    currentMousePosition: Position = { x: 0, y: 0 }
 
     constructor() {
         super(SceneNames.Game);

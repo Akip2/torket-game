@@ -1,7 +1,7 @@
 import { getStateCallbacks, type Room } from "colyseus.js";
 import PlayerClient from "../game-objects/PlayerClient";
 import type GameScene from "../scenes/GameScene";
-import type { InputPayload } from "@shared/types";
+import type { InputPayload, Position } from "@shared/types";
 import { movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
 
 export default class PlayerManager {
@@ -107,7 +107,7 @@ export default class PlayerManager {
         }
     }
 
-    handleLocalInput(inputPayload: InputPayload, mousePosition: {x: number, y: number}) {
+    handleLocalInput(inputPayload: InputPayload, mousePosition:  Position) {
         movePlayerFromInputs(this.currentPlayer, inputPayload);
         this.currentPlayer.updateGunPlacement(mousePosition);
     }

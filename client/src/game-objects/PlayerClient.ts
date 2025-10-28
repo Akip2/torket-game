@@ -5,6 +5,7 @@ import Gun from "./Gun";
 import { PLAYER_CONST } from "@shared/const";
 import Bar from "../ui/Bar";
 import { BarStyle } from "../ui/ui-styles";
+import type { Position } from "@shared/types";
 
 export default class PlayerClient extends Phaser.Physics.Matter.Sprite implements IPlayer {
     isMoving: boolean;
@@ -32,7 +33,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.healthBar = new Bar(scene, this.x, this.y, 1, BarStyle.Player);
     }
 
-    updateGunPlacement(targetPosition: { x: number, y: number }) {
+    updateGunPlacement(targetPosition: Position) {
         const dx = targetPosition.x - this.x;
         const dy = targetPosition.y - this.y;
         const angle = Math.atan2(dy, dx) * 180 / Math.PI;
@@ -51,7 +52,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.healthBar.updateGraphics(this.x, this.y, this.hp / PLAYER_CONST.MAX_HP);
     }
 
-    getPosition(): { x: number; y: number; } {
+    getPosition(): Position {
         return { x: this.x, y: this.y };
     }
 

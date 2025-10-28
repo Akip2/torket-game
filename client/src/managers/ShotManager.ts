@@ -1,4 +1,4 @@
-import type { ShootInfo } from "@shared/types";
+import type { Position, ShootInfo } from "@shared/types";
 import BulletClient from "../game-objects/BulletClient";
 import { generateBulletOriginPosition, shoot } from "@shared/logics/bullet-logic";
 import type GameScene from "../scenes/GameScene";
@@ -13,8 +13,8 @@ export default class ShotManager {
     force: number = 0;
     isCharging: boolean = false;
 
-    targetPosition: { x: number, y: number } = { x: 0, y: 0 };
-    startingPosition: { x: number, y: number } = { x: 0, y: 0 };
+    targetPosition: Position = { x: 0, y: 0 };
+    startingPosition: Position = { x: 0, y: 0 };
 
     trajectoryDrawer?: Phaser.GameObjects.Graphics;
 

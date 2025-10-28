@@ -1,3 +1,4 @@
+import type { Position } from "@shared/types";
 import QuadBlock from "./QuadBlock";
 
 export default class PrimitiveMap {
@@ -6,9 +7,9 @@ export default class PrimitiveMap {
     grid: Uint8Array;
     minTileSize: number;
 
-    playerPositions: { x: number, y: number }[];
+    playerPositions: Position[];
 
-    constructor(grid: Uint8Array, rowSize: number, columnSize: number, minTileSize: number, playerPositions: { x: number, y: number }[] = []) {
+    constructor(grid: Uint8Array, rowSize: number, columnSize: number, minTileSize: number, playerPositions: Position[] = []) {
         this.grid = new Uint8Array(grid);
         this.rowSize = rowSize;
         this.columnSize = columnSize;
