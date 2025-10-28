@@ -100,12 +100,8 @@ export default class TerrainManager {
             }
         }
     }
-
-    quadBlockTypeToQuadBlock(blockType: QuadBlockType): QuadBlock {
-        return new QuadBlock(blockType.x, blockType.y, blockType.width, blockType.height, blockType.filled, blockType.children.map((child) => this.quadBlockTypeToQuadBlock(child)));
-    }
     
     constructQuadBlock(blockType: QuadBlockType) {
-        this.root = this.quadBlockTypeToQuadBlock(blockType);
+        this.root = QuadBlock.generateQuadBlockFromType(blockType);
     }
 }
