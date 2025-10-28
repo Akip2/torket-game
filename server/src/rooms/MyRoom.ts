@@ -5,7 +5,7 @@ import PlayerServer from "../bodies/PlayerServer";
 import Matter from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { parsePlayerLabel } from "@shared/utils";
-import { InputPayload, ShootInfo } from "@shared/types";
+import { InputPayload, GameMap, PlayerStartingPosition, QuadBlockType, ShootInfo } from "@shared/types";
 import { isPlayerInRadius, movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
 import QuadBlock from "@shared/data/QuadBlock";
 import BullerServer from "src/bodies/BulletServer";
@@ -13,6 +13,8 @@ import { generateBulletOriginPosition, shoot } from "@shared/logics/bullet-logic
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import TerrainManager from "src/managers/TerrainManager";
 import PhysicsManager from "src/managers/PhysicsManager";
+import path from "path";
+import { readFile } from "fs/promises";
 
 export class MyRoom extends Room<MyRoomState> {
     maxClients = 4;
@@ -20,10 +22,12 @@ export class MyRoom extends Room<MyRoomState> {
 
     playerBodies: Map<string, PlayerServer> = new Map();
 
+    playerStartingPositions: PlayerStartingPosition[] = [];
+
     terrainManager: TerrainManager;
     physicsManager: PhysicsManager = new PhysicsManager();
 
-    onCreate(options: any) {
+    async onCreate(options: any) {
         let elapsedTime = 0;
         this.setSimulationInterval((deltaTime) => {
             elapsedTime += deltaTime;
@@ -35,7 +39,7 @@ export class MyRoom extends Room<MyRoomState> {
 
         this.setupMessages();
         this.setupCollisionEvents();
-        this.setupTerrain();
+        await this.setupTerrain();
     }
 
     setupMessages() {
@@ -64,15 +68,15 @@ export class MyRoom extends Room<MyRoomState> {
         });
     }
 
-    setupTerrain() {
-        const defaultMap = new QuadBlock(
-            0,
-            GAME_HEIGHT - GAME_HEIGHT / 5,
-            GAME_WIDTH,
-            GAME_HEIGHT / 5,
-        );
+    async setupTerrain() {
+        const mapPath = path.resolve(__dirname, "../../maps/mushroom.json");
+        const data = await readFile(mapPath, "utf-8");
+        const map: GameMap = JSON.parse(data);
 
-        this.terrainManager = new TerrainManager(this.physicsManager, defaultMap);
+        const quadTree = QuadBlock.generateQuadBlockFromType(map.quadTree);
+        this.playerStartingPositions = map.playerPositions;
+        
+        this.terrainManager = new TerrainManager(this.physicsManager, quadTree);
         this.terrainManager.createTerrain();
     }
 
@@ -134,8 +138,13 @@ export class MyRoom extends Room<MyRoomState> {
 
     onJoin(client: Client, options: any) {
         const player = new Player();
-        player.x = Math.random() * GAME_WIDTH;
-        player.y = 0;
+
+        const startingPosition = this.playerStartingPositions.find((p) => p.playerId == null)
+        startingPosition.playerId = client.sessionId;
+
+        player.x = startingPosition.x;
+        player.y = startingPosition.y;
+
         player.timeStamp = 0;
         player.hp = PLAYER_CONST.MAX_HP;
 
@@ -155,6 +164,8 @@ export class MyRoom extends Room<MyRoomState> {
             this.playerBodies.delete(client.sessionId);
         }
         this.state.players.delete(client.sessionId);
+
+        this.playerStartingPositions.find((p) => p.playerId === client.sessionId).playerId = null;
     }
 
     onDispose() { }
