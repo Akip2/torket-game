@@ -5,7 +5,7 @@ import PlayerServer from "../bodies/PlayerServer";
 import Matter from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { parsePlayerLabel } from "@shared/utils";
-import { InputPayload, QuadBlockType, ShootInfo } from "@shared/types";
+import { InputPayload, GameMap, PlayerStartingPosition, QuadBlockType, ShootInfo } from "@shared/types";
 import { isPlayerInRadius, movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
 import QuadBlock from "@shared/data/QuadBlock";
 import BullerServer from "src/bodies/BulletServer";
@@ -21,6 +21,8 @@ export class MyRoom extends Room<MyRoomState> {
     state = new MyRoomState();
 
     playerBodies: Map<string, PlayerServer> = new Map();
+
+    playerStartingPositions: PlayerStartingPosition[] = [];
 
     terrainManager: TerrainManager;
     physicsManager: PhysicsManager = new PhysicsManager();
@@ -69,11 +71,12 @@ export class MyRoom extends Room<MyRoomState> {
     async setupTerrain() {
         const mapPath = path.resolve(__dirname, "../../maps/mushroom.json");
         const data = await readFile(mapPath, "utf-8");
-        const json: QuadBlockType = JSON.parse(data);
+        const map: GameMap = JSON.parse(data);
 
-        const defaultMap = QuadBlock.generateQuadBlockFromType(json);
+        const quadTree = QuadBlock.generateQuadBlockFromType(map.quadTree);
+        this.playerStartingPositions = map.playerPositions;
         
-        this.terrainManager = new TerrainManager(this.physicsManager, defaultMap);
+        this.terrainManager = new TerrainManager(this.physicsManager, quadTree);
         this.terrainManager.createTerrain();
     }
 
@@ -135,8 +138,13 @@ export class MyRoom extends Room<MyRoomState> {
 
     onJoin(client: Client, options: any) {
         const player = new Player();
-        player.x = Math.random() * GAME_WIDTH;
-        player.y = 0;
+
+        const startingPosition = this.playerStartingPositions.find((p) => p.playerId == null)
+        startingPosition.playerId = client.sessionId;
+
+        player.x = startingPosition.x;
+        player.y = startingPosition.y;
+
         player.timeStamp = 0;
         player.hp = PLAYER_CONST.MAX_HP;
 
@@ -156,6 +164,8 @@ export class MyRoom extends Room<MyRoomState> {
             this.playerBodies.delete(client.sessionId);
         }
         this.state.players.delete(client.sessionId);
+
+        this.playerStartingPositions.find((p) => p.playerId === client.sessionId).playerId = null;
     }
 
     onDispose() { }

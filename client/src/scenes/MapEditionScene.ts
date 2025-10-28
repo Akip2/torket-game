@@ -1,17 +1,21 @@
-import { EDITION_TILE_SIZE, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE } from "@shared/const";
+import { EDITION_TILE_SIZE, GAME_HEIGHT, GAME_WIDTH, PLAYER_CONST, TEXTURE_SIZE } from "@shared/const";
 import PrimitiveMap from "@shared/data/PrimitiveMap";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
+import TextureManager from "../managers/TextureManager";
 
 export default class MapEditionScene extends Phaser.Scene {
     currentMap: PrimitiveMap;
     tiles: Phaser.GameObjects.TileSprite[] = [];
+    playerSprites: Phaser.GameObjects.TileSprite[] = [];
+
     gridGraphics!: Phaser.GameObjects.Graphics;
 
     brushSize: number = 2;
     brushPreview!: Phaser.GameObjects.Rectangle;
 
     mirrorMode: boolean = false;
+    playerPlacementMode: boolean = false;
 
     constructor() {
         super(SceneNames.MapEditor);
@@ -23,6 +27,8 @@ export default class MapEditionScene extends Phaser.Scene {
     }
 
     create() {
+        new TextureManager(this.add).generatePlayerTexture();
+
         this.input.on("pointerdown", (p: Phaser.Input.Pointer) => this.doToolAction(p));
         this.input.on("pointermove", (p: Phaser.Input.Pointer) => {
             this.doToolAction(p);
@@ -40,9 +46,13 @@ export default class MapEditionScene extends Phaser.Scene {
             this.mirrorMode = !this.mirrorMode;
         });
 
+        this.input.keyboard!.on("keydown-P", () => {
+            this.playerPlacementMode = !this.playerPlacementMode;
+            this.brushSize = Math.floor(PLAYER_CONST.WIDTH / this.currentMap.minTileSize);
+        });
+
         this.input.keyboard!.on("keydown-S", () => this.saveMap());
         this.input.keyboard!.on("keydown-L", () => this.loadMap());
-        this.input.keyboard!.on("keydown-E", () => this.export());
 
         this.brushPreview = this.add.rectangle(0, 0, EDITION_TILE_SIZE, EDITION_TILE_SIZE, 0x00ff00, 0.25)
             .setOrigin(0)
@@ -71,10 +81,17 @@ export default class MapEditionScene extends Phaser.Scene {
     }
 
     doToolAction(pointer: Phaser.Input.Pointer) {
+        const x = pointer.x;
+        const y = pointer.y;
+
         if (pointer.leftButtonDown()) {
-            this.paintTiles(pointer.x, pointer.y);
-        } else if (pointer.rightButtonDown()) {
-            this.eraseTiles(pointer.x, pointer.y);
+            if (this.playerPlacementMode) {
+                this.addPlayer(x, y);
+            } else {
+                this.paintTiles(x, y);
+            }
+        } else if (pointer.rightButtonDown() && !this.playerPlacementMode) {
+            this.eraseTiles(x, y);
         }
     }
 
@@ -83,6 +100,37 @@ export default class MapEditionScene extends Phaser.Scene {
         const tileX = Math.floor(x / tileSize);
         const mirroredTileX = this.currentMap.rowSize - 1 - tileX;
         return mirroredTileX * tileSize;
+    }
+
+    addPlayer(x: number, y: number) {
+        const playerX = Math.floor(x / this.currentMap.minTileSize) * this.currentMap.minTileSize;
+        const playerY = Math.floor(y / this.currentMap.minTileSize) * this.currentMap.minTileSize;
+
+        this.currentMap.addPlayerPosition(playerX, playerY);
+        this.drawPlayer(playerX, playerY);
+    }
+
+    drawPlayer(x: number, y: number) {
+        const sprite = this.add.tileSprite(
+            x,
+            y,
+            PLAYER_CONST.WIDTH,
+            PLAYER_CONST.WIDTH,
+            RessourceKeys.Player
+        ).setOrigin(0);
+
+        this.playerSprites.push(sprite);
+
+        sprite.setInteractive();
+
+        sprite.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+            if (this.playerPlacementMode && pointer.rightButtonDown()) {
+                this.currentMap.removePlayerPosition(sprite.x, sprite.y);
+                this.playerSprites.splice(this.playerSprites.indexOf(sprite), 1);
+
+                sprite.destroy();
+            }
+        });
     }
 
     paintTiles(x: number, y: number) {
@@ -148,6 +196,9 @@ export default class MapEditionScene extends Phaser.Scene {
     }
 
     clear() {
+        this.playerSprites.forEach(playerSprite => playerSprite.destroy());
+        this.playerSprites = [];
+
         for (let i = 0; i < this.tiles.length; i++) {
             this.tiles[i]?.destroy();
             delete this.tiles[i];
@@ -156,6 +207,10 @@ export default class MapEditionScene extends Phaser.Scene {
     }
 
     drawNewMap() {
+        this.currentMap.playerPositions.forEach(playerPosition => {
+            this.drawPlayer(playerPosition.x, playerPosition.y);
+        });
+
         for (let i = 0; i < this.currentMap.rowSize * this.currentMap.columnSize; i++) {
             if (this.currentMap.grid[i] === 1) {
                 const x = (i % this.currentMap.rowSize) * this.currentMap.minTileSize;
@@ -196,24 +251,16 @@ export default class MapEditionScene extends Phaser.Scene {
 
             const file = target.files[0];
             const text = await file.text();
-            const jsonData: PrimitiveMap = JSON.parse(text);
+            const jsonData = JSON.parse(text);
+
+            const primitiveData = jsonData.primitive;
+            const playerPositions = jsonData.playerPositions;
 
             this.clear();
-            this.currentMap = new PrimitiveMap(jsonData.grid, jsonData.rowSize, jsonData.columnSize, jsonData.minTileSize);
+            this.currentMap = new PrimitiveMap(primitiveData.grid, primitiveData.rowSize, primitiveData.columnSize, primitiveData.minTileSize, playerPositions);
             this.drawNewMap();
         });
 
         input.click();
-    }
-
-    export() {
-        const json = JSON.stringify(this.currentMap.toQuadBlock(), null, 2);
-        const blob = new Blob([json], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "exported-map.json";
-        a.click();
-        URL.revokeObjectURL(url);
     }
 }

@@ -41,3 +41,14 @@ export type BarStyleType = {
     marginX: number;
     marginY: number;
 }
+
+export type GameMap = {
+    playerPositions: { x: number, y: number }[],
+    quadTree: QuadBlockType
+}
+
+export type PlayerStartingPosition = {
+    x: number,
+    y: number,
+    playerId?: string
+}

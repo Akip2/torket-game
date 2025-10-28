@@ -6,11 +6,14 @@ export default class PrimitiveMap {
     grid: Uint8Array;
     minTileSize: number;
 
-    constructor(grid: Uint8Array, rowSize: number, columnSize: number, minTileSize: number) {
+    playerPositions: { x: number, y: number }[];
+
+    constructor(grid: Uint8Array, rowSize: number, columnSize: number, minTileSize: number, playerPositions: { x: number, y: number }[] = []) {
         this.grid = new Uint8Array(grid);
         this.rowSize = rowSize;
         this.columnSize = columnSize;
         this.minTileSize = minTileSize;
+        this.playerPositions = playerPositions;
     }
 
     static createEmptyMap(width: number, height: number, minTileSize: number) {
@@ -19,6 +22,29 @@ export default class PrimitiveMap {
         const grid = new Uint8Array(rowSize * columnSize);
 
         return new PrimitiveMap(grid, rowSize, columnSize, minTileSize);
+    }
+
+    addPlayerPosition(x: number, y :number) {
+        this.playerPositions.push({
+            x: x,
+            y: y
+        });
+    }
+
+    removePlayerPosition(x: number, y: number) {
+        let i = 0;
+        let found = false;
+
+        while (i < this.playerPositions.length && !found) {
+            let currentPlayerPosition = this.playerPositions[i];
+            found = currentPlayerPosition.x === x && currentPlayerPosition.y === y;
+
+            i++;
+        }
+
+        if (found) {
+            this.playerPositions.splice(i - 1, 1);
+        }
     }
 
     getIndex(x: number, y: number) {
@@ -42,10 +68,15 @@ export default class PrimitiveMap {
 
     serialize() {
         const obj = {
-            rowSize: this.rowSize,
-            columnSize: this.columnSize,
-            minTileSize: this.minTileSize,
-            grid: Array.from(this.grid),
+            playerPositions: this.playerPositions,
+            quadTree: this.toQuadBlock(),
+
+            primitive: {
+                rowSize: this.rowSize,
+                columnSize: this.columnSize,
+                minTileSize: this.minTileSize,
+                grid: Array.from(this.grid),
+            }
         };
 
         return JSON.stringify(obj, null, 2);
