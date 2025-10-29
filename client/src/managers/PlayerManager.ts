@@ -4,6 +4,7 @@ import type GameScene from "../scenes/GameScene";
 import type { InputPayload, Position } from "@shared/types";
 import { movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
 import { DEBUG } from "@shared/const";
+import { Depths } from "@shared/enums/Depths.eunum";
 
 export default class PlayerManager {
     room: Room;
@@ -33,8 +34,9 @@ export default class PlayerManager {
 
         if (sessionId === this.room.sessionId) {
             this.remoteRef = scene.add.rectangle(0, 0, playerObject.width, playerObject.height);
-            this.remoteRef.setStrokeStyle(1, 0xff0000);
-            this.remoteRef.setVisible(DEBUG);
+            this.remoteRef.setStrokeStyle(1, 0xff0000)
+                .setDepth(Depths.Debug)
+                .setVisible(DEBUG);
 
             this.setupLocalPlayer(player, playerObject);
         } else {

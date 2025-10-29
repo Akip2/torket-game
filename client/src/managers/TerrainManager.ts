@@ -50,7 +50,8 @@ export default class TerrainManager {
             if (DEBUG) {
                 const g = this.scene.add.graphics()
                     .lineStyle(1, 0x00ff00)
-                    .strokeRect(block.x, block.y, block.width, block.height);
+                    .strokeRect(block.x, block.y, block.width, block.height)
+                    .setDepth(Depths.Debug);
                 this.scene.debugGraphics.push(g);
             }
         } else if (block.hasChildren()) {

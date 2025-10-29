@@ -1,4 +1,5 @@
 export enum Depths {
+    Debug = Number.MAX_SAFE_INTEGER,
     First = 1000,
     Second = 900,
     Third = 800,
