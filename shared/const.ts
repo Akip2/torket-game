@@ -15,8 +15,8 @@ export const TIME_STEP = 1000 / 60;
 
 export const PLAYER_CONST = {
     WIDTH: 32,
-    SPEED: 3,
-    JUMP: -14,
+    SPEED: 4.5,
+    JUMP: -18,
     MAX_HP: 100
 }
 
