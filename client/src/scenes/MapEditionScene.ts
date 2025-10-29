@@ -1,4 +1,4 @@
-import { EDITION_TILE_SIZE, GAME_HEIGHT, GAME_WIDTH, PLAYER_CONST, TEXTURE_SIZE } from "@shared/const";
+import { EDITION_TILE_SIZE, GAME_HEIGHT, GAME_WIDTH, PLAYER_CONST } from "@shared/const";
 import PrimitiveMap from "@shared/data/PrimitiveMap";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
@@ -10,6 +10,7 @@ export default class MapEditionScene extends Phaser.Scene {
     playerSprites: Phaser.GameObjects.TileSprite[] = [];
 
     gridGraphics!: Phaser.GameObjects.Graphics;
+    subdivisionGraphics!: Phaser.GameObjects.Graphics;
 
     brushSize: number = 2;
     brushPreview!: Phaser.GameObjects.Rectangle;
@@ -23,7 +24,7 @@ export default class MapEditionScene extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image(RessourceKeys.Ground, `assets/ground/ground_${TEXTURE_SIZE}.png`);
+        this.load.image(RessourceKeys.Ground, `assets/ground/ground_16.png`);
     }
 
     create() {
@@ -51,6 +52,15 @@ export default class MapEditionScene extends Phaser.Scene {
             this.brushSize = Math.floor(PLAYER_CONST.WIDTH / this.currentMap.minTileSize);
         });
 
+        this.input.keyboard!.on("keydown-A", () => {
+            if (this.subdivisionGraphics) {
+                this.subdivisionGraphics.destroy();
+                this.subdivisionGraphics = null!;
+            } else {
+                this.drawSubdivisionAxis();
+            }
+        });
+
         this.input.keyboard!.on("keydown-S", () => this.saveMap());
         this.input.keyboard!.on("keydown-L", () => this.loadMap());
 
@@ -64,7 +74,8 @@ export default class MapEditionScene extends Phaser.Scene {
 
     drawGrid() {
         this.gridGraphics = this.add.graphics();
-        this.gridGraphics.lineStyle(1, 0x333333, 0.3);
+        this.gridGraphics.lineStyle(1, 0x333333, 0.25);
+
         const step = this.currentMap.minTileSize;
 
         for (let x = 0; x <= GAME_WIDTH; x += step) {
@@ -75,9 +86,33 @@ export default class MapEditionScene extends Phaser.Scene {
             this.gridGraphics.moveTo(0, y);
             this.gridGraphics.lineTo(GAME_WIDTH, y);
         }
-
         this.gridGraphics.strokePath();
+
         this.gridGraphics.setDepth(999);
+    }
+
+    drawSubdivisionAxis() {
+        this.subdivisionGraphics = this.add.graphics();
+        this.subdivisionGraphics.setDepth(1000);
+
+        this.subdivisionGraphics.lineStyle(0.25, 0x00ffff, 0.5);
+        const fractions = [1 / 8, 3 / 8, 5 / 8, 7 / 8];
+        for (const f of fractions) {
+            this.subdivisionGraphics.strokeLineShape(new Phaser.Geom.Line(Math.floor(GAME_WIDTH * f), 0, Math.floor(GAME_WIDTH * f), GAME_HEIGHT));
+            this.subdivisionGraphics.strokeLineShape(new Phaser.Geom.Line(0, Math.floor(GAME_HEIGHT * f), GAME_WIDTH, Math.floor(GAME_HEIGHT * f)));
+        }
+
+        this.subdivisionGraphics.lineStyle(1, 0x0000ff, 0.75);
+        this.subdivisionGraphics.strokeLineShape(new Phaser.Geom.Line(GAME_WIDTH / 4, 0, GAME_WIDTH / 4, GAME_HEIGHT));
+        this.subdivisionGraphics.strokeLineShape(new Phaser.Geom.Line((GAME_WIDTH / 4) * 3, 0, (GAME_WIDTH / 4) * 3, GAME_HEIGHT));
+        this.subdivisionGraphics.strokeLineShape(new Phaser.Geom.Line(0, GAME_HEIGHT / 4, GAME_WIDTH, GAME_HEIGHT / 4));
+        this.subdivisionGraphics.strokeLineShape(new Phaser.Geom.Line(0, (GAME_HEIGHT / 4) * 3, GAME_WIDTH, (GAME_HEIGHT / 4) * 3));
+
+        this.subdivisionGraphics.lineStyle(2, 0xff0000, 0.75);
+        this.subdivisionGraphics.strokeLineShape(new Phaser.Geom.Line(GAME_WIDTH / 2, 0, GAME_WIDTH / 2, GAME_HEIGHT));
+        this.subdivisionGraphics.strokeLineShape(new Phaser.Geom.Line(0, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT / 2));
+
+        this.subdivisionGraphics.setDepth(1001);
     }
 
     doToolAction(pointer: Phaser.Input.Pointer) {

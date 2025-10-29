@@ -15,6 +15,9 @@ import TerrainManager from "src/managers/TerrainManager";
 import PhysicsManager from "src/managers/PhysicsManager";
 import path from "path";
 import { readFile } from "fs/promises";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export class MyRoom extends Room<MyRoomState> {
     maxClients = 4;
@@ -69,7 +72,8 @@ export class MyRoom extends Room<MyRoomState> {
     }
 
     async setupTerrain() {
-        const mapPath = path.resolve(__dirname, "../../maps/mushroom.json");
+        const mapName = process.env.MAP_NAME ?? "test";
+        const mapPath = path.resolve(__dirname, `../../maps/${mapName}.json`);
         const data = await readFile(mapPath, "utf-8");
         const map: GameMap = JSON.parse(data);
 

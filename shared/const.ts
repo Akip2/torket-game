@@ -6,7 +6,7 @@ export const GRAVITY = 1.75;
 
 export const TILE_SIZE = 8;
 export const EDITION_TILE_SIZE = 8;
-export const TEXTURE_SIZE = 16;
+export const TEXTURE_SIZE = 32;
 
 export const EXPLOSION_SPRITE_SIZE = 32;
 export const EXPLOSION_RADIUS = 50;
