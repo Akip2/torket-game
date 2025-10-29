@@ -6,6 +6,7 @@ import { PLAYER_CONST } from "@shared/const";
 import Bar from "../ui/Bar";
 import { BarStyle } from "../ui/ui-styles";
 import type { Position } from "@shared/types";
+import { Depths } from "@shared/enums/Depths.eunum";
 
 export default class PlayerClient extends Phaser.Physics.Matter.Sprite implements IPlayer {
     isMoving: boolean;
@@ -25,6 +26,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
 
         scene.add.existing(this);
         (this.body as MatterJS.BodyType).label = RessourceKeys.Player;
+        this.setDepth(Depths.Third)
 
         this.isMoving = false;
         this.isOnGround = false;

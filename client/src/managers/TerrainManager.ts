@@ -3,6 +3,7 @@ import type GameScene from "../scenes/GameScene";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { DEBUG, TEXTURE_SIZE, TILE_SIZE } from "@shared/const";
 import type { QuadBlockType } from "@shared/types";
+import { Depths } from "@shared/enums/Depths.eunum";
 
 export default class TerrainManager {
     scene: GameScene;
@@ -38,7 +39,8 @@ export default class TerrainManager {
                 x, y,
                 width, height,
                 RessourceKeys.Ground
-            ).setOrigin(0);
+            ).setOrigin(0)
+            .setDepth(Depths.Fourth);
 
             sprite.tilePositionX = block.x % TEXTURE_SIZE;
             sprite.tilePositionY = block.y % TEXTURE_SIZE;

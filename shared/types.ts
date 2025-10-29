@@ -1,3 +1,5 @@
+import type { Depths } from "./enums/Depths.eunum";
+
 export type InputPayload = {
     up: boolean,
     down: boolean,
@@ -37,6 +39,9 @@ export type BarStyleType = {
 
     marginX: number;
     marginY: number;
+
+    opacity?: number;
+    depth?: Depths;
 }
 
 export type GameMap = {

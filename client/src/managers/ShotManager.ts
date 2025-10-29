@@ -6,6 +6,7 @@ import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import { wait } from "@shared/utils";
 import { BULLER_CONST, GAME_HEIGHT, GAME_WIDTH, GRAVITY, TIME_STEP } from "@shared/const";
 import Vector from "@shared/data/Vector";
+import { Depths } from "@shared/enums/Depths.eunum";
 
 export default class ShotManager {
     scene: GameScene;
@@ -71,6 +72,7 @@ export default class ShotManager {
 
         this.shootBulletFromInfo(shotInfo);
         this.scene.room.send(RequestTypes.Shoot, shotInfo);
+        this.trajectoryDrawer?.clear();
     }
 
     drawTrajectory(shootInfo: ShootInfo) {
@@ -104,6 +106,8 @@ export default class ShotManager {
 
             this.trajectoryDrawer.fillCircle(x, y, 2);
         }
+
+        this.trajectoryDrawer.setDepth(Depths.None);
     }
 
     generateShotInfo() {

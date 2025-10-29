@@ -11,6 +11,7 @@ import ShotManager from "../managers/ShotManager";
 import PlayerManager from "../managers/PlayerManager";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
 import type { Position } from "@shared/types";
+import { Depths } from "@shared/enums/Depths.eunum";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "localhost:2567";
 
@@ -173,7 +174,7 @@ export default class GameScene extends Phaser.Scene {
             gravityY: 150,
             blendMode: 'ADD',
             emitting: false
-        }).setDepth(1000);
+        }).setDepth(Depths.First);
 
         emitter.explode(10 + Math.random() * 5);
 

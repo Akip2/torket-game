@@ -3,6 +3,7 @@ import PrimitiveMap from "@shared/data/PrimitiveMap";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
 import TextureManager from "../managers/TextureManager";
+import { Depths } from "@shared/enums/Depths.eunum";
 
 export default class MapEditionScene extends Phaser.Scene {
     currentMap: PrimitiveMap;
@@ -66,7 +67,7 @@ export default class MapEditionScene extends Phaser.Scene {
 
         this.brushPreview = this.add.rectangle(0, 0, EDITION_TILE_SIZE, EDITION_TILE_SIZE, 0x00ff00, 0.25)
             .setOrigin(0)
-            .setDepth(1000)
+            .setDepth(Depths.First)
             .setVisible(false);
 
         this.drawGrid();
@@ -88,12 +89,12 @@ export default class MapEditionScene extends Phaser.Scene {
         }
         this.gridGraphics.strokePath();
 
-        this.gridGraphics.setDepth(999);
+        this.gridGraphics.setDepth(Depths.Third);
     }
 
     drawSubdivisionAxis() {
         this.subdivisionGraphics = this.add.graphics();
-        this.subdivisionGraphics.setDepth(1000);
+        this.subdivisionGraphics.setDepth(Depths.Second);
 
         this.subdivisionGraphics.lineStyle(0.25, 0x00ffff, 0.5);
         const fractions = [1 / 8, 3 / 8, 5 / 8, 7 / 8];
@@ -111,8 +112,6 @@ export default class MapEditionScene extends Phaser.Scene {
         this.subdivisionGraphics.lineStyle(2, 0xff0000, 0.75);
         this.subdivisionGraphics.strokeLineShape(new Phaser.Geom.Line(GAME_WIDTH / 2, 0, GAME_WIDTH / 2, GAME_HEIGHT));
         this.subdivisionGraphics.strokeLineShape(new Phaser.Geom.Line(0, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT / 2));
-
-        this.subdivisionGraphics.setDepth(1001);
     }
 
     doToolAction(pointer: Phaser.Input.Pointer) {
