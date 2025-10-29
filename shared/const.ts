@@ -25,4 +25,6 @@ export const BULLER_CONST = {
     AIR_FRICTION: 0.01
 }
 
-export const DAMAGE_BASE = 20;
+export const DAMAGE_BASE = 5;
+export const BASE_MAX_SHOT_FORCE = 15;
+export const MIN_SHOT_FORCE = 2;
