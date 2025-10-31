@@ -12,6 +12,8 @@ export default class TerrainManager {
     terrainColliders: MatterJS.BodyType[] = [];
     terrainSprites: Phaser.GameObjects.TileSprite[] = [];
 
+    spritePool: Phaser.GameObjects.TileSprite[] = [];
+
     constructor(scene: GameScene, root: QuadBlock = new QuadBlock(0, 0)) {
         this.scene = scene;
         this.root = root;
@@ -30,47 +32,63 @@ export default class TerrainManager {
         if (block.isEmpty()) return;
 
         if (block.filled) {
-            const x = block.x;
-            const y = block.y;
-            const width = block.width;
-            const height = block.height;
+            let sprite = this.spritePool.pop();
 
-            const sprite = this.scene.add.tileSprite(
-                x, y,
-                width, height,
-                RessourceKeys.Ground
-            ).setOrigin(0)
-            .setDepth(Depths.Fourth);
-
+            if (sprite) {
+                sprite.setPosition(block.x, block.y);
+                sprite.setSize(block.width, block.height);
+                sprite.setVisible(true);
+            } else {
+                sprite = this.scene.add.tileSprite(block.x, block.y, block.width, block.height, RessourceKeys.Ground)
+                    .setOrigin(0)
+                    .setDepth(Depths.Fourth);
+            }
             sprite.tilePositionX = block.x % TEXTURE_SIZE;
             sprite.tilePositionY = block.y % TEXTURE_SIZE;
 
             this.terrainSprites.push(sprite);
 
             if (DEBUG) {
-                const g = this.scene.add.graphics()
+                const g = this.scene.add
+                    .graphics()
                     .lineStyle(1, 0x00ff00)
                     .strokeRect(block.x, block.y, block.width, block.height)
                     .setDepth(Depths.Debug);
                 this.scene.debugGraphics.push(g);
             }
         } else if (block.hasChildren()) {
-            for (const child of block.children!) {
-                this.drawQuadBlock(child);
+            for (let i = 0; i < block.children.length; i++) {
+                this.drawQuadBlock(block.children[i]);
             }
         }
     }
 
     redrawTerrain() {
-        this.scene.debugGraphics.forEach(g => g.destroy());
-        this.scene.debugGraphics = [];
+        if (DEBUG) {
+            for (let i = 0; i < this.scene.debugGraphics.length; i++) {
+                this.scene.debugGraphics[i].destroy();
+            }
+            this.scene.debugGraphics = [];
+        }
 
-        this.terrainSprites.forEach(s => s.destroy());
+        for (let i = 0; i < this.terrainSprites.length; i++) {
+            const sprite = this.terrainSprites[i];
+            sprite.setVisible(false);
+            this.spritePool.push(sprite);
+        }
         this.terrainSprites = [];
 
         this.drawTerrain();
 
-        this.terrainColliders.forEach(c => this.scene.matter.world.remove(c))
+        this.recreateColliders();
+    }
+
+    recreateColliders() {
+        if (this.terrainColliders.length > 0) {
+            this.scene.matter.world.remove(this.terrainColliders);
+            this.terrainColliders = [];
+        }
+
         this.createTerrainColliders();
     }
 
@@ -103,7 +121,7 @@ export default class TerrainManager {
             }
         }
     }
-    
+
     constructQuadBlock(blockType: QuadBlockType) {
         this.root = QuadBlock.generateQuadBlockFromType(blockType);
     }
