@@ -18,13 +18,10 @@ export default class QuadBlock {
         filled: boolean = true,
         children: QuadBlock[] = []
     ) {
-        const w = Math.floor(width / TILE_SIZE) * TILE_SIZE;
-        const h = Math.floor(height / TILE_SIZE) * TILE_SIZE;
-
         this.x = x;
         this.y = y;
-        this.width = w;
-        this.height = h;
+        this.width = width;
+        this.height = height;
         this.filled = filled;
         this.children = children;
     }
@@ -48,29 +45,36 @@ export default class QuadBlock {
         const hw = this.roundToTileMultiple(this.width / 2, minSize);
         const hh = this.roundToTileMultiple(this.height / 2, minSize);
 
+        const rightW = this.width - hw;
+        const bottomH = this.height - hh;
+
         this.children = [
             new QuadBlock(this.x, this.y, hw, hh),
-            new QuadBlock(this.x + hw, this.y, hw, hh),
-            new QuadBlock(this.x, this.y + hh, hw, hh),
-            new QuadBlock(this.x + hw, this.y + hh, hw, hh),
+            new QuadBlock(this.x + hw, this.y, rightW, hh),
+            new QuadBlock(this.x, this.y + hh, hw, bottomH),
+            new QuadBlock(this.x + hw, this.y + hh, rightW, bottomH),
         ];
     }
 
     subdivideHorizontally(minSize = TILE_SIZE) {
         const hw = this.roundToTileMultiple(this.width / 2, minSize);
+        const rightW = this.width - hw;
         const midX = this.x + hw;
+
         this.children = [
             new QuadBlock(this.x, this.y, hw, this.height),
-            new QuadBlock(midX, this.y, this.width - hw, this.height),
+            new QuadBlock(midX, this.y, rightW, this.height),
         ];
     }
 
     subdivideVertically(minSize = TILE_SIZE) {
         const hh = this.roundToTileMultiple(this.height / 2, minSize);
+        const bottomH = this.height - hh;
         const midY = this.y + hh;
+
         this.children = [
             new QuadBlock(this.x, this.y, this.width, hh),
-            new QuadBlock(this.x, midY, this.width, this.height - hh),
+            new QuadBlock(this.x, midY, this.width, bottomH),
         ];
     }
 
