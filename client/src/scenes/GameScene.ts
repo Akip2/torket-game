@@ -10,6 +10,8 @@ import { getExplosionSpriteScale } from "@shared/utils";
 import ShotManager from "../managers/ShotManager";
 import PlayerManager from "../managers/PlayerManager";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
+import type { Position } from "@shared/types";
+import { Depths } from "@shared/enums/Depths.eunum";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "localhost:2567";
 
@@ -29,7 +31,7 @@ export default class GameScene extends Phaser.Scene {
     terrainManager!: TerrainManager;
     shotManager!: ShotManager;
 
-    currentMousePosition: { x: number, y: number } = { x: 0, y: 0 }
+    currentMousePosition: Position = { x: 0, y: 0 }
 
     constructor() {
         super(SceneNames.Game);
@@ -137,7 +139,7 @@ export default class GameScene extends Phaser.Scene {
 
     setupCollisionEvents() {
         this.matter.world.on("collisionstart", (event: Phaser.Physics.Matter.Events.CollisionStartEvent) => {
-            for (const { bodyA, bodyB } of event.pairs) {
+            for (const { bodyA, bodyB, collision } of event.pairs) {
                 const labels = [bodyA.label, bodyB.label];
 
                 if (labels.includes(RessourceKeys.Bullet) && (labels.includes(RessourceKeys.Ground) || labels.includes(RessourceKeys.Player))) {
@@ -150,8 +152,11 @@ export default class GameScene extends Phaser.Scene {
                 }
 
                 if (labels.includes(RessourceKeys.Player) && labels.includes(RessourceKeys.Ground)) {
-                    const player = (bodyA.label === RessourceKeys.Player ? bodyA.gameObject : bodyB.gameObject) as PlayerClient;
-                    player.isOnGround = true;
+                    const normal = bodyA.label === RessourceKeys.Player ? collision.normal : { x: -collision.normal.x, y: -collision.normal.y };
+                    if (normal.y < -0.3) {
+                        const player = (bodyA.label === RessourceKeys.Player ? bodyA.gameObject : bodyB.gameObject) as PlayerClient;
+                        player.isOnGround = true;
+                    }
                 }
             }
         });
@@ -172,7 +177,7 @@ export default class GameScene extends Phaser.Scene {
             gravityY: 150,
             blendMode: 'ADD',
             emitting: false
-        }).setDepth(1000);
+        }).setDepth(Depths.First);
 
         emitter.explode(10 + Math.random() * 5);
 

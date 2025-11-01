@@ -14,33 +14,27 @@ export default class TerrainManager {
     }
 
     createTerrain() {
-        this.createTerrainBlock(this.root);
+        const filledBlocks: QuadBlock[] = this.root.getFilledBlocks();
+
+        const mergedRects = QuadBlock.mergeAdjacentBlocks(filledBlocks);
+
+        for (const rect of mergedRects) {
+            const terrainBlock = new TerrainBlock(
+                rect.x + rect.width / 2,
+                rect.y + rect.height / 2,
+                rect.width,
+                rect.height
+            );
+
+            this.terrainBlocks.push(terrainBlock);
+            this.physicsManager.add(terrainBlock);
+        }
     }
 
     recreateTerrain() {
         this.terrainBlocks.forEach(t => this.physicsManager.remove(t));
         this.terrainBlocks = [];
         this.createTerrain();
-    }
-
-    createTerrainBlock(block: QuadBlock) {
-        if (block.isEmpty()) return;
-
-        if (block.filled) {
-            const terrainBlock = new TerrainBlock(
-                block.x + block.width / 2,
-                block.y + block.height / 2,
-                block.width,
-                block.height
-            )
-
-            this.terrainBlocks.push(terrainBlock);
-            this.physicsManager.add(terrainBlock);
-        } else if (block.hasChildren()) {
-            for (const child of block.children) {
-                this.createTerrainBlock(child);
-            }
-        }
     }
 
     explodeTerrain(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {

@@ -1,3 +1,4 @@
+import { Depths } from "@shared/enums/Depths.eunum";
 import type GameScene from "../scenes/GameScene";
 import type { BarStyleType } from "@shared/types";
 
@@ -22,7 +23,9 @@ export default class Bar extends Phaser.GameObjects.Graphics {
         scene.add.existing(this);
 
         this.updateGraphics(x, y, value);
-        this.setDepth(200);
+                
+        this.setDepth(this.style.depth ?? Depths.None);
+        this.setAlpha(this.style.opacity ?? 1);
     }
 
     updateGraphics(x: number, y: number, value: number) {

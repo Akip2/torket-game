@@ -37,7 +37,7 @@ export default class TextureManager {
         g.destroy();
     }
 
-    generateGunTexture(size = 40) {
+    generateGunTexture(size = 35) {
         const g = this.factory.graphics();
 
         const tubeLength = size * 1.1;

@@ -3,21 +3,29 @@ import type GameScene from "../scenes/GameScene";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { DEBUG, TEXTURE_SIZE, TILE_SIZE } from "@shared/const";
 import type { QuadBlockType } from "@shared/types";
+import { Depths } from "@shared/enums/Depths.eunum";
 
 export default class TerrainManager {
     scene: GameScene;
     root: QuadBlock;
-
     terrainColliders: MatterJS.BodyType[] = [];
     terrainSprites: Phaser.GameObjects.TileSprite[] = [];
+
+    spritePool: Phaser.GameObjects.TileSprite[] = [];
 
     constructor(scene: GameScene, root: QuadBlock = new QuadBlock(0, 0)) {
         this.scene = scene;
         this.root = root;
     }
 
-    explodeTerrain(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
-        this.root.destroy(cx, cy, radius, minSize); // Destroy terrain
+    explodeTerrain(
+        cx: number,
+        cy: number,
+        radius: number,
+        minSize: number = TILE_SIZE
+    ) {
+        this.root.destroy(cx, cy, radius, minSize);
+        this.root.cleanup();
         this.redrawTerrain();
     }
 
@@ -29,83 +37,94 @@ export default class TerrainManager {
         if (block.isEmpty()) return;
 
         if (block.filled) {
-            const x = block.x;
-            const y = block.y;
-            const width = block.width;
-            const height = block.height;
+            let sprite = this.spritePool.pop();
 
-            const sprite = this.scene.add.tileSprite(
-                x, y,
-                width, height,
-                RessourceKeys.Ground
-            ).setOrigin(0);
-
-            sprite.tilePositionX = block.x % TEXTURE_SIZE;
-            sprite.tilePositionY = block.y % TEXTURE_SIZE;
+            if (sprite) {
+                sprite.setPosition(block.x, block.y);
+                sprite.setSize(block.width, block.height);
+                sprite.setVisible(true);
+                sprite.tilePositionX = block.x % TEXTURE_SIZE;
+                sprite.tilePositionY = block.y % TEXTURE_SIZE;
+            } else {
+                sprite = this.scene.add
+                    .tileSprite(block.x, block.y, block.width, block.height, RessourceKeys.Ground)
+                    .setOrigin(0)
+                    .setDepth(Depths.Fourth);
+                sprite.tilePositionX = block.x % TEXTURE_SIZE;
+                sprite.tilePositionY = block.y % TEXTURE_SIZE;
+            }
 
             this.terrainSprites.push(sprite);
 
-            if (DEBUG) {
-                const g = this.scene.add.graphics()
-                    .lineStyle(1, 0x00ff00)
-                    .strokeRect(block.x, block.y, block.width, block.height);
-                this.scene.debugGraphics.push(g);
-            }
         } else if (block.hasChildren()) {
-            for (const child of block.children!) {
-                this.drawQuadBlock(child);
+            for (let i = 0; i < block.children.length; i++) {
+                this.drawQuadBlock(block.children[i]);
             }
         }
     }
 
     redrawTerrain() {
-        this.scene.debugGraphics.forEach(g => g.destroy());
-        this.scene.debugGraphics = [];
+        if (DEBUG) {
+            for (let i = 0; i < this.scene.debugGraphics.length; i++) {
+                this.scene.debugGraphics[i].destroy();
+            }
+            this.scene.debugGraphics = [];
+        }
 
-        this.terrainSprites.forEach(s => s.destroy());
+        for (let i = 0; i < this.terrainSprites.length; i++) {
+            const sprite = this.terrainSprites[i];
+            sprite.setVisible(false);
+            this.spritePool.push(sprite);
+        }
         this.terrainSprites = [];
 
         this.drawTerrain();
+        this.recreateColliders();
+    }
 
-        this.terrainColliders.forEach(c => this.scene.matter.world.remove(c))
+    private recreateColliders() {
+        if (this.terrainColliders.length > 0) {
+            this.scene.matter.world.remove(this.terrainColliders);
+            this.terrainColliders = [];
+        }
+
         this.createTerrainColliders();
     }
 
     createTerrainColliders() {
-        this.createQuadBlockCollider(this.root);
-    }
+        const filledBlocks: QuadBlock[] = this.root.getFilledBlocks();
 
-    createQuadBlockCollider(block: QuadBlock) {
-        if (block.isEmpty()) return;
+        const mergedRects = QuadBlock.mergeAdjacentBlocks(filledBlocks);
 
-        if (block.filled) {
+        for (let i = 0; i < mergedRects.length; i++) {
+            const rect = mergedRects[i];
             const collider = this.scene.matter.add.rectangle(
-                block.x + block.width / 2,
-                block.y + block.height / 2,
-                block.width,
-                block.height,
+                rect.x + rect.width / 2,
+                rect.y + rect.height / 2,
+                rect.width,
+                rect.height,
                 {
                     isStatic: true,
                     friction: 0,
                     frictionAir: 0,
                     frictionStatic: 0,
-                    label: RessourceKeys.Ground
+                    label: RessourceKeys.Ground,
                 }
             );
-
             this.terrainColliders.push(collider);
-        } else if (block.hasChildren()) {
-            for (const child of block.children) {
-                this.createQuadBlockCollider(child);
+
+            if (DEBUG) {
+                const g = this.scene.add
+                    .graphics()
+                    .lineStyle(1, 0x00ff00)
+                    .strokeRect(rect.x, rect.y, rect.width, rect.height)
+                    .setDepth(Depths.Debug);
+                this.scene.debugGraphics.push(g);
             }
         }
     }
 
-    quadBlockTypeToQuadBlock(blockType: QuadBlockType): QuadBlock {
-        return new QuadBlock(blockType.x, blockType.y, blockType.width, blockType.height, blockType.filled, blockType.children.map((child) => this.quadBlockTypeToQuadBlock(child)));
-    }
-    
     constructQuadBlock(blockType: QuadBlockType) {
-        this.root = this.quadBlockTypeToQuadBlock(blockType);
+        this.root = QuadBlock.generateQuadBlockFromType(blockType);
     }
 }

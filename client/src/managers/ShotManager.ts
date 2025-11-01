@@ -1,11 +1,12 @@
-import type { ShootInfo } from "@shared/types";
+import type { Position, ShootInfo } from "@shared/types";
 import BulletClient from "../game-objects/BulletClient";
 import { generateBulletOriginPosition, shoot } from "@shared/logics/bullet-logic";
 import type GameScene from "../scenes/GameScene";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import { wait } from "@shared/utils";
-import { BULLER_CONST, GAME_HEIGHT, GAME_WIDTH, GRAVITY, TIME_STEP } from "@shared/const";
+import { BASE_MAX_SHOT_FORCE, BULLER_CONST, GAME_HEIGHT, GAME_WIDTH, GRAVITY, MIN_SHOT_FORCE, TIME_STEP } from "@shared/const";
 import Vector from "@shared/data/Vector";
+import { Depths } from "@shared/enums/Depths.eunum";
 
 export default class ShotManager {
     scene: GameScene;
@@ -13,8 +14,8 @@ export default class ShotManager {
     force: number = 0;
     isCharging: boolean = false;
 
-    targetPosition: { x: number, y: number } = { x: 0, y: 0 };
-    startingPosition: { x: number, y: number } = { x: 0, y: 0 };
+    targetPosition: Position = { x: 0, y: 0 };
+    startingPosition: Position = { x: 0, y: 0 };
 
     trajectoryDrawer?: Phaser.GameObjects.Graphics;
 
@@ -40,18 +41,18 @@ export default class ShotManager {
         this.isCharging = true;
 
         let sign = 1;
-        this.force = 5;
+        this.force = MIN_SHOT_FORCE;
 
         while (this.isCharging) {
-            if (this.force < 5 || this.force > 30) {
-                sign *= -1;
-            }
-
-            this.force += 0.5 * sign;
-
+            this.force += 0.33 * sign;
             this.drawTrajectory(this.generateShotInfo());
 
             await wait(TIME_STEP);
+            if (this.force <= MIN_SHOT_FORCE || this.force >= BASE_MAX_SHOT_FORCE) {
+                sign *= -1;
+                await wait(TIME_STEP);
+            }
+
         }
     }
 
@@ -71,6 +72,7 @@ export default class ShotManager {
 
         this.shootBulletFromInfo(shotInfo);
         this.scene.room.send(RequestTypes.Shoot, shotInfo);
+        this.trajectoryDrawer?.clear();
     }
 
     drawTrajectory(shootInfo: ShootInfo) {
@@ -104,6 +106,8 @@ export default class ShotManager {
 
             this.trajectoryDrawer.fillCircle(x, y, 2);
         }
+
+        this.trajectoryDrawer.setDepth(Depths.None);
     }
 
     generateShotInfo() {

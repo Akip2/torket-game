@@ -1,6 +1,7 @@
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import type { IBasicBody } from "@shared/interfaces/BasicBody.interface";
 import type GameScene from "../scenes/GameScene";
+import type { Position } from "@shared/types";
 
 export default class BulletClient extends Phaser.Physics.Matter.Sprite implements IBasicBody {
     constructor(scene: GameScene, x: number, y: number) {
@@ -11,7 +12,7 @@ export default class BulletClient extends Phaser.Physics.Matter.Sprite implement
         (this.body as MatterJS.BodyType).label = RessourceKeys.Bullet;
     }
 
-    getPosition(): { x: number; y: number } {
+    getPosition(): Position {
         return { x: this.x, y: this.y };
     }
 }
