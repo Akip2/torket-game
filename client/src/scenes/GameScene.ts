@@ -139,7 +139,7 @@ export default class GameScene extends Phaser.Scene {
 
     setupCollisionEvents() {
         this.matter.world.on("collisionstart", (event: Phaser.Physics.Matter.Events.CollisionStartEvent) => {
-            for (const { bodyA, bodyB } of event.pairs) {
+            for (const { bodyA, bodyB, collision } of event.pairs) {
                 const labels = [bodyA.label, bodyB.label];
 
                 if (labels.includes(RessourceKeys.Bullet) && (labels.includes(RessourceKeys.Ground) || labels.includes(RessourceKeys.Player))) {
@@ -152,8 +152,11 @@ export default class GameScene extends Phaser.Scene {
                 }
 
                 if (labels.includes(RessourceKeys.Player) && labels.includes(RessourceKeys.Ground)) {
-                    const player = (bodyA.label === RessourceKeys.Player ? bodyA.gameObject : bodyB.gameObject) as PlayerClient;
-                    player.isOnGround = true;
+                    const normal = bodyA.label === RessourceKeys.Player ? collision.normal : { x: -collision.normal.x, y: -collision.normal.y };
+                    if (normal.y < -0.3) {
+                        const player = (bodyA.label === RessourceKeys.Player ? bodyA.gameObject : bodyB.gameObject) as PlayerClient;
+                        player.isOnGround = true;
+                    }
                 }
             }
         });

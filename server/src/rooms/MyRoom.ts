@@ -79,7 +79,7 @@ export class MyRoom extends Room<MyRoomState> {
 
         const quadTree = QuadBlock.generateQuadBlockFromType(map.quadTree);
         this.playerStartingPositions = map.playerPositions;
-        
+
         this.terrainManager = new TerrainManager(this.physicsManager, quadTree);
         this.terrainManager.createTerrain();
     }
@@ -87,7 +87,7 @@ export class MyRoom extends Room<MyRoomState> {
     setupCollisionEvents() {
         Matter.Events.on(this.physicsManager.engine, "collisionStart", (event) => {
             for (const pair of event.pairs) {
-                const { bodyA, bodyB } = pair;
+                const { bodyA, bodyB, collision } = pair;
                 const labels = [bodyA.label, bodyB.label];
                 const playerLabel = labels.find(label => label.startsWith(`${RessourceKeys.Player}:`));
 
@@ -109,7 +109,19 @@ export class MyRoom extends Room<MyRoomState> {
 
                 if (hasPlayerCollision && labels.includes(RessourceKeys.Ground)) {
                     const sessionId = parsePlayerLabel(playerLabel).sessionId;
-                    this.playerBodies.get(sessionId).isOnGround = true;
+                    const playerBody = this.playerBodies.get(sessionId);
+
+                    if (!playerBody) continue;
+
+                    const isPlayerA = bodyA.label.startsWith(`${RessourceKeys.Player}:`);
+                    const normal = isPlayerA ? collision.normal : { x: -collision.normal.x, y: -collision.normal.y };
+
+                    const isGroundCollision = normal.y < -0.3;
+                    const isFalling = playerBody.getVelocity().y > 0.5;
+
+                    if (isGroundCollision && isFalling) {
+                        playerBody.isOnGround = true;
+                    }
                 }
             }
         });
