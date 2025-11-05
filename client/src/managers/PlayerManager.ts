@@ -54,17 +54,22 @@ export default class PlayerManager {
             const serverY = player.y;
             const predictedX = this.currentPlayer.x;
             const predictedY = this.currentPlayer.y;
-            const THRESHOLD = 2;
+            const THRESHOLD_X = 2;
+            const THRESHOLD_Y = 800;
 
-            if (Math.abs(serverX - predictedX) > THRESHOLD || Math.abs(serverY - predictedY) > THRESHOLD) {
+            if (Math.abs(serverX - predictedX) > THRESHOLD_X) {
                 this.currentPlayer.x = serverX;
-                this.currentPlayer.y = serverY;
                 this.localInputBuffer = this.localInputBuffer.filter(input => input.timeStamp > player.timeStamp);
 
                 for (const input of this.localInputBuffer) {
                     movePlayerFromInputs(this.currentPlayer, input, true);
                 }
             }
+
+            if (Math.abs(serverY - predictedY) > THRESHOLD_Y) {
+                this.currentPlayer.y = serverY;
+            }
+
             this.remoteRef.x = serverX;
             this.remoteRef.y = serverY;
         });
