@@ -3,7 +3,7 @@ import PlayerClient from "../game-objects/PlayerClient";
 import type GameScene from "../scenes/GameScene";
 import type { InputPayload, Position } from "@shared/types";
 import { movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
-import { DEBUG } from "@shared/const";
+import { DEBUG, PLAYER_CONST } from "@shared/const";
 import { Depths } from "@shared/enums/Depths.eunum";
 
 export default class PlayerManager {
@@ -54,17 +54,38 @@ export default class PlayerManager {
             const serverY = player.y;
             const predictedX = this.currentPlayer.x;
             const predictedY = this.currentPlayer.y;
-            const THRESHOLD = 2;
+            const THRESHOLD_X = PLAYER_CONST.SPEED * 2;
+            const THRESHOLD_Y = Math.abs(PLAYER_CONST.JUMP * 8);
 
-            if (Math.abs(serverX - predictedX) > THRESHOLD || Math.abs(serverY - predictedY) > THRESHOLD) {
+            const distX = Math.abs(serverX - predictedX);
+
+            if (distX > THRESHOLD_X) {
                 this.currentPlayer.x = serverX;
-                this.currentPlayer.y = serverY;
+                this.localInputBuffer = this.localInputBuffer.filter(input => input.timeStamp > player.timeStamp);
+
+                for (const input of this.localInputBuffer) {
+                    movePlayerFromInputs(this.currentPlayer, input, true);
+                }
+            } else if(distX > THRESHOLD_X / 2) {
+                this.currentPlayer.x = Phaser.Math.Linear(this.currentPlayer.x, serverX, 0.5);
+                this.localInputBuffer = this.localInputBuffer.filter(input => input.timeStamp > player.timeStamp);
+
+                for (const input of this.localInputBuffer) {
+                    movePlayerFromInputs(this.currentPlayer, input, true);
+                }
+            } else {
+                this.currentPlayer.x = Phaser.Math.Linear(this.currentPlayer.x, serverX, 0.05);
                 this.localInputBuffer = this.localInputBuffer.filter(input => input.timeStamp > player.timeStamp);
 
                 for (const input of this.localInputBuffer) {
                     movePlayerFromInputs(this.currentPlayer, input, true);
                 }
             }
+
+            if (Math.abs(serverY - predictedY) > THRESHOLD_Y) {
+                this.currentPlayer.y = serverY;
+            }
+
             this.remoteRef.x = serverX;
             this.remoteRef.y = serverY;
         });
@@ -72,7 +93,7 @@ export default class PlayerManager {
 
     setupRemotePlayer(player: any, playerObject: PlayerClient) {
         const $ = getStateCallbacks(this.room);
-        
+
         $(player).onChange(() => {
             playerObject.setData("serverX", player.x);
             playerObject.setData("serverY", player.y);
@@ -111,7 +132,7 @@ export default class PlayerManager {
         }
     }
 
-    handleLocalInput(inputPayload: InputPayload, mousePosition:  Position) {
+    handleLocalInput(inputPayload: InputPayload, mousePosition: Position) {
         movePlayerFromInputs(this.currentPlayer, inputPayload);
         this.currentPlayer.updateGunPlacement(mousePosition);
     }
