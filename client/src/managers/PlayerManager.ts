@@ -66,8 +66,15 @@ export default class PlayerManager {
                 for (const input of this.localInputBuffer) {
                     movePlayerFromInputs(this.currentPlayer, input, true);
                 }
-            } else if(distX > THRESHOLD_X / 2) {
+            } else if (distX > THRESHOLD_X / 2) {
                 this.currentPlayer.x = Phaser.Math.Linear(this.currentPlayer.x, serverX, 0.5);
+                this.localInputBuffer = this.localInputBuffer.filter(input => input.timeStamp > player.timeStamp);
+
+                for (const input of this.localInputBuffer) {
+                    movePlayerFromInputs(this.currentPlayer, input, true);
+                }
+            } else if (distX > THRESHOLD_X / 4) {
+                this.currentPlayer.x = Phaser.Math.Linear(this.currentPlayer.x, serverX, 0.25);
                 this.localInputBuffer = this.localInputBuffer.filter(input => input.timeStamp > player.timeStamp);
 
                 for (const input of this.localInputBuffer) {
