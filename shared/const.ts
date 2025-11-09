@@ -1,4 +1,4 @@
-export const DEBUG = true;
+export const DEBUG = false;
 
 export const GAME_WIDTH = 1600;
 export const GAME_HEIGHT = 800;

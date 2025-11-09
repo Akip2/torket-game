@@ -54,11 +54,27 @@ export default class PlayerManager {
             const serverY = player.y;
             const predictedX = this.currentPlayer.x;
             const predictedY = this.currentPlayer.y;
-            const THRESHOLD_X = 2;
+            const THRESHOLD_X = PLAYER_CONST.SPEED * 2;
             const THRESHOLD_Y = Math.abs(PLAYER_CONST.JUMP * 8);
 
-            if (Math.abs(serverX - predictedX) > THRESHOLD_X) {
+            const distX = Math.abs(serverX - predictedX);
+
+            if (distX > THRESHOLD_X) {
                 this.currentPlayer.x = serverX;
+                this.localInputBuffer = this.localInputBuffer.filter(input => input.timeStamp > player.timeStamp);
+
+                for (const input of this.localInputBuffer) {
+                    movePlayerFromInputs(this.currentPlayer, input, true);
+                }
+            } else if(distX > THRESHOLD_X / 2) {
+                this.currentPlayer.x = Phaser.Math.Linear(this.currentPlayer.x, serverX, 0.5);
+                this.localInputBuffer = this.localInputBuffer.filter(input => input.timeStamp > player.timeStamp);
+
+                for (const input of this.localInputBuffer) {
+                    movePlayerFromInputs(this.currentPlayer, input, true);
+                }
+            } else {
+                this.currentPlayer.x = Phaser.Math.Linear(this.currentPlayer.x, serverX, 0.05);
                 this.localInputBuffer = this.localInputBuffer.filter(input => input.timeStamp > player.timeStamp);
 
                 for (const input of this.localInputBuffer) {
@@ -77,7 +93,7 @@ export default class PlayerManager {
 
     setupRemotePlayer(player: any, playerObject: PlayerClient) {
         const $ = getStateCallbacks(this.room);
-        
+
         $(player).onChange(() => {
             playerObject.setData("serverX", player.x);
             playerObject.setData("serverY", player.y);
@@ -116,7 +132,7 @@ export default class PlayerManager {
         }
     }
 
-    handleLocalInput(inputPayload: InputPayload, mousePosition:  Position) {
+    handleLocalInput(inputPayload: InputPayload, mousePosition: Position) {
         movePlayerFromInputs(this.currentPlayer, inputPayload);
         this.currentPlayer.updateGunPlacement(mousePosition);
     }
