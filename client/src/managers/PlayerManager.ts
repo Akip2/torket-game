@@ -3,7 +3,7 @@ import PlayerClient from "../game-objects/PlayerClient";
 import type GameScene from "../scenes/GameScene";
 import type { InputPayload, Position } from "@shared/types";
 import { movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
-import { DEBUG } from "@shared/const";
+import { DEBUG, PLAYER_CONST } from "@shared/const";
 import { Depths } from "@shared/enums/Depths.eunum";
 
 export default class PlayerManager {
@@ -55,7 +55,7 @@ export default class PlayerManager {
             const predictedX = this.currentPlayer.x;
             const predictedY = this.currentPlayer.y;
             const THRESHOLD_X = 2;
-            const THRESHOLD_Y = 800;
+            const THRESHOLD_Y = Math.abs(PLAYER_CONST.JUMP * 8);
 
             if (Math.abs(serverX - predictedX) > THRESHOLD_X) {
                 this.currentPlayer.x = serverX;

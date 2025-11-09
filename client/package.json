@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "colyseus.js": "^0.16.19",
+    "matter-js": "^0.20.0",
     "phaser": "^3.90.0",
     "tinycolor2": "^1.6.0"
   }

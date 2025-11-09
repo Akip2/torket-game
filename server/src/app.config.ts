@@ -2,7 +2,7 @@ import config from "@colyseus/tools";
 import { monitor } from "@colyseus/monitor";
 import { playground } from "@colyseus/playground";
 
-const LATENCY = 0;
+const LATENCY = 100;
 
 /**
  * Import your Room files

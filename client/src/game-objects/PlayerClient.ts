@@ -60,10 +60,44 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
 
     moveHorizontally(speed: number, instantly: boolean = false) {
         if (instantly) {
-            this.setPosition(this.x + speed, this.y);
+            if (!this.collides(this.x + speed, this.y)) {
+                this.setPosition(this.x + speed, this.y);
+            }
         } else {
             this.setVelocityX(speed);
         }
+    }
+
+    collides(x: number, y: number) {
+        const allBodies = (this.scene.matter.world as any).localWorld.bodies;
+
+        const playerBounds = {
+            min: {
+                x: x - this.width / 2,
+                y: y - this.height / 2 + 1
+            },
+            max: {
+                x: x + this.width / 2,
+                y: this.y + this.height / 2 - 1
+            }
+        };
+
+        for (const body of allBodies) {
+            if (body === this.body || body.label !== RessourceKeys.Ground) {
+                continue;
+            }
+
+            if (!(
+                playerBounds.max.x < body.bounds.min.x ||
+                playerBounds.min.x > body.bounds.max.x ||
+                playerBounds.max.y < body.bounds.min.y ||
+                playerBounds.min.y > body.bounds.max.y
+            )) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     destroy(fromScene?: boolean): void {
