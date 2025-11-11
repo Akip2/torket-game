@@ -2,7 +2,7 @@ import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import type { IPlayer } from "@shared/interfaces/Player.interface";
 import type GameScene from "../scenes/GameScene";
 import Gun from "./Gun";
-import { PLAYER_CONST } from "@shared/const";
+import { CLIENT_PREDICTION, PLAYER_CONST } from "@shared/const";
 import Bar from "../ui/Bar";
 import { BarStyle } from "../ui/ui-styles";
 import type { Position } from "@shared/types";
@@ -22,7 +22,16 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         super(scene.matter.world, x, y, RessourceKeys.Player);
 
         this.setFixedRotation();
-        this.setFriction(0, 0.05, 0)
+
+        if (CLIENT_PREDICTION) {
+            this.setFriction(0, 0.05, 0)
+        } else { // disable physics
+            this.setIgnoreGravity(true);
+            this.setStatic(true);
+            this.setCollidesWith([]);
+            this.setFixedRotation();
+            this.setFriction(0, 0, 0);
+        }
 
         scene.add.existing(this);
         (this.body as MatterJS.BodyType).label = RessourceKeys.Player;

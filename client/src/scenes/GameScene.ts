@@ -119,8 +119,8 @@ export default class GameScene extends Phaser.Scene {
             timeStamp: Date.now()
         };
 
-        this.room.send(RequestTypes.Move, inputPayload);
         this.playerManager.localInputBuffer.push(inputPayload);
+        this.room.send(RequestTypes.Move, inputPayload);
 
         this.playerManager.handleLocalInput(inputPayload, this.currentMousePosition);
         this.playerManager.updatePlayers();

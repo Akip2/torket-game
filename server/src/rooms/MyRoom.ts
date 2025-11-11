@@ -31,6 +31,8 @@ export class MyRoom extends Room<MyRoomState> {
     physicsManager: PhysicsManager = new PhysicsManager();
 
     async onCreate(options: any) {
+        this.patchRate = TIME_STEP;
+        
         let elapsedTime = 0;
         this.setSimulationInterval((deltaTime) => {
             elapsedTime += deltaTime;
