@@ -101,3 +101,93 @@ canvas {
     background-color: #f9f9f9;
   }
 }
+
+.central-container-title-screen {
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+
+  position: absolute;
+  top: 50%;
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+}
+
+.central-container-title-screen h1 {
+  font-size: 75px;
+  text-align: center;
+  color: white;
+}
+
+.input-container-title-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.5em;
+
+  background-color: rgba(0, 0, 0, 0.4);
+  padding: 2em 3em;
+  border-radius: 1.5em;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+
+  font-family: "Arial", sans-serif;
+  color: #fff;
+  text-align: center;
+
+  max-width: 500px;
+  width: fit-content;
+}
+
+.input-container-title-screen button {
+  background-color: rgb(121, 85, 72);
+  color: #ffffff;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75em;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.input-container-title-screen button:hover {
+  background-color: rgb(141, 110, 99);
+}
+
+.input-container-title-screen input {
+  background-color: white;
+  color: black;
+
+  text-align: center;
+  font-size: 1rem;
+  font-weight: bold;
+  padding: 0.7em;
+  border-radius: 8px;
+}
+
+@media (max-width: 1090px) {
+  .central-container-title-screen h1 {
+    font-size: 50px;
+  }
+
+  .input-container-title-screen {
+    padding: 1.5em 2em;
+  }
+}
+
+@media (max-width: 910px) {
+  .central-container-title-screen h1 {
+    font-size: 36px;
+  }
+
+  .input-container-title-screen {
+    padding: 1em 1.5em;
+  }
+
+  .input-container-title-screen button,
+  .input-container-title-screen input {
+    font-size: 0.9rem;
+    padding: 0.6em;
+  }
+}

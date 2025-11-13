@@ -66,3 +66,7 @@ export type Rectangle = {
     width: number,
     height: number
 }
+
+export type InitData = {
+    name: string;
+}

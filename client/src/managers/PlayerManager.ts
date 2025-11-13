@@ -27,7 +27,7 @@ export default class PlayerManager {
     }
 
     addPlayer(scene: GameScene, player: any, sessionId: string) {
-        const playerObject = new PlayerClient(scene, player.x, player.y);
+        const playerObject = new PlayerClient(scene, player.pseudo, player.x, player.y);
         playerObject.hp = player.hp;
         playerObject.isAlive = player.isAlive;
         this.playerObjects[sessionId] = playerObject;
@@ -94,7 +94,7 @@ export default class PlayerManager {
                 playerObject.updateGunPlacement(mousePosition);
             }
 
-            playerObject.updateHealthBar();
+            playerObject.updateUI();
         }
     }
 

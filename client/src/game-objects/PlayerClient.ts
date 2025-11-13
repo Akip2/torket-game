@@ -7,6 +7,7 @@ import Bar from "../ui/Bar";
 import { BarStyle } from "../ui/ui-styles";
 import type { Position } from "@shared/types";
 import { Depths } from "@shared/enums/Depths.eunum";
+import NameTag from "../ui/NameTag";
 
 export default class PlayerClient extends Phaser.Physics.Matter.Sprite implements IPlayer {
     isMoving: boolean;
@@ -17,8 +18,9 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
 
     gun: Gun;
     healthBar: Bar;
+    nameTag: NameTag;
 
-    constructor(scene: GameScene, x: number, y: number) {
+    constructor(scene: GameScene, name: string, x: number, y: number) {
         super(scene.matter.world, x, y, RessourceKeys.Player);
 
         this.setFixedRotation();
@@ -42,6 +44,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
 
         this.gun = new Gun(scene, x, y);
         this.healthBar = new Bar(scene, this.x, this.y, 1, BarStyle.Player);
+        this.nameTag = new NameTag(scene, name, x, y);
     }
 
     updateGunPlacement(targetPosition: Position) {
@@ -59,8 +62,9 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.gun.setAngle(angle);
     }
 
-    updateHealthBar() {
+    updateUI() {
         this.healthBar.updateGraphics(this.x, this.y, this.hp / PLAYER_CONST.MAX_HP);
+        this.nameTag.updatePlacement(this.x, this.y);
     }
 
     getPosition(): Position {

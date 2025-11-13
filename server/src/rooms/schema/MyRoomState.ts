@@ -4,6 +4,8 @@ import { InputPayload } from "@shared/types";
 export class Player extends Schema {
   inputQueue: InputPayload[] = [];
 
+  @type("string") pseudo: string;
+
   @type("number") x: number;
   @type("number") y: number;
 
