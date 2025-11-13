@@ -9,8 +9,10 @@ export default class TitleScreenScene extends Phaser.Scene {
     }
 
     private quickPlay() {
-        const pseudo = this.nameInput?.value?.trim() || "Joueur";
-        this.scene.start(SceneNames.Game, { pseudo });
+        const name = this.nameInput?.value?.trim() || "Player";
+        this.scene.start(SceneNames.Game, {
+            name: name 
+        });
     }
 
     private joinGame() {

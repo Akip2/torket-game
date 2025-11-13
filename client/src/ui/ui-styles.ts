@@ -12,6 +12,6 @@ export const BarStyle = {
         marginX: 0,
 
         opacity: 0.75,
-        depth: Depths.Second,
+        depth: Depths.First,
     }
 }

@@ -5,7 +5,7 @@ import PlayerServer from "../bodies/PlayerServer";
 import Matter from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { parsePlayerLabel } from "@shared/utils";
-import { InputPayload, GameMap, PlayerStartingPosition, QuadBlockType, ShootInfo } from "@shared/types";
+import { InputPayload, GameMap, PlayerStartingPosition, QuadBlockType, ShootInfo, InitData } from "@shared/types";
 import { isPlayerInRadius, movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
 import QuadBlock from "@shared/data/QuadBlock";
 import BullerServer from "src/bodies/BulletServer";
@@ -154,12 +154,13 @@ export class MyRoom extends Room<MyRoomState> {
         });
     }
 
-    onJoin(client: Client, options: any) {
+    onJoin(client: Client, initData: InitData) {
         const player = new Player();
 
         const startingPosition = this.playerStartingPositions.find((p) => p.playerId == null)
         startingPosition.playerId = client.sessionId;
 
+        player.pseudo = initData.name?.trim() || "Player";
         player.x = startingPosition.x;
         player.y = startingPosition.y;
 

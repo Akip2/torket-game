@@ -10,7 +10,7 @@ import { getExplosionSpriteScale } from "@shared/utils";
 import ShotManager from "../managers/ShotManager";
 import PlayerManager from "../managers/PlayerManager";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
-import type { Position } from "@shared/types";
+import type { InitData, Position } from "@shared/types";
 import { Depths } from "@shared/enums/Depths.eunum";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "localhost:2567";
@@ -33,8 +33,14 @@ export default class GameScene extends Phaser.Scene {
 
     currentMousePosition: Position = { x: 0, y: 0 }
 
+    initData!: InitData; // data related to the current player, sent to the server on connection
+
     constructor() {
         super(SceneNames.Game);
+    }
+
+    init(data: InitData) {
+        this.initData = data;
     }
 
     preload() {
@@ -65,7 +71,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     async setupRoomEvents() {
-        if (!this.room) this.room = await this.client.joinOrCreate("my_room");
+        if (!this.room) this.room = await this.client.joinOrCreate("my_room", this.initData);
 
         this.playerManager = new PlayerManager(this.room);
         this.playerManager.setupPlayerListeners(this);
