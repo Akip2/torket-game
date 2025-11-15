@@ -114,8 +114,9 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     }
 
     destroy(fromScene?: boolean): void {
-        this.gun?.destroy(fromScene);
-        this.healthBar?.destroy(fromScene);
+        this.gun.destroy(fromScene);
+        this.healthBar.destroy(fromScene);
+        this.nameTag.destroy(fromScene);
         super.destroy(fromScene);
     }
 }
