@@ -4,7 +4,7 @@ import type GameScene from "../scenes/GameScene";
 import Gun from "./Gun";
 import { CLIENT_PREDICTION, PLAYER_CONST } from "@shared/const";
 import Bar from "../ui/Bar";
-import { BarStyle } from "../ui/ui-styles";
+import { BarStyle, TextStyle } from "../ui/ui-styles";
 import type { Position } from "@shared/types";
 import { Depths } from "@shared/enums/Depths.eunum";
 import NameTag from "../ui/NameTag";
@@ -44,7 +44,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
 
         this.gun = new Gun(scene, x, y);
         this.healthBar = new Bar(scene, this.x, this.y, 1, BarStyle.Player);
-        this.nameTag = new NameTag(scene, name, x, y);
+        this.nameTag = new NameTag(scene, name, x, y, TextStyle.NameTag);
     }
 
     updateGunPlacement(targetPosition: Position) {

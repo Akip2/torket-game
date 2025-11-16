@@ -3,11 +3,8 @@ import type GameScene from "../scenes/GameScene";
 import { Depths } from "@shared/enums/Depths.eunum";
 
 export default class NameTag extends Phaser.GameObjects.Text {
-    constructor(scene: GameScene, name: string, playerX: number, playerY: number) {
-        super(scene, playerX, playerY + PLAYER_CONST.WIDTH + 10, name, {
-            fontFamily: "Arial",
-            color: "white",
-        });
+    constructor(scene: GameScene, name: string, playerX: number, playerY: number, style: Phaser.Types.GameObjects.Text.TextStyle) {
+        super(scene, playerX, playerY + PLAYER_CONST.WIDTH + 10, name, style);
 
         this.setOrigin(0.5);
         this.setDepth(Depths.First);

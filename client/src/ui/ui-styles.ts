@@ -15,3 +15,10 @@ export const BarStyle = {
         depth: Depths.First,
     }
 }
+
+export const TextStyle = {
+    NameTag: {
+        fontFamily: "Arial",
+        color: "white",
+    }
+} as Record<string, Phaser.Types.GameObjects.Text.TextStyle>; 
