@@ -30,13 +30,13 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         } else { // disable physics
             this.setIgnoreGravity(true);
             this.setStatic(true);
-            this.setCollidesWith([]);
             this.setFixedRotation();
             this.setFriction(0, 0, 0);
         }
 
         scene.add.existing(this);
         (this.body as MatterJS.BodyType).label = RessourceKeys.Player;
+        (this.body as MatterJS.BodyType).isSensor = true;
         this.setDepth(Depths.Third)
 
         this.isMoving = false;

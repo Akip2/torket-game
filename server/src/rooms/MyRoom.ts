@@ -32,7 +32,7 @@ export class MyRoom extends Room<MyRoomState> {
 
     async onCreate(options: any) {
         this.patchRate = TIME_STEP;
-        
+
         let elapsedTime = 0;
         this.setSimulationInterval((deltaTime) => {
             elapsedTime += deltaTime;
@@ -105,7 +105,7 @@ export class MyRoom extends Room<MyRoomState> {
 
                         if (hasPlayerCollision) {
                             const sessionId = parsePlayerLabel(playerLabel).sessionId;
-                            this.applyDamage(sessionId, true);
+                            this.playerBodies.get(sessionId)?.applyDamage(true);
                         }
                     }
                 }
@@ -131,27 +131,24 @@ export class MyRoom extends Room<MyRoomState> {
     }
 
     fixedTick(deltaTime: number) {
-        this.state.players.forEach((player, id) => {
-            const playerBody = this.playerBodies.get(id);
-            if (!playerBody) return;
+        this.playerBodies.forEach((playerBody, id) => {
+            const queue = playerBody.getInputQueue();
+            if (queue.length > 0) {
+                const last = queue[queue.length - 1];
+                playerBody.lastProcessedTimeStamp = last.timeStamp;
+                playerBody.updatePlayerRefMouse(last.mousePosition);
+            }
 
             let input: InputPayload;
-            while (input = player.inputQueue.shift()) {
+            while (input = queue.shift()) {
                 movePlayerFromInputs(playerBody, input);
-                player.timeStamp = input.timeStamp;
-
-                player.mouseX = input.mousePosition.x;
-                player.mouseY = input.mousePosition.y;
             }
         });
 
         this.physicsManager.update(deltaTime);
 
-        this.state.players.forEach((player, id) => {
-            const playerBody = this.playerBodies.get(id);
-            if (!playerBody) return;
-            player.x = playerBody.getX();
-            player.y = playerBody.getY();
+        this.playerBodies.forEach((playerBody) => {
+            playerBody.updatePlayerRefPosition();
         });
     }
 
@@ -164,11 +161,10 @@ export class MyRoom extends Room<MyRoomState> {
         player.pseudo = initData.name?.trim() || "Player";
         player.x = startingPosition.x;
         player.y = startingPosition.y;
-
         player.timeStamp = 0;
         player.hp = PLAYER_CONST.MAX_HP;
 
-        const playerBody = new PlayerServer(client.sessionId, player.x, player.y);
+        const playerBody = new PlayerServer(player, client.sessionId, (hp: number) => this.broadcastDamage(client.sessionId, hp));
         this.physicsManager.add(playerBody);
 
         this.playerBodies.set(client.sessionId, playerBody);
@@ -196,26 +192,13 @@ export class MyRoom extends Room<MyRoomState> {
             playerReactToExplosion(p, cx, cy, radius);
 
             if (isPlayerInRadius(p, cx, cy, radius)) {
-                this.applyDamage(id, false);
+                this.playerBodies.get(id)?.applyDamage(false);
             }
         });
     }
 
-    applyDamage(playerId: string, directHit: boolean) {
-        const playerRef = this.state.players.get(playerId);
-        const damage = Math.round((DAMAGE_BASE) * (directHit ? 2 : 1) + (Math.random() * 15));
-
-        playerRef.hp -= damage;
-
-        if (playerRef.hp <= 0) {
-            playerRef.hp = 0;
-            playerRef.isAlive = false;
-        }
-
-        this.broadcast(RequestTypes.HealthUpdate, {
-            playerId: playerId,
-            hp: playerRef.hp,
-        });
+    broadcastDamage(playerId: string, hp: number) {
+        this.broadcast(RequestTypes.HealthUpdate, { playerId, hp });
     }
 
     synchronizeTerrain(client?: Client) {
