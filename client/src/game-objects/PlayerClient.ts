@@ -23,6 +23,9 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     constructor(scene: GameScene, name: string, x: number, y: number) {
         super(scene.matter.world, x, y, RessourceKeys.Player);
 
+        scene.add.existing(this);
+        (this.body as MatterJS.BodyType).label = RessourceKeys.Player;
+        this.setDepth(Depths.Third)
         this.setFixedRotation();
 
         if (CLIENT_PREDICTION) {
@@ -32,12 +35,8 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
             this.setStatic(true);
             this.setFixedRotation();
             this.setFriction(0, 0, 0);
+            (this.body as MatterJS.BodyType).isSensor = true;
         }
-
-        scene.add.existing(this);
-        (this.body as MatterJS.BodyType).label = RessourceKeys.Player;
-        (this.body as MatterJS.BodyType).isSensor = true;
-        this.setDepth(Depths.Third)
 
         this.isMoving = false;
         this.isOnGround = false;
