@@ -5,10 +5,10 @@ import PlayerClient from "../game-objects/PlayerClient";
 import { Client, Room } from "colyseus.js";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import TextureManager from "../managers/TextureManager";
-import TerrainManager from "../managers/TerrainManager";
+import TerrainManagerClient from "../managers/TerrainManagerClient";
 import { getExplosionSpriteScale } from "@shared/utils";
 import ShotManager from "../managers/ShotManager";
-import PlayerManager from "../managers/PlayerManager";
+import PlayerManagerClient from "../managers/PlayerManagerClient";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
 import type { InitData, Position } from "@shared/types";
 import { Depths } from "@shared/enums/Depths.eunum";
@@ -26,9 +26,9 @@ export default class GameScene extends Phaser.Scene {
 
     keyboard!: Phaser.Types.Input.Keyboard.CursorKeys;
 
-    playerManager!: PlayerManager;
+    playerManager!: PlayerManagerClient;
 
-    terrainManager!: TerrainManager;
+    terrainManager!: TerrainManagerClient;
     shotManager!: ShotManager;
 
     currentMousePosition: Position = { x: 0, y: 0 }
@@ -59,7 +59,7 @@ export default class GameScene extends Phaser.Scene {
 
         new TextureManager(this.add).generateTextures();
 
-        this.terrainManager = new TerrainManager(this);
+        this.terrainManager = new TerrainManagerClient(this);
         this.terrainManager.drawTerrain();
         this.terrainManager.createTerrainColliders();
 
@@ -73,7 +73,7 @@ export default class GameScene extends Phaser.Scene {
     async setupRoomEvents() {
         if (!this.room) this.room = await this.client.joinOrCreate("my_room", this.initData);
 
-        this.playerManager = new PlayerManager(this.room);
+        this.playerManager = new PlayerManagerClient(this.room);
         this.playerManager.setupPlayerListeners(this);
 
         this.room.onMessage(RequestTypes.TerrainSynchro, (quadBlock) => {

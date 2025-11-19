@@ -4,7 +4,7 @@ import PlayerServer from "src/bodies/PlayerServer";
 import { Player } from "src/rooms/schema/MyRoomState";
 import PhysicsManager from "./PhysicsManager";
 
-export default class PlayerManager {
+export default class PlayerManagerServer {
     playerBodies: Map<string, PlayerServer>;
 
     constructor() {

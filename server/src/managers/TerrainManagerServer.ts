@@ -3,7 +3,7 @@ import QuadBlock from "@shared/data/QuadBlock";
 import TerrainBlock from "src/bodies/TerrainBlock";
 import PhysicsManager from "./PhysicsManager";
 
-export default class TerrainManager {
+export default class TerrainManagerServer {
     physicsManager: PhysicsManager;
     root: QuadBlock;
     terrainBlocks: TerrainBlock[] = [];

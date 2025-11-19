@@ -1,6 +1,6 @@
 import { Room, Client } from "@colyseus/core";
 import { MyRoomState, Player } from "./schema/MyRoomState";
-import { BULLER_CONST, DAMAGE_BASE, EXPLOSION_RADIUS, PLAYER_CONST, TILE_SIZE, TIME_STEP } from "@shared/const";
+import { BULLER_CONST, EXPLOSION_RADIUS, PLAYER_CONST, TILE_SIZE, TIME_STEP } from "@shared/const";
 import Matter from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { parsePlayerLabel } from "@shared/utils";
@@ -9,12 +9,12 @@ import QuadBlock from "@shared/data/QuadBlock";
 import BullerServer from "src/bodies/BulletServer";
 import { generateBulletOriginPosition, shoot } from "@shared/logics/bullet-logic";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
-import TerrainManager from "src/managers/TerrainManager";
+import TerrainManagerServer from "src/managers/TerrainManagerServer";
 import PhysicsManager from "src/managers/PhysicsManager";
 import path from "path";
 import { readFile } from "fs/promises";
 import dotenv from "dotenv";
-import PlayerManager from "src/managers/PlayerManager";
+import PlayerManagerServer from "src/managers/PlayerManagerServer";
 
 dotenv.config();
 
@@ -24,9 +24,9 @@ export class MyRoom extends Room<MyRoomState> {
 
     playerStartingPositions: PlayerStartingPosition[] = [];
 
-    terrainManager: TerrainManager;
+    terrainManager: TerrainManagerServer;
     physicsManager: PhysicsManager = new PhysicsManager();
-    playerManager: PlayerManager = new PlayerManager();
+    playerManager: PlayerManagerServer = new PlayerManagerServer();
 
     async onCreate(options: any) {
         this.patchRate = TIME_STEP;
@@ -81,7 +81,7 @@ export class MyRoom extends Room<MyRoomState> {
         this.playerStartingPositions = map.playerPositions;
         this.maxClients = this.playerStartingPositions.length;
 
-        this.terrainManager = new TerrainManager(this.physicsManager, quadTree);
+        this.terrainManager = new TerrainManagerServer(this.physicsManager, quadTree);
         this.terrainManager.createTerrain();
     }
 

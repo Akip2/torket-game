@@ -5,7 +5,7 @@ import { DEBUG, TEXTURE_SIZE, TILE_SIZE } from "@shared/const";
 import type { QuadBlockType } from "@shared/types";
 import { Depths } from "@shared/enums/Depths.eunum";
 
-export default class TerrainManager {
+export default class TerrainManagerClient {
     scene: GameScene;
     root: QuadBlock;
     terrainColliders: MatterJS.BodyType[] = [];

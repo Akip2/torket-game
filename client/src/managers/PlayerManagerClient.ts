@@ -6,7 +6,7 @@ import { movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/pla
 import { CLIENT_PREDICTION, DEBUG } from "@shared/const";
 import { Depths } from "@shared/enums/Depths.eunum";
 
-export default class PlayerManager {
+export default class PlayerManagerClient {
     room: Room;
 
     localInputBuffer: InputPayload[] = [];
