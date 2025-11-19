@@ -10,8 +10,9 @@ import { getExplosionSpriteScale } from "@shared/utils";
 import ShotManager from "../managers/ShotManager";
 import PlayerManagerClient from "../managers/PlayerManagerClient";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
-import type { InitData, Position } from "@shared/types";
+import type { FullSynchroInfo, InitData, Position } from "@shared/types";
 import { Depths } from "@shared/enums/Depths.eunum";
+import PhaseManagerClient from "../managers/PhaseManagerClient";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "localhost:2567";
 
@@ -30,6 +31,7 @@ export default class GameScene extends Phaser.Scene {
 
     terrainManager!: TerrainManagerClient;
     shotManager!: ShotManager;
+    phaseManager: PhaseManagerClient = new PhaseManagerClient();
 
     currentMousePosition: Position = { x: 0, y: 0 }
 
@@ -79,6 +81,17 @@ export default class GameScene extends Phaser.Scene {
         this.room.onMessage(RequestTypes.TerrainSynchro, (quadBlock) => {
             this.terrainManager.constructQuadBlock(quadBlock);
             this.terrainManager.redrawTerrain();
+        });
+
+        this.room.onMessage(RequestTypes.PhaseSynchro, (phase) => {
+            this.phaseManager.currentPhase = phase;
+        });
+
+        this.room.onMessage(RequestTypes.FullSynchro, (synchroInfo: FullSynchroInfo) => {
+            this.terrainManager.constructQuadBlock(synchroInfo.terrain);
+            this.terrainManager.redrawTerrain();
+
+            this.phaseManager.currentPhase = synchroInfo.phase;
         });
 
         this.room.onMessage(RequestTypes.Shoot, (shootInfo) => {

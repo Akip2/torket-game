@@ -1,9 +1,10 @@
 import type Phase from "@shared/data/phases/Phase";
+import WaitingPhase from "@shared/data/phases/WaitingPhase";
 
 export default class PhaseManagerClient {
     currentPhase: Phase;
 
-    constructor(currentPhase: Phase) {
-        this.currentPhase = currentPhase;
+    constructor() {
+        this.currentPhase = new WaitingPhase();
     }
 }

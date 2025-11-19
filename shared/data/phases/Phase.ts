@@ -1,4 +1,4 @@
-import type { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
+import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
 
 export default abstract class Phase {
     type: PhaseTypes;

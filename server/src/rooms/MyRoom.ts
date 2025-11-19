@@ -15,6 +15,9 @@ import path from "path";
 import { readFile } from "fs/promises";
 import dotenv from "dotenv";
 import PlayerManagerServer from "src/managers/PlayerManagerServer";
+import PhaseManagerServer from "src/managers/PhaseManagerServer";
+import Phase from "@shared/data/phases/Phase";
+import StartingPhase from "@shared/data/phases/StartingPhase";
 
 dotenv.config();
 
@@ -25,6 +28,7 @@ export class MyRoom extends Room<MyRoomState> {
     playerStartingPositions: PlayerStartingPosition[] = [];
 
     terrainManager: TerrainManagerServer;
+    phaseManager: PhaseManagerServer;
     physicsManager: PhysicsManager = new PhysicsManager();
     playerManager: PlayerManagerServer = new PlayerManagerServer();
 
@@ -42,6 +46,7 @@ export class MyRoom extends Room<MyRoomState> {
 
         this.setupMessages();
         this.setupCollisionEvents();
+        this.phaseManager = new PhaseManagerServer(this.playerManager, (phase) => this.broadcastPhase(phase));
         await this.setupTerrain();
     }
 
@@ -151,7 +156,11 @@ export class MyRoom extends Room<MyRoomState> {
         this.playerManager.addPlayer(client.sessionId, player, (hp: number) => this.broadcastDamage(client.sessionId, hp), this.physicsManager)
         this.state.players.set(client.sessionId, player);
 
-        this.synchronizeTerrain(client); // Sending terrain to connecting client
+        this.synchronizeFully(client);
+
+        if (this.playerManager.getPlayerNb() === this.maxClients) { // if enough players we start the game
+            this.phaseManager.start();
+        }
     }
 
     onLeave(client: Client, consented: boolean) {
@@ -159,6 +168,14 @@ export class MyRoom extends Room<MyRoomState> {
         this.state.players.delete(client.sessionId);
 
         this.playerStartingPositions.find((p) => p.playerId === client.sessionId).playerId = null;
+
+        if (this.playerManager.getPlayerNb() === 0) {
+            this.phaseManager.stop();
+        } else {
+            if (this.phaseManager.currentPhase instanceof StartingPhase) {
+                this.phaseManager.reset();
+            }
+        }
     }
 
     onDispose() { }
@@ -172,12 +189,29 @@ export class MyRoom extends Room<MyRoomState> {
         this.broadcast(RequestTypes.HealthUpdate, { playerId, hp });
     }
 
+    broadcastPhase(phase: Phase) {
+        this.broadcast(RequestTypes.PhaseSynchro, phase);
+    }
+
     synchronizeTerrain(client?: Client) {
         const content = this.terrainManager.root;
         if (client) {
             client.send(RequestTypes.TerrainSynchro, content);
         } else {
             this.broadcast(RequestTypes.TerrainSynchro, content);
+        }
+    }
+
+    synchronizeFully(client?: Client) {
+        const content = {
+            terrain: this.terrainManager.root,
+            phase: this.phaseManager.currentPhase
+        };
+
+        if (client) {
+            client.send(RequestTypes.FullSynchro, content);
+        } else {
+            this.broadcast(RequestTypes.FullSynchro, content);
         }
     }
 }

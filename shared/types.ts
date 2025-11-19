@@ -1,3 +1,4 @@
+import type Phase from "./data/phases/Phase";
 import type { Depths } from "./enums/Depths.eunum";
 
 export type InputPayload = {
@@ -19,6 +20,11 @@ export type ShootInfo = {
     
     targetX: number,
     targetY: number
+}
+
+export type FullSynchroInfo = {
+    terrain: QuadBlockType,
+    phase: Phase
 }
 
 export type QuadBlockType = {

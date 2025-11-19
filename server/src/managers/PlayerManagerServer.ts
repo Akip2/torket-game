@@ -53,6 +53,10 @@ export default class PlayerManagerServer {
         return this.playerBodies.get(sessionId);
     }
 
+    getPlayerNb() {
+        return this.playerBodies.size;
+    }
+
     removePlayer(sessionId: string, physicsManager: PhysicsManager) {
         const playerBody = this.getPlayer(sessionId);
         if (playerBody) {

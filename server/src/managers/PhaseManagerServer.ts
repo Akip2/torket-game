@@ -13,9 +13,11 @@ export default class PhaseManagerServer {
     phases: Phase[] = [];
     playerManager: PlayerManagerServer;
     timeOut: NodeJS.Timeout;
+    onPhaseChange: (phase: Phase) => void;
 
-    constructor(playerManager: PlayerManagerServer) {
+    constructor(playerManager: PlayerManagerServer, onPhaseChange: (phase: Phase) => void) {
         this.playerManager = playerManager;
+        this.onPhaseChange = onPhaseChange;
     }
 
     start() {
@@ -33,9 +35,12 @@ export default class PhaseManagerServer {
         this.setCurrentPhase(startingPhase);
     }
 
-    reset() {
+    stop() {
         clearTimeout(this.timeOut);
-        this.currentPhase = new WaitingPhase();
+    }
+
+    reset() {
+        this.setCurrentPhase(new WaitingPhase());
         this.phases = [];
         this.currentIndex = 0;
     }
@@ -49,6 +54,7 @@ export default class PhaseManagerServer {
         }
 
         this.currentPhase = phase;
+        this.onPhaseChange(phase);
     }
 
     next() {
@@ -56,7 +62,7 @@ export default class PhaseManagerServer {
 
         const phase = this.phases[this.currentIndex];
 
-        if (phase instanceof SoloActionPhase && !this.playerManager.getPlayer(phase.playerId).playerRef.isAlive) { // trying to do the action of a dead player
+        if (phase instanceof SoloActionPhase && !this.playerManager.getPlayer(phase.playerId)?.playerRef.isAlive) { // trying to do the action of a dead player
             this.phases.splice(this.currentIndex, 1); // removing the phase
             this.next();
         } else {
