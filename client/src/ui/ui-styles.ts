@@ -20,5 +20,11 @@ export const TextStyle = {
     NameTag: {
         fontFamily: "Arial",
         color: "white",
+    },
+
+    PhaseDisplayer: {
+        fontFamily: "Arial",
+        color: "white",
+        fontSize: 30
     }
 } as Record<string, Phaser.Types.GameObjects.Text.TextStyle>; 

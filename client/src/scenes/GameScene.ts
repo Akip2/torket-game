@@ -13,6 +13,8 @@ import { SceneNames } from "@shared/enums/SceneNames.enum";
 import type { FullSynchroInfo, InitData, Position } from "@shared/types";
 import { Depths } from "@shared/enums/Depths.eunum";
 import PhaseManagerClient from "../managers/PhaseManagerClient";
+import PhaseDisplayer from "../ui/PhaseDisplayer";
+import { TextStyle } from "../ui/ui-styles";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "localhost:2567";
 
@@ -36,6 +38,8 @@ export default class GameScene extends Phaser.Scene {
     currentMousePosition: Position = { x: 0, y: 0 }
 
     initData!: InitData; // data related to the current player, sent to the server on connection
+
+    phaseDisplayer!: PhaseDisplayer;
 
     constructor() {
         super(SceneNames.Game);
@@ -70,6 +74,8 @@ export default class GameScene extends Phaser.Scene {
         this.setupCollisionEvents();
         this.setupPointerEvents();
         this.setupVisibilityHandler();
+
+        this.phaseDisplayer = new PhaseDisplayer(this, this.phaseManager, TextStyle.PhaseDisplayer);
     }
 
     async setupRoomEvents() {
@@ -84,14 +90,14 @@ export default class GameScene extends Phaser.Scene {
         });
 
         this.room.onMessage(RequestTypes.PhaseSynchro, (phase) => {
-            this.phaseManager.currentPhase = phase;
+            this.phaseManager.setCurrentPhase(phase);
         });
 
         this.room.onMessage(RequestTypes.FullSynchro, (synchroInfo: FullSynchroInfo) => {
             this.terrainManager.constructQuadBlock(synchroInfo.terrain);
             this.terrainManager.redrawTerrain();
 
-            this.phaseManager.currentPhase = synchroInfo.phase;
+            this.phaseManager.setCurrentPhase(synchroInfo.phase);
         });
 
         this.room.onMessage(RequestTypes.Shoot, (shootInfo) => {
@@ -154,6 +160,8 @@ export default class GameScene extends Phaser.Scene {
             this.elapsedTime -= TIME_STEP;
             this.fixedTick();
         }
+
+        this.phaseDisplayer.update(this.cameras.main);
     }
 
     setupCollisionEvents() {

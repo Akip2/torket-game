@@ -1,7 +1,7 @@
 import type { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
 import Phase from "./Phase";
 
-export default abstract class TimedPhase extends Phase {
+export default class TimedPhase extends Phase {
     startTime: number;
     duration: number;
     endTime: number;
