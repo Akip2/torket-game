@@ -4,6 +4,7 @@ import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { DEBUG, TEXTURE_SIZE, TILE_SIZE } from "@shared/const";
 import type { QuadBlockType } from "@shared/types";
 import { Depths } from "@shared/enums/Depths.eunum";
+import BlockSprite from "../game-objects/BlockSprite";
 
 export default class TerrainManagerClient {
     scene: GameScene;
@@ -46,12 +47,7 @@ export default class TerrainManagerClient {
                 sprite.tilePositionX = block.x % TEXTURE_SIZE;
                 sprite.tilePositionY = block.y % TEXTURE_SIZE;
             } else {
-                sprite = this.scene.add
-                    .tileSprite(block.x, block.y, block.width, block.height, RessourceKeys.Ground)
-                    .setOrigin(0)
-                    .setDepth(Depths.Fourth);
-                sprite.tilePositionX = block.x % TEXTURE_SIZE;
-                sprite.tilePositionY = block.y % TEXTURE_SIZE;
+                sprite = new BlockSprite(this.scene, block.x, block.y, block.width, block.height, block.x % TEXTURE_SIZE, block.y % TEXTURE_SIZE);
             }
 
             this.terrainSprites.push(sprite);

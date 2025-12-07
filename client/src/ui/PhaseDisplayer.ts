@@ -19,13 +19,13 @@ export default class PhaseDisplayer extends UiText {
         this.phaseManager = phaseManager;
     }
 
-    update(camera: Phaser.Cameras.Scene2D.Camera): void {
+    update(): void {
         const currentPhase = this.phaseManager.currentPhase;
         if (currentPhase.isTimed || currentPhase != this.lastDisplayedPhase) {
             this.lastDisplayedPhase = currentPhase;
 
             this.setText(currentPhase.name);
-            this.relativeX = (GAME_WIDTH / 2) - this.width / 2;
+            this.x = (GAME_WIDTH / 2) - this.width / 2;
 
             if (currentPhase.isTimed) {
                 const timeLeft = (currentPhase as TimedPhase).getTimeLeft();
@@ -37,7 +37,5 @@ export default class PhaseDisplayer extends UiText {
                 this.setText(`${this.text} : ${seconds}.${milliseconds}`)
             }
         }
-
-        super.update(camera);
     }
 }

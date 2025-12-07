@@ -1,4 +1,4 @@
-import { EXPLOSION_RADIUS, TEXTURE_SIZE, TILE_SIZE, TIME_STEP } from "@shared/const";
+import { EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE, TILE_SIZE, TIME_STEP } from "@shared/const";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import BulletClient from "../game-objects/BulletClient";
 import PlayerClient from "../game-objects/PlayerClient";
@@ -15,6 +15,7 @@ import { Depths } from "@shared/enums/Depths.eunum";
 import PhaseManagerClient from "../managers/PhaseManagerClient";
 import PhaseDisplayer from "../ui/PhaseDisplayer";
 import { TextStyle } from "../ui/ui-styles";
+import UiText from "../ui/UiText";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "localhost:2567";
 
@@ -34,6 +35,9 @@ export default class GameScene extends Phaser.Scene {
     terrainManager!: TerrainManagerClient;
     shotManager!: ShotManager;
     phaseManager: PhaseManagerClient = new PhaseManagerClient();
+
+    worldContainer!: Phaser.GameObjects.Container;
+    uiContainer!: Phaser.GameObjects.Container;
 
     currentMousePosition: Position = { x: 0, y: 0 }
 
@@ -63,6 +67,10 @@ export default class GameScene extends Phaser.Scene {
             throw e;
         }
 
+        this.worldContainer = this.add.container();
+        this.uiContainer = this.add.container();
+        this.patchScene()
+
         new TextureManager(this.add).generateTextures();
 
         this.terrainManager = new TerrainManagerClient(this);
@@ -74,8 +82,7 @@ export default class GameScene extends Phaser.Scene {
         this.setupCollisionEvents();
         this.setupPointerEvents();
         this.setupVisibilityHandler();
-
-        this.phaseDisplayer = new PhaseDisplayer(this, this.phaseManager, TextStyle.PhaseDisplayer);
+        this.setupUi();
     }
 
     async setupRoomEvents() {
@@ -131,6 +138,16 @@ export default class GameScene extends Phaser.Scene {
         });
     }
 
+    setupUi() {
+        const uiCam = this.cameras.add(0, 0, GAME_WIDTH, GAME_HEIGHT);
+        uiCam.setScroll(0, 0);
+
+        this.cameras.main.ignore(this.uiContainer);
+        uiCam.ignore(this.worldContainer);
+
+        this.phaseDisplayer = new PhaseDisplayer(this, this.phaseManager, TextStyle.PhaseDisplayer);
+    }
+
     fixedTick() {
         if (!this.room) { return; }
 
@@ -161,7 +178,7 @@ export default class GameScene extends Phaser.Scene {
             this.fixedTick();
         }
 
-        this.phaseDisplayer.update(this.cameras.main);
+        this.phaseDisplayer.update();
     }
 
     setupCollisionEvents() {
@@ -236,6 +253,32 @@ export default class GameScene extends Phaser.Scene {
         this.currentMousePosition = {
             x: pointer.x,
             y: pointer.y
+        }
+    }
+
+    patchScene() {
+        this.add.existing = (gameObject: any) => {
+            if (gameObject instanceof UiText) {
+                this.uiContainer.add(gameObject);
+            }
+            else {
+                this.worldContainer.add(gameObject);
+            }
+            return gameObject;
+        };
+
+        const originalGraphics = this.add.graphics;
+        this.add.graphics = (...args) => {
+            const g = originalGraphics.apply(this.add, args);
+            this.worldContainer.add(g);
+            return g;
+        };
+
+        const originalRectangle = this.add.rectangle;
+        this.add.rectangle = (...args) => {
+            const rect = originalRectangle.apply(this.add, args);
+            this.worldContainer.add(rect);
+            return rect;
         }
     }
 }
