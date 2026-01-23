@@ -18,7 +18,7 @@ export const BarStyle = {
 
 export const TextStyle = {
     NameTag: {
-        fontFamily: "Arial",
+        fontFamily: "Comic Sans MS",
         color: "white",
     },
 
