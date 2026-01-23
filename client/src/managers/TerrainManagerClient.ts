@@ -75,6 +75,7 @@ export default class TerrainManagerClient {
         this.terrainSprites = [];
 
         this.drawTerrain();
+        this.scene.worldContainer.sort('depth'); // fix display order
         this.recreateColliders();
     }
 
