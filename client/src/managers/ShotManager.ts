@@ -76,8 +76,11 @@ export default class ShotManager {
     }
 
     drawTrajectory(shootInfo: ShootInfo) {
-        this.trajectoryDrawer?.destroy();
-        this.trajectoryDrawer = this.scene.add.graphics();
+        if (!this.trajectoryDrawer) {
+            this.trajectoryDrawer = this.scene.add.graphics();
+        }
+        this.trajectoryDrawer.clear();
+        //this.trajectoryDrawer = this.scene.add.graphics();
         this.trajectoryDrawer.fillStyle(0xffffff, 0.9);
 
         const gravityStep = GRAVITY * 0.001 * TIME_STEP * TIME_STEP;
