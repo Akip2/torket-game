@@ -24,7 +24,18 @@ export const TextStyle = {
 
     PhaseDisplayer: {
         fontFamily: "Arial",
-        color: "white",
-        fontSize: 30
+        color: "#44ff44",
+        fontSize: 32,
+        fontStyle: "bold",
+        stroke: "#000000",
+        strokeThickness: 2
+    },
+
+    Timer: {
+        fontFamily: "Arial",
+        fontSize: 27,
+        color: "#ffaa44",
+        align: "center",
+        fontStyle: "bold"
     }
 } as Record<string, Phaser.Types.GameObjects.Text.TextStyle>; 
