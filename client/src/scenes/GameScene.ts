@@ -1,4 +1,4 @@
-import { EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, TEXTURE_SIZE, TILE_SIZE, TIME_STEP } from "@shared/const";
+import { EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, GROUND_TYPE, TEXTURE_SIZE, TILE_SIZE, TIME_STEP } from "@shared/const";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import BulletClient from "../game-objects/BulletClient";
 import PlayerClient from "../game-objects/PlayerClient";
@@ -55,7 +55,7 @@ export default class GameScene extends Phaser.Scene {
 
     preload() {
         this.keyboard = this.input.keyboard!.createCursorKeys();
-        this.load.image(RessourceKeys.Ground, `assets/ground/ground_${TEXTURE_SIZE}.png`);
+        this.load.image(RessourceKeys.Ground, `assets/ground/${GROUND_TYPE}_${TEXTURE_SIZE}.png`);
         this.load.image(RessourceKeys.Particle, 'assets/explosion/particle.png');
     }
 
