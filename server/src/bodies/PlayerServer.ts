@@ -4,7 +4,8 @@ import GameBody from "./GameBody";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { IPlayer } from "@shared/interfaces/Player.interface";
 import { Player } from "src/rooms/schema/MyRoomState";
-import { InputPayload, Position } from "@shared/types";
+import { Position } from "@shared/types";
+import { PlayerState } from "@shared/enums/PlayerState.enum";
 
 export default class PlayerServer extends GameBody implements IPlayer {
     isMoving: boolean;
@@ -46,6 +47,14 @@ export default class PlayerServer extends GameBody implements IPlayer {
         }
 
         this.onDamage(this.playerRef.hp);
+    }
+
+    getState() {
+        return this.playerRef.state;
+    }
+
+    setState(state: PlayerState) {
+        this.playerRef.state = state;
     }
 
     getInputQueue() {

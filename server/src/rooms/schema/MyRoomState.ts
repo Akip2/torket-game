@@ -1,4 +1,5 @@
 import { MapSchema, Schema, type } from "@colyseus/schema";
+import { PlayerState } from "@shared/enums/PlayerState.enum";
 import { InputPayload } from "@shared/types";
 
 export class Player extends Schema {
@@ -16,6 +17,8 @@ export class Player extends Schema {
   @type("number") hp: number;
   
   @type("number") timeStamp: number;
+
+  @type("string") state: PlayerState = PlayerState.Inactive;
 }
 
 export class MyRoomState extends Schema {

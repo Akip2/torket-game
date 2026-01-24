@@ -16,6 +16,7 @@ import PhaseManagerClient from "../managers/PhaseManagerClient";
 import PhaseDisplayer from "../ui/PhaseDisplayer";
 import { TextStyle } from "../ui/ui-styles";
 import UiText from "../ui/UiText";
+import { canPlayerShoot } from "@shared/logics/player-logic";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "localhost:2567";
 
@@ -233,6 +234,8 @@ export default class GameScene extends Phaser.Scene {
     }
 
     pointerDownEvent(pointer: Phaser.Input.Pointer) {
+        if (!canPlayerShoot(this.playerManager.currentPlayer)) return;
+        
         this.shotManager.setTargetPosition(pointer.x, pointer.y);
         this.shotManager.setStartingPosition(this.playerManager.currentPlayer.x, this.playerManager.currentPlayer.y);
 
@@ -240,6 +243,8 @@ export default class GameScene extends Phaser.Scene {
     }
 
     pointerUpEvent(pointer: Phaser.Input.Pointer) {
+        if (!canPlayerShoot(this.playerManager.currentPlayer)) return;
+
         this.shotManager.setTargetPosition(pointer.x, pointer.y);
         this.shotManager.setStartingPosition(this.playerManager.currentPlayer.x, this.playerManager.currentPlayer.y);
 

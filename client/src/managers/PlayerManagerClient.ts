@@ -75,6 +75,8 @@ export default class PlayerManagerClient {
                 x: player.mouseX,
                 y: player.mouseY
             });
+
+            playerObject.state = player.state;
         });
     }
 

@@ -18,6 +18,7 @@ import PlayerManagerServer from "src/managers/PlayerManagerServer";
 import PhaseManagerServer from "src/managers/PhaseManagerServer";
 import Phase from "@shared/data/phases/Phase";
 import StartingPhase from "@shared/data/phases/StartingPhase";
+import { canPlayerShoot } from "@shared/logics/player-logic";
 
 dotenv.config();
 
@@ -58,6 +59,8 @@ export class MyRoom extends Room<MyRoomState> {
 
         this.onMessage(RequestTypes.Shoot, (client, shootInfo: ShootInfo) => {
             const playerBody = this.playerManager.getPlayer(client.sessionId);
+
+            if(!canPlayerShoot(playerBody)) return;
 
             const originPosition = generateBulletOriginPosition(playerBody.getX(), playerBody.getY(), shootInfo.targetX, shootInfo.targetY);
 

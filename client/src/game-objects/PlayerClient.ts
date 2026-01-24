@@ -8,8 +8,11 @@ import { BarStyle, TextStyle } from "../ui/ui-styles";
 import type { Position } from "@shared/types";
 import { Depths } from "@shared/enums/Depths.eunum";
 import NameTag from "../ui/NameTag";
+import { PlayerState } from "@shared/enums/PlayerState.enum";
 
 export default class PlayerClient extends Phaser.Physics.Matter.Sprite implements IPlayer {
+    state: PlayerState = PlayerState.Inactive;
+
     isMoving: boolean;
     isOnGround: boolean;
 
@@ -46,7 +49,17 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.nameTag = new NameTag(scene, name, x, y, TextStyle.NameTag);
     }
 
+    getState(): PlayerState {
+        return this.state;
+    }
+
     updateGunPlacement(targetPosition: Position) {
+        if (this.state !== PlayerState.Shooting) {
+            this.gun.setVisible(false);
+            return;
+        }
+
+        this.gun.setVisible(true);
         const dx = targetPosition.x - this.x;
         const dy = targetPosition.y - this.y;
         const angle = Math.atan2(dy, dx) * 180 / Math.PI;
