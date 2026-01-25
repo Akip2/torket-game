@@ -2,7 +2,6 @@ import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
 import TimedPhase from "./TimedPhase";
 
 export default class ActionPhase extends TimedPhase {
-    isSolo: boolean;
     static TYPES = [
         PhaseTypes.ActionChoice,
         PhaseTypes.PowerChoice,
@@ -21,9 +20,8 @@ export default class ActionPhase extends TimedPhase {
             type,
             name,
             startTime,
-            duration
+            duration,
+            isSolo
         );
-
-        this.isSolo = isSolo;
     }
 }

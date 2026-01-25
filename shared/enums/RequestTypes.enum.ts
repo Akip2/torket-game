@@ -5,4 +5,5 @@ export enum RequestTypes {
     PhaseSynchro = "phase-synchro",
     FullSynchro = "full-synchro",
     HealthUpdate = "health-update",
+    SelectAction = "select-action",
 }

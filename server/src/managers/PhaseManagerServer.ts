@@ -64,6 +64,7 @@ export default class PhaseManagerServer {
 
         if (phase instanceof SoloActionPhase && !this.playerManager.getPlayer(phase.playerId)?.playerRef.isAlive) { // trying to do the action of a dead player
             this.phases.splice(this.currentIndex, 1); // removing the phase
+            this.currentIndex--; // staying at the same index for the next phase
             this.next();
         } else {
             this.setCurrentPhase(phase);

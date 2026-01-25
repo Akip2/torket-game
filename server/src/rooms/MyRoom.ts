@@ -19,6 +19,7 @@ import PhaseManagerServer from "src/managers/PhaseManagerServer";
 import Phase from "@shared/data/phases/Phase";
 import StartingPhase from "@shared/data/phases/StartingPhase";
 import { canPlayerShoot } from "@shared/logics/player-logic";
+import { Action } from "@shared/enums/Action.enum";
 
 dotenv.config();
 
@@ -76,6 +77,12 @@ export class MyRoom extends Room<MyRoomState> {
 
         this.onMessage(RequestTypes.TerrainSynchro, (client) => {
             this.synchronizeTerrain(client);
+        });
+
+        this.onMessage(RequestTypes.SelectAction, (client, data: { action: Action }) => {
+            // Handle action selection during ActionChoicePhase
+            // For now, we'll just advance to the next phase
+            this.phaseManager.next();
         });
     }
 

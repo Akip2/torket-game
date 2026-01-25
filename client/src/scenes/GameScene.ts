@@ -17,6 +17,7 @@ import PhaseDisplayer from "../ui/PhaseDisplayer";
 import { TextStyle } from "../ui/ui-styles";
 import UiText from "../ui/UiText";
 import { canPlayerShoot } from "@shared/logics/player-logic";
+import ActionChoicePanel from "../ui/ActionChoicePanel";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "localhost:2567";
 
@@ -45,6 +46,7 @@ export default class GameScene extends Phaser.Scene {
     initData!: InitData; // data related to the current player, sent to the server on connection
 
     phaseDisplayer!: PhaseDisplayer;
+    actionChoicePanel!: ActionChoicePanel;
 
     constructor() {
         super(SceneNames.Game);
@@ -147,6 +149,7 @@ export default class GameScene extends Phaser.Scene {
         uiCam.ignore(this.worldContainer);
 
         this.phaseDisplayer = new PhaseDisplayer(this, this.phaseManager, TextStyle.PhaseDisplayer);
+        this.actionChoicePanel = new ActionChoicePanel(this);
     }
 
     fixedTick() {
@@ -180,6 +183,12 @@ export default class GameScene extends Phaser.Scene {
         }
 
         this.phaseDisplayer.update();
+
+        if (this.phaseManager.isActionChoicePhase() && this.phaseManager.isConcerned(this.room.sessionId)) {
+                this.actionChoicePanel.show();
+        } else {
+            this.actionChoicePanel.show();
+        }
     }
 
     setupCollisionEvents() {

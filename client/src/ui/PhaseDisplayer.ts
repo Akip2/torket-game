@@ -5,6 +5,7 @@ import type PhaseManagerClient from "../managers/PhaseManagerClient";
 import type Phase from "@shared/data/phases/Phase";
 import type TimedPhase from "@shared/data/phases/TimedPhase";
 import Timer from "./Timer";
+import { Depths } from "@shared/enums/Depths.eunum";
 
 export default class PhaseDisplayer extends UiText {
     phaseManager: PhaseManagerClient;
@@ -26,10 +27,11 @@ export default class PhaseDisplayer extends UiText {
         this.setOrigin(0, 0);
 
         this.background = background
-        this.background.setDepth(this.depth - 1);
+        this.background.setDepth(Depths.First - 1);
         this.background.setStrokeStyle(2, 0x44aa44);
         this.background.setOrigin(0.5, 0);
 
+        this.setDepth(Depths.First);
         this.timer = new Timer(scene);
     }
 

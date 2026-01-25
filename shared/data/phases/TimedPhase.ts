@@ -6,8 +6,8 @@ export default class TimedPhase extends Phase {
     duration: number;
     endTime: number;
 
-    constructor(type: PhaseTypes, name: string, startTime: number, duration: number) {
-        super(type, name, true);
+    constructor(type: PhaseTypes, name: string, startTime: number, duration: number, isSolo: boolean = false) {
+        super(type, name, true, isSolo);
 
         this.startTime = startTime;
         this.duration = duration;
