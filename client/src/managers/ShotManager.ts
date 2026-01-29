@@ -57,9 +57,17 @@ export default class ShotManager {
     }
 
     releaseShot() {
+        if (!this.isCharging) return;
+        
         this.isCharging = false;
 
         this.shootBullet();
+    }
+
+    cancelShot() {
+        this.isCharging = false;
+        this.force = 0;
+        this.trajectoryDrawer?.clear();
     }
 
     shootBulletFromInfo(shotInfo: ShootInfo) {

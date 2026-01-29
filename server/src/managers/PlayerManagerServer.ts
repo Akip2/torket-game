@@ -3,6 +3,10 @@ import { InputPayload } from "@shared/types";
 import PlayerServer from "src/bodies/PlayerServer";
 import { Player } from "src/rooms/schema/MyRoomState";
 import PhysicsManager from "./PhysicsManager";
+import Phase from "@shared/data/phases/Phase";
+import SoloActionPhase from "@shared/data/phases/SoloActionPhase";
+import { PlayerState } from "@shared/enums/PlayerState.enum";
+import ShootingPhase from "@shared/data/phases/ShootingPhase";
 
 export default class PlayerManagerServer {
     playerBodies: Map<string, PlayerServer>;
@@ -21,6 +25,26 @@ export default class PlayerManagerServer {
         this.playerBodies.forEach((playerBody) => {
             playerBody.updatePlayerRefPosition();
         });
+    }
+
+    handlePlayersState(phase: Phase) {
+        if (phase instanceof SoloActionPhase) {
+            const actionPhase = phase as SoloActionPhase;
+            const concernedPlayerId = actionPhase.playerId;
+            const concernedPlayerState = phase instanceof ShootingPhase ? PlayerState.Shooting : PlayerState.Moving;
+
+            this.playerBodies.forEach((playerBody, id) => {
+                if (id === concernedPlayerId) {
+                    playerBody.setState(concernedPlayerState);
+                } else {
+                    playerBody.setState(PlayerState.Inactive);
+                }
+            });
+        } else {
+            this.playerBodies.forEach((playerBody, id) => {
+                playerBody.setState(PlayerState.Inactive);
+            });
+        }
     }
 
     applyInputs() {

@@ -5,6 +5,7 @@ import type { InputPayload, Position } from "@shared/types";
 import { movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
 import { CLIENT_PREDICTION, DEBUG } from "@shared/const";
 import { Depths } from "@shared/enums/Depths.eunum";
+import type ShotManager from "./ShotManager";
 
 export default class PlayerManagerClient {
     room: Room;
@@ -38,13 +39,13 @@ export default class PlayerManagerClient {
                 .setDepth(Depths.Debug)
                 .setVisible(DEBUG);
 
-            this.setupLocalPlayer(player, playerObject);
+            this.setupLocalPlayer(player, playerObject, scene.shotManager);
         } else {
             this.setupRemotePlayer(player, playerObject);
         }
     }
 
-    setupLocalPlayer(player: any, playerObject: PlayerClient) {
+    setupLocalPlayer(player: any, playerObject: PlayerClient, shotManager: ShotManager) {
         const $ = getStateCallbacks(this.room);
 
         this.currentPlayer = playerObject;
@@ -62,6 +63,11 @@ export default class PlayerManagerClient {
 
             this.remoteRef.x = serverX;
             this.remoteRef.y = serverY;
+
+            if (playerObject.state != player.state) {
+                playerObject.state = player.state;
+                shotManager.cancelShot();
+            }
         });
     }
 

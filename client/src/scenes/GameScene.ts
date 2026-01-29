@@ -101,6 +101,12 @@ export default class GameScene extends Phaser.Scene {
 
         this.room.onMessage(RequestTypes.PhaseSynchro, (phase) => {
             this.phaseManager.setCurrentPhase(phase);
+
+            if (this.phaseManager.isActionChoicePhase() && this.phaseManager.isConcerned(this.room.sessionId)) {
+                this.actionChoicePanel.show();
+            } else {
+                this.actionChoicePanel.hide();
+            }
         });
 
         this.room.onMessage(RequestTypes.FullSynchro, (synchroInfo: FullSynchroInfo) => {
@@ -183,12 +189,6 @@ export default class GameScene extends Phaser.Scene {
         }
 
         this.phaseDisplayer.update();
-
-        if (this.phaseManager.isActionChoicePhase() && this.phaseManager.isConcerned(this.room.sessionId)) {
-                this.actionChoicePanel.show();
-        } else {
-            this.actionChoicePanel.show();
-        }
     }
 
     setupCollisionEvents() {
@@ -244,7 +244,7 @@ export default class GameScene extends Phaser.Scene {
 
     pointerDownEvent(pointer: Phaser.Input.Pointer) {
         if (!canPlayerShoot(this.playerManager.currentPlayer)) return;
-        
+
         this.shotManager.setTargetPosition(pointer.x, pointer.y);
         this.shotManager.setStartingPosition(this.playerManager.currentPlayer.x, this.playerManager.currentPlayer.y);
 

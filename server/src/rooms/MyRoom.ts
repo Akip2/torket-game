@@ -80,9 +80,7 @@ export class MyRoom extends Room<MyRoomState> {
         });
 
         this.onMessage(RequestTypes.SelectAction, (client, data: { action: Action }) => {
-            // Handle action selection during ActionChoicePhase
-            // For now, we'll just advance to the next phase
-            this.phaseManager.next();
+            this.phaseManager.actionChoice(client.sessionId, data.action);
         });
     }
 

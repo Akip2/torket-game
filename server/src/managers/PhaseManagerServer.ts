@@ -3,12 +3,14 @@ import PlayerManagerServer from "./PlayerManagerServer";
 import WaitingPhase from "@shared/data/phases/WaitingPhase";
 import StartingPhase from "@shared/data/phases/StartingPhase";
 import TimedPhase from "@shared/data/phases/TimedPhase";
-import PowerChoicePhase from "@shared/data/phases/PowerChoicePhase";
 import ActionChoicePhase from "@shared/data/phases/ActionChoicePhase";
 import SoloActionPhase from "@shared/data/phases/SoloActionPhase";
+import { Action } from "@shared/enums/Action.enum";
+import ShootingPhase from "@shared/data/phases/ShootingPhase";
+import MovingPhase from "@shared/data/phases/MovingPhase";
 
 export default class PhaseManagerServer {
-    currentIndex: number = 0;
+    currentIndex: number = -1;
     currentPhase: Phase = new WaitingPhase();
     phases: Phase[] = [];
     playerManager: PlayerManagerServer;
@@ -21,7 +23,7 @@ export default class PhaseManagerServer {
     }
 
     start() {
-        this.phases = [new PowerChoicePhase()];
+        this.phases = [];
         this.playerManager.playerBodies.forEach((playerBody, id) => {
             this.phases.push(
                 new ActionChoicePhase(0, {
@@ -42,7 +44,7 @@ export default class PhaseManagerServer {
     reset() {
         this.setCurrentPhase(new WaitingPhase());
         this.phases = [];
-        this.currentIndex = 0;
+        this.currentIndex = -1;
     }
 
     setCurrentPhase(phase: Phase) {
@@ -52,6 +54,8 @@ export default class PhaseManagerServer {
             (phase as TimedPhase).startTime = Date.now();
             this.timeOut = setTimeout(() => this.next(), (phase as TimedPhase).duration * 1000);
         }
+
+        this.playerManager.handlePlayersState(phase);
 
         this.currentPhase = phase;
         this.onPhaseChange(phase);
@@ -68,6 +72,22 @@ export default class PhaseManagerServer {
             this.next();
         } else {
             this.setCurrentPhase(phase);
+        }
+    }
+
+    actionChoice(playerId: string, action: Action) {
+        const player = this.playerManager.getPlayer(playerId);
+
+        if (action === Action.Move) {
+            this.setCurrentPhase(new MovingPhase(Date.now(), {
+                pseudo: player.playerRef.pseudo,
+                playerId: playerId
+            }));
+        } else if (action === Action.Shoot) {
+            this.setCurrentPhase(new ShootingPhase(Date.now(), {
+                pseudo: player.playerRef.pseudo,
+                playerId: playerId
+            }));
         }
     }
 }
