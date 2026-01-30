@@ -1,4 +1,5 @@
 import { Depths } from "@shared/enums/Depths.eunum"
+import type { UIButtonStyle } from "@shared/types";
 
 export const BarStyle = {
     Player: {
@@ -38,4 +39,41 @@ export const TextStyle = {
         align: "center",
         fontStyle: "bold"
     }
-} as Record<string, Phaser.Types.GameObjects.Text.TextStyle>; 
+} as Record<string, Phaser.Types.GameObjects.Text.TextStyle>;
+
+export const ButtonStyle = {
+    MoveButton: {
+        width: 220,
+        height: 70,
+        radius: 6,
+
+        backgroundColor: 0x2563eb,
+        borderColor: 0xffffff,
+        borderThickness: 3,
+
+        text: {
+            fontFamily: "Arial",
+            fontSize: "32px",
+            color: "#ffffff",
+            fontStyle: "bold"
+        }
+    },
+
+    ShootButton: {
+        width: 220,
+        height: 70,
+        radius: 6,
+
+        backgroundColor: 0xc01616,
+        borderColor: 0xffffff,
+        borderThickness: 3,
+
+        text: {
+            fontFamily: "Arial",
+            fontSize: "32px",
+            color: "#ffffff",
+            fontStyle: "bold"
+        }
+    }
+
+} as Record<string, UIButtonStyle>;
