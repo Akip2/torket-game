@@ -4,7 +4,7 @@ import type GameScene from "../scenes/GameScene";
 import { TextStyle } from "./ui-styles";
 import { Action } from "@shared/enums/Action.enum";
 import type { Room } from "colyseus.js";
-import ActionButton from "./ActionButton";
+import ActionButton from "./buttons/ActionButton";
 
 export default class ActionChoicePanel {
     container: Phaser.GameObjects.Container;

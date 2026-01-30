@@ -1,8 +1,8 @@
 import type { UIButtonStyle } from "@shared/types";
-import type GameScene from "../scenes/GameScene";
+import type GameScene from "../../scenes/GameScene";
 import tinycolor from "tinycolor2";
 
-export default class Button extends Phaser.GameObjects.Container {
+export default class UiButton extends Phaser.GameObjects.Container {
     private bg: Phaser.GameObjects.Rectangle;
     private label: Phaser.GameObjects.Text;
     private baseColor: number;
@@ -40,9 +40,6 @@ export default class Button extends Phaser.GameObjects.Container {
 
         this.bg.on('pointerover', () => {
             const lighter = tinycolor(this.baseColor.toString(16)).lighten(7.5).toHexString().replace("#", "");
-            console.log(lighter);
-            console.log(parseInt(lighter, 16));
-
             this.bg.setFillStyle(parseInt(lighter, 16));
         });
 

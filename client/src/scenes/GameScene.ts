@@ -18,6 +18,10 @@ import { TextStyle } from "../ui/ui-styles";
 import UiText from "../ui/UiText";
 import { canPlayerShoot } from "@shared/logics/player-logic";
 import ActionChoicePanel from "../ui/ActionChoicePanel";
+import EndTurnButton from "../ui/buttons/EndTurnButton";
+import UiButton from "../ui/buttons/UiButton";
+import type Phase from "@shared/data/phases/Phase";
+import ActionPhase from "@shared/data/phases/ActionPhase";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "localhost:2567";
 
@@ -45,8 +49,10 @@ export default class GameScene extends Phaser.Scene {
 
     initData!: InitData; // data related to the current player, sent to the server on connection
 
+    //UI
     phaseDisplayer!: PhaseDisplayer;
     actionChoicePanel!: ActionChoicePanel;
+    endTurnButton!: EndTurnButton;
 
     constructor() {
         super(SceneNames.Game);
@@ -99,13 +105,24 @@ export default class GameScene extends Phaser.Scene {
             this.terrainManager.redrawTerrain();
         });
 
-        this.room.onMessage(RequestTypes.PhaseSynchro, (phase) => {
+        this.room.onMessage(RequestTypes.PhaseSynchro, (phase: Phase) => {
             this.phaseManager.setCurrentPhase(phase);
 
-            if (this.phaseManager.isActionChoicePhase() && this.phaseManager.isConcerned(this.room.sessionId)) {
-                this.actionChoicePanel.show();
+            if (!ActionPhase.TYPES.includes(phase.type)) {
+                this.endTurnButton.hide();
+                this.actionChoicePanel.hide();
+                return;
+            }
+
+            const isConcerned = this.phaseManager.isConcerned(this.room.sessionId);
+
+            if (this.phaseManager.isActionChoicePhase()) {
+                this.endTurnButton.hide();
+                isConcerned ? this.actionChoicePanel.show() : this.actionChoicePanel.hide();
             } else {
                 this.actionChoicePanel.hide();
+                this.endTurnButton.show();
+                isConcerned ? this.endTurnButton.enable() : this.endTurnButton.disable();
             }
         });
 
@@ -156,6 +173,13 @@ export default class GameScene extends Phaser.Scene {
 
         this.phaseDisplayer = new PhaseDisplayer(this, this.phaseManager, TextStyle.PhaseDisplayer);
         this.actionChoicePanel = new ActionChoicePanel(this);
+
+        this.endTurnButton = new EndTurnButton(
+            this,
+            GAME_WIDTH / 2,
+            GAME_HEIGHT - 20,
+            () => { this.room.send(RequestTypes.EndTurn) }
+        );
     }
 
     fixedTick() {
@@ -272,7 +296,7 @@ export default class GameScene extends Phaser.Scene {
 
     patchScene() {
         this.add.existing = (gameObject: any) => {
-            if (gameObject instanceof UiText) {
+            if (gameObject instanceof UiText || gameObject instanceof UiButton) {
                 this.uiContainer.add(gameObject);
             }
             else {

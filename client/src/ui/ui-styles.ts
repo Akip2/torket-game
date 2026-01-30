@@ -74,6 +74,19 @@ export const ButtonStyle = {
             color: "#ffffff",
             fontStyle: "bold"
         }
-    }
+    },
 
+    EndTurnButton: {
+        width: 100,
+        height: 30,
+        backgroundColor: 0x1e40af,
+        borderColor: 0x60a5fa,
+        borderThickness: 2,
+        text: {
+            fontFamily: "Arial",
+            fontSize: "16px",
+            color: "#ffffff",
+            fontStyle: "bold",
+        },
+    },
 } as Record<string, UIButtonStyle>;
