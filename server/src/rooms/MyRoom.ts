@@ -1,21 +1,25 @@
 import { Room, Client } from "@colyseus/core";
 import { MyRoomState, Player } from "./schema/MyRoomState";
-import { BULLER_CONST, DAMAGE_BASE, EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, PLAYER_CONST, TILE_SIZE, TIME_STEP } from "@shared/const";
-import PlayerServer from "../bodies/PlayerServer";
+import { BULLER_CONST, EXPLOSION_RADIUS, PLAYER_CONST, TILE_SIZE, TIME_STEP } from "@shared/const";
 import Matter from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { parsePlayerLabel } from "@shared/utils";
-import { InputPayload, GameMap, PlayerStartingPosition, QuadBlockType, ShootInfo, InitData } from "@shared/types";
-import { isPlayerInRadius, movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
+import { InputPayload, GameMap, PlayerStartingPosition, ShootInfo, InitData } from "@shared/types";
 import QuadBlock from "@shared/data/QuadBlock";
 import BullerServer from "src/bodies/BulletServer";
 import { generateBulletOriginPosition, shoot } from "@shared/logics/bullet-logic";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
-import TerrainManager from "src/managers/TerrainManager";
+import TerrainManagerServer from "src/managers/TerrainManagerServer";
 import PhysicsManager from "src/managers/PhysicsManager";
 import path from "path";
 import { readFile } from "fs/promises";
 import dotenv from "dotenv";
+import PlayerManagerServer from "src/managers/PlayerManagerServer";
+import PhaseManagerServer from "src/managers/PhaseManagerServer";
+import Phase from "@shared/data/phases/Phase";
+import StartingPhase from "@shared/data/phases/StartingPhase";
+import { canPlayerShoot } from "@shared/logics/player-logic";
+import { Action } from "@shared/enums/Action.enum";
 
 dotenv.config();
 
@@ -23,16 +27,16 @@ export class MyRoom extends Room<MyRoomState> {
     maxClients = 4;
     state = new MyRoomState();
 
-    playerBodies: Map<string, PlayerServer> = new Map();
-
     playerStartingPositions: PlayerStartingPosition[] = [];
 
-    terrainManager: TerrainManager;
+    terrainManager: TerrainManagerServer;
+    phaseManager: PhaseManagerServer;
     physicsManager: PhysicsManager = new PhysicsManager();
+    playerManager: PlayerManagerServer = new PlayerManagerServer();
 
     async onCreate(options: any) {
         this.patchRate = TIME_STEP;
-        
+
         let elapsedTime = 0;
         this.setSimulationInterval((deltaTime) => {
             elapsedTime += deltaTime;
@@ -44,6 +48,7 @@ export class MyRoom extends Room<MyRoomState> {
 
         this.setupMessages();
         this.setupCollisionEvents();
+        this.phaseManager = new PhaseManagerServer(this.playerManager, (phase) => this.broadcastPhase(phase));
         await this.setupTerrain();
     }
 
@@ -54,7 +59,9 @@ export class MyRoom extends Room<MyRoomState> {
         });
 
         this.onMessage(RequestTypes.Shoot, (client, shootInfo: ShootInfo) => {
-            const playerBody = this.playerBodies.get(client.sessionId);
+            const playerBody = this.playerManager.getPlayer(client.sessionId);
+
+            if(!canPlayerShoot(playerBody)) return;
 
             const originPosition = generateBulletOriginPosition(playerBody.getX(), playerBody.getY(), shootInfo.targetX, shootInfo.targetY);
 
@@ -71,6 +78,10 @@ export class MyRoom extends Room<MyRoomState> {
         this.onMessage(RequestTypes.TerrainSynchro, (client) => {
             this.synchronizeTerrain(client);
         });
+
+        this.onMessage(RequestTypes.SelectAction, (client, data: { action: Action }) => {
+            this.phaseManager.actionChoice(client.sessionId, data.action);
+        });
     }
 
     async setupTerrain() {
@@ -83,7 +94,7 @@ export class MyRoom extends Room<MyRoomState> {
         this.playerStartingPositions = map.playerPositions;
         this.maxClients = this.playerStartingPositions.length;
 
-        this.terrainManager = new TerrainManager(this.physicsManager, quadTree);
+        this.terrainManager = new TerrainManagerServer(this.physicsManager, quadTree);
         this.terrainManager.createTerrain();
     }
 
@@ -105,14 +116,14 @@ export class MyRoom extends Room<MyRoomState> {
 
                         if (hasPlayerCollision) {
                             const sessionId = parsePlayerLabel(playerLabel).sessionId;
-                            this.applyDamage(sessionId, true);
+                            this.playerManager.getPlayer(sessionId)?.applyDamage(true);
                         }
                     }
                 }
 
                 if (hasPlayerCollision && labels.includes(RessourceKeys.Ground)) {
                     const sessionId = parsePlayerLabel(playerLabel).sessionId;
-                    const playerBody = this.playerBodies.get(sessionId);
+                    const playerBody = this.playerManager.getPlayer(sessionId);
 
                     if (!playerBody) continue;
 
@@ -131,28 +142,11 @@ export class MyRoom extends Room<MyRoomState> {
     }
 
     fixedTick(deltaTime: number) {
-        this.state.players.forEach((player, id) => {
-            const playerBody = this.playerBodies.get(id);
-            if (!playerBody) return;
-
-            let input: InputPayload;
-            while (input = player.inputQueue.shift()) {
-                movePlayerFromInputs(playerBody, input);
-                player.timeStamp = input.timeStamp;
-
-                player.mouseX = input.mousePosition.x;
-                player.mouseY = input.mousePosition.y;
-            }
-        });
+        this.playerManager.applyInputs();
 
         this.physicsManager.update(deltaTime);
 
-        this.state.players.forEach((player, id) => {
-            const playerBody = this.playerBodies.get(id);
-            if (!playerBody) return;
-            player.x = playerBody.getX();
-            player.y = playerBody.getY();
-        });
+        this.playerManager.updateRefsPosition();
     }
 
     onJoin(client: Client, initData: InitData) {
@@ -164,58 +158,47 @@ export class MyRoom extends Room<MyRoomState> {
         player.pseudo = initData.name?.trim() || "Player";
         player.x = startingPosition.x;
         player.y = startingPosition.y;
-
         player.timeStamp = 0;
         player.hp = PLAYER_CONST.MAX_HP;
 
-        const playerBody = new PlayerServer(client.sessionId, player.x, player.y);
-        this.physicsManager.add(playerBody);
-
-        this.playerBodies.set(client.sessionId, playerBody);
+        this.playerManager.addPlayer(client.sessionId, player, (hp: number) => this.broadcastDamage(client.sessionId, hp), this.physicsManager)
         this.state.players.set(client.sessionId, player);
 
-        this.synchronizeTerrain(client); // Sending terrain to connecting client
+        this.synchronizeFully(client);
+
+        if (this.playerManager.getPlayerNb() === this.maxClients) { // if enough players we start the game
+            this.phaseManager.start();
+        }
     }
 
     onLeave(client: Client, consented: boolean) {
-        const playerBody = this.playerBodies.get(client.sessionId);
-        if (playerBody) {
-            this.physicsManager.remove(playerBody);
-            this.playerBodies.delete(client.sessionId);
-        }
+        this.playerManager.removePlayer(client.sessionId, this.physicsManager);
         this.state.players.delete(client.sessionId);
 
         this.playerStartingPositions.find((p) => p.playerId === client.sessionId).playerId = null;
+
+        if (this.playerManager.getPlayerNb() === 0) {
+            this.phaseManager.stop();
+        } else {
+            if (this.phaseManager.currentPhase instanceof StartingPhase) {
+                this.phaseManager.reset();
+            }
+        }
     }
 
     onDispose() { }
 
     explode(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
         this.terrainManager.explodeTerrain(cx, cy, EXPLOSION_RADIUS);
-        this.playerBodies.forEach((p, id) => {
-            playerReactToExplosion(p, cx, cy, radius);
-
-            if (isPlayerInRadius(p, cx, cy, radius)) {
-                this.applyDamage(id, false);
-            }
-        });
+        this.playerManager.applyExplosion(cx, cy, radius);
     }
 
-    applyDamage(playerId: string, directHit: boolean) {
-        const playerRef = this.state.players.get(playerId);
-        const damage = Math.round((DAMAGE_BASE) * (directHit ? 2 : 1) + (Math.random() * 15));
+    broadcastDamage(playerId: string, hp: number) {
+        this.broadcast(RequestTypes.HealthUpdate, { playerId, hp });
+    }
 
-        playerRef.hp -= damage;
-
-        if (playerRef.hp <= 0) {
-            playerRef.hp = 0;
-            playerRef.isAlive = false;
-        }
-
-        this.broadcast(RequestTypes.HealthUpdate, {
-            playerId: playerId,
-            hp: playerRef.hp,
-        });
+    broadcastPhase(phase: Phase) {
+        this.broadcast(RequestTypes.PhaseSynchro, phase);
     }
 
     synchronizeTerrain(client?: Client) {
@@ -224,6 +207,19 @@ export class MyRoom extends Room<MyRoomState> {
             client.send(RequestTypes.TerrainSynchro, content);
         } else {
             this.broadcast(RequestTypes.TerrainSynchro, content);
+        }
+    }
+
+    synchronizeFully(client?: Client) {
+        const content = {
+            terrain: this.terrainManager.root,
+            phase: this.phaseManager.currentPhase
+        };
+
+        if (client) {
+            client.send(RequestTypes.FullSynchro, content);
+        } else {
+            this.broadcast(RequestTypes.FullSynchro, content);
         }
     }
 }

@@ -4,12 +4,15 @@ import type GameScene from "../scenes/GameScene";
 import Gun from "./Gun";
 import { CLIENT_PREDICTION, PLAYER_CONST } from "@shared/const";
 import Bar from "../ui/Bar";
-import { BarStyle } from "../ui/ui-styles";
+import { BarStyle, TextStyle } from "../ui/ui-styles";
 import type { Position } from "@shared/types";
 import { Depths } from "@shared/enums/Depths.eunum";
 import NameTag from "../ui/NameTag";
+import { PlayerState } from "@shared/enums/PlayerState.enum";
 
 export default class PlayerClient extends Phaser.Physics.Matter.Sprite implements IPlayer {
+    state: PlayerState = PlayerState.Inactive;
+
     isMoving: boolean;
     isOnGround: boolean;
 
@@ -23,6 +26,9 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     constructor(scene: GameScene, name: string, x: number, y: number) {
         super(scene.matter.world, x, y, RessourceKeys.Player);
 
+        scene.add.existing(this);
+        (this.body as MatterJS.BodyType).label = RessourceKeys.Player;
+        this.setDepth(Depths.Third)
         this.setFixedRotation();
 
         if (CLIENT_PREDICTION) {
@@ -30,24 +36,30 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         } else { // disable physics
             this.setIgnoreGravity(true);
             this.setStatic(true);
-            this.setCollidesWith([]);
             this.setFixedRotation();
             this.setFriction(0, 0, 0);
+            (this.body as MatterJS.BodyType).isSensor = true;
         }
-
-        scene.add.existing(this);
-        (this.body as MatterJS.BodyType).label = RessourceKeys.Player;
-        this.setDepth(Depths.Third)
 
         this.isMoving = false;
         this.isOnGround = false;
 
         this.gun = new Gun(scene, x, y);
         this.healthBar = new Bar(scene, this.x, this.y, 1, BarStyle.Player);
-        this.nameTag = new NameTag(scene, name, x, y);
+        this.nameTag = new NameTag(scene, name, x, y, TextStyle.NameTag);
+    }
+
+    getState(): PlayerState {
+        return this.state;
     }
 
     updateGunPlacement(targetPosition: Position) {
+        if (this.state !== PlayerState.Shooting) {
+            this.gun.setVisible(false);
+            return;
+        }
+
+        this.gun.setVisible(true);
         const dx = targetPosition.x - this.x;
         const dy = targetPosition.y - this.y;
         const angle = Math.atan2(dy, dx) * 180 / Math.PI;
