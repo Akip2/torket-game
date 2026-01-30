@@ -79,6 +79,10 @@ export class MyRoom extends Room<MyRoomState> {
             this.synchronizeTerrain(client);
         });
 
+        this.onMessage(RequestTypes.EndTurn, (client) => {
+            this.phaseManager.endTurn(client.sessionId);
+        });
+
         this.onMessage(RequestTypes.SelectAction, (client, data: { action: Action }) => {
             this.phaseManager.actionChoice(client.sessionId, data.action);
         });
