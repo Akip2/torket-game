@@ -6,7 +6,6 @@ import { Client, Room } from "colyseus.js";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import TextureManager from "../managers/TextureManager";
 import TerrainManagerClient from "../managers/TerrainManagerClient";
-import { getExplosionSpriteScale } from "@shared/utils";
 import ShotManager from "../managers/ShotManager";
 import PlayerManagerClient from "../managers/PlayerManagerClient";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
@@ -24,6 +23,7 @@ import type Phase from "@shared/data/phases/Phase";
 import ActionPhase from "@shared/data/phases/ActionPhase";
 import SimulationBorderClient from "../game-objects/SimulationBorderClient";
 import { Border } from "@shared/enums/Border.enum";
+import { getExplosionSpriteScale } from "../client-utils";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "localhost:2567";
 

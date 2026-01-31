@@ -3,7 +3,6 @@ import { MyRoomState, Player } from "./schema/MyRoomState";
 import { BULLET_CONST, EXPLOSION_RADIUS, PLAYER_CONST, TILE_SIZE, TIME_STEP } from "@shared/const";
 import Matter from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
-import { parsePlayerLabel } from "@shared/utils";
 import { InputPayload, GameMap, PlayerStartingPosition, ShootInfo, InitData } from "@shared/types";
 import QuadBlock from "@shared/data/QuadBlock";
 import BullerServer from "src/bodies/BulletServer";
@@ -21,6 +20,7 @@ import StartingPhase from "@shared/data/phases/StartingPhase";
 import { canPlayerShoot } from "@shared/logics/player-logic";
 import { Action } from "@shared/enums/Action.enum";
 import ShootingPhase from "@shared/data/phases/ShootingPhase";
+import { parsePlayerLabel } from "src/server-utils";
 
 dotenv.config();
 
