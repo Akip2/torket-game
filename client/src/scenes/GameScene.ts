@@ -22,6 +22,8 @@ import EndTurnButton from "../ui/buttons/EndTurnButton";
 import UiButton from "../ui/buttons/UiButton";
 import type Phase from "@shared/data/phases/Phase";
 import ActionPhase from "@shared/data/phases/ActionPhase";
+import SimulationBorderClient from "../game-objects/SimulationBorderClient";
+import { Border } from "@shared/enums/Border.enum";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "localhost:2567";
 
@@ -92,6 +94,7 @@ export default class GameScene extends Phaser.Scene {
         this.setupPointerEvents();
         this.setupVisibilityHandler();
         this.setupUi();
+        this.setupBorders();
     }
 
     async setupRoomEvents() {
@@ -182,6 +185,13 @@ export default class GameScene extends Phaser.Scene {
         );
     }
 
+    setupBorders() {
+        new SimulationBorderClient(this, Border.Top);
+        new SimulationBorderClient(this, Border.Bottom);
+        new SimulationBorderClient(this, Border.Right);
+        new SimulationBorderClient(this, Border.Left);
+    }
+
     fixedTick() {
         if (!this.room) { return; }
 
@@ -220,7 +230,7 @@ export default class GameScene extends Phaser.Scene {
             for (const { bodyA, bodyB, collision } of event.pairs) {
                 const labels = [bodyA.label, bodyB.label];
 
-                if (labels.includes(RessourceKeys.Bullet) && (labels.includes(RessourceKeys.Ground) || labels.includes(RessourceKeys.Player))) {
+                if (labels.includes(RessourceKeys.Bullet) && (labels.includes(RessourceKeys.Ground) || labels.includes(RessourceKeys.Player) || labels.includes(RessourceKeys.Border))) {
                     const bullet = (bodyA.label === RessourceKeys.Bullet) ? bodyA.gameObject as BulletClient : bodyB.gameObject as BulletClient;
 
                     if (bullet) {

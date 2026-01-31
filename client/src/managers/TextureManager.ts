@@ -1,4 +1,4 @@
-import { BULLER_CONST } from "@shared/const";
+import { BULLET_CONST } from "@shared/const";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 
 export default class TextureManager {
@@ -27,7 +27,7 @@ export default class TextureManager {
         g.destroy();
     }
 
-    generateBulletTexture(radius = BULLER_CONST.RADIUS) {
+    generateBulletTexture(radius = BULLET_CONST.RADIUS) {
         const g = this.factory.graphics();
 
         g.fillStyle(0xFFFFFF, 1);

@@ -1,6 +1,6 @@
 import { Room, Client } from "@colyseus/core";
 import { MyRoomState, Player } from "./schema/MyRoomState";
-import { BULLER_CONST, EXPLOSION_RADIUS, PLAYER_CONST, TILE_SIZE, TIME_STEP } from "@shared/const";
+import { BULLET_CONST, EXPLOSION_RADIUS, PLAYER_CONST, TILE_SIZE, TIME_STEP } from "@shared/const";
 import Matter from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { parsePlayerLabel } from "@shared/utils";
@@ -70,7 +70,7 @@ export class MyRoom extends Room<MyRoomState> {
 
             const originPosition = generateBulletOriginPosition(playerBody.getX(), playerBody.getY(), shootInfo.targetX, shootInfo.targetY);
 
-            const bullet = new BullerServer(originPosition.x, originPosition.y, BULLER_CONST.RADIUS);
+            const bullet = new BullerServer(originPosition.x, originPosition.y, BULLET_CONST.RADIUS);
             this.physicsManager.add(bullet);
 
             shoot(bullet, shootInfo.targetX, shootInfo.targetY, shootInfo.force);
@@ -116,7 +116,7 @@ export class MyRoom extends Room<MyRoomState> {
 
                 const hasPlayerCollision = playerLabel ? true : false;
 
-                if (labels.includes(RessourceKeys.Bullet) && (labels.includes(RessourceKeys.Ground) || hasPlayerCollision)) {
+                if (labels.includes(RessourceKeys.Bullet) && (labels.includes(RessourceKeys.Ground) || labels.includes(RessourceKeys.Border) || hasPlayerCollision)) {
                     const bullet = (bodyA.label === RessourceKeys.Bullet ? bodyA : bodyB) as any;
 
                     if (bullet.hasAlreadyExplosed) continue;
