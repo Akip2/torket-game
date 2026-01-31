@@ -1,6 +1,6 @@
 import { Room, Client } from "@colyseus/core";
 import { MyRoomState, Player } from "./schema/MyRoomState";
-import { BULLER_CONST, EXPLOSION_RADIUS, PLAYER_CONST, TILE_SIZE, TIME_STEP } from "@shared/const";
+import { BULLET_CONST, EXPLOSION_RADIUS, PLAYER_CONST, TILE_SIZE, TIME_STEP } from "@shared/const";
 import Matter from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { parsePlayerLabel } from "@shared/utils";
@@ -20,6 +20,7 @@ import Phase from "@shared/data/phases/Phase";
 import StartingPhase from "@shared/data/phases/StartingPhase";
 import { canPlayerShoot } from "@shared/logics/player-logic";
 import { Action } from "@shared/enums/Action.enum";
+import ShootingPhase from "@shared/data/phases/ShootingPhase";
 
 dotenv.config();
 
@@ -58,14 +59,18 @@ export class MyRoom extends Room<MyRoomState> {
             player.inputQueue.push(inputPayload);
         });
 
-        this.onMessage(RequestTypes.Shoot, (client, shootInfo: ShootInfo) => {
+        this.onMessage(RequestTypes.Shoot, (client, shootInfo: ShootInfo) => {                
             const playerBody = this.playerManager.getPlayer(client.sessionId);
 
-            if(!canPlayerShoot(playerBody)) return;
+            if (canPlayerShoot(playerBody)) {
+                this.phaseManager.disableAction(playerBody);
+            } else { // can't shoot, refusing action
+                return;
+            }
 
             const originPosition = generateBulletOriginPosition(playerBody.getX(), playerBody.getY(), shootInfo.targetX, shootInfo.targetY);
 
-            const bullet = new BullerServer(originPosition.x, originPosition.y, BULLER_CONST.RADIUS);
+            const bullet = new BullerServer(originPosition.x, originPosition.y, BULLET_CONST.RADIUS);
             this.physicsManager.add(bullet);
 
             shoot(bullet, shootInfo.targetX, shootInfo.targetY, shootInfo.force);
@@ -77,6 +82,10 @@ export class MyRoom extends Room<MyRoomState> {
 
         this.onMessage(RequestTypes.TerrainSynchro, (client) => {
             this.synchronizeTerrain(client);
+        });
+
+        this.onMessage(RequestTypes.EndTurn, (client) => {
+            this.phaseManager.endTurn(client.sessionId);
         });
 
         this.onMessage(RequestTypes.SelectAction, (client, data: { action: Action }) => {
@@ -107,8 +116,12 @@ export class MyRoom extends Room<MyRoomState> {
 
                 const hasPlayerCollision = playerLabel ? true : false;
 
-                if (labels.includes(RessourceKeys.Bullet) && (labels.includes(RessourceKeys.Ground) || hasPlayerCollision)) {
-                    const bullet = (bodyA.label === RessourceKeys.Bullet ? bodyA : bodyB);
+                if (labels.includes(RessourceKeys.Bullet) && (labels.includes(RessourceKeys.Ground) || labels.includes(RessourceKeys.Border) || hasPlayerCollision)) {
+                    const bullet = (bodyA.label === RessourceKeys.Bullet ? bodyA : bodyB) as any;
+
+                    if (bullet.hasAlreadyExplosed) continue;
+
+                    bullet.hasAlreadyExplosed = true;
 
                     if (bullet) {
                         this.explode(bullet.position.x, bullet.position.y, EXPLOSION_RADIUS);
@@ -191,6 +204,8 @@ export class MyRoom extends Room<MyRoomState> {
     explode(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
         this.terrainManager.explodeTerrain(cx, cy, EXPLOSION_RADIUS);
         this.playerManager.applyExplosion(cx, cy, radius);
+
+        this.phaseManager.next(500);
     }
 
     broadcastDamage(playerId: string, hp: number) {

@@ -4,7 +4,7 @@ import { generateBulletOriginPosition, shoot } from "@shared/logics/bullet-logic
 import type GameScene from "../scenes/GameScene";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import { wait } from "@shared/utils";
-import { BASE_MAX_SHOT_FORCE, BULLER_CONST, GAME_HEIGHT, GAME_WIDTH, GRAVITY, MIN_SHOT_FORCE, TIME_STEP } from "@shared/const";
+import { BASE_MAX_SHOT_FORCE, BULLET_CONST, GAME_HEIGHT, GAME_WIDTH, GRAVITY, MIN_SHOT_FORCE, TIME_STEP } from "@shared/const";
 import Vector from "@shared/data/Vector";
 import { Depths } from "@shared/enums/Depths.eunum";
 
@@ -92,7 +92,7 @@ export default class ShotManager {
         this.trajectoryDrawer.fillStyle(0xffffff, 0.9);
 
         const gravityStep = GRAVITY * 0.001 * TIME_STEP * TIME_STEP;
-        const frictionFactor = 1 - BULLER_CONST.AIR_FRICTION;
+        const frictionFactor = 1 - BULLET_CONST.AIR_FRICTION;
 
         let x = shootInfo.originX;
         let y = shootInfo.originY;

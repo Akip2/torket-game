@@ -50,6 +50,18 @@ export type BarStyleType = {
     depth?: Depths;
 }
 
+export type UIButtonStyle = {
+    width: number;
+    height: number;
+    radius?: number;
+
+    backgroundColor: number;
+    borderColor?: number;
+    borderThickness?: number;
+
+    text: Phaser.Types.GameObjects.Text.TextStyle;
+};
+
 export type GameMap = {
     playerPositions: Position[],
     quadTree: QuadBlockType

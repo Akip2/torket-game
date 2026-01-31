@@ -1,3 +1,6 @@
+import { Border } from "./enums/Border.enum";
+import type { Rectangle } from "./types";
+
 export const DEBUG = false;
 export const CLIENT_PREDICTION = false;
 
@@ -23,10 +26,44 @@ export const PLAYER_CONST = {
     MAX_HP: 100
 }
 
-export const BULLER_CONST = {
+export const BULLET_CONST = {
     RADIUS: 4,
     AIR_FRICTION: 0.01
 }
+
+export const BORDERS_CONST = {
+    [Border.Top]: {
+        x: GAME_WIDTH / 2,
+        y: 0,
+
+        width: GAME_WIDTH,
+        height: 1
+    },
+
+    [Border.Bottom]: {
+        x: GAME_WIDTH / 2,
+        y: GAME_HEIGHT,
+
+        width: GAME_WIDTH,
+        height: 1
+    },
+
+    [Border.Right]: {
+        x: GAME_WIDTH,
+        y: GAME_HEIGHT / 2,
+
+        width: 1,
+        height: GAME_HEIGHT
+    },
+
+    [Border.Left]: {
+        x: 0,
+        y: GAME_HEIGHT / 2,
+
+        width: 1,
+        height: GAME_HEIGHT
+    },
+} as Record<Border, Rectangle>
 
 export const DAMAGE_BASE = 5;
 export const BASE_MAX_SHOT_FORCE = 15;

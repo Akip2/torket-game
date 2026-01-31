@@ -8,6 +8,9 @@ import SoloActionPhase from "@shared/data/phases/SoloActionPhase";
 import { Action } from "@shared/enums/Action.enum";
 import ShootingPhase from "@shared/data/phases/ShootingPhase";
 import MovingPhase from "@shared/data/phases/MovingPhase";
+import { wait } from "@shared/utils";
+import PlayerServer from "src/bodies/PlayerServer";
+import { PlayerState } from "@shared/enums/PlayerState.enum";
 
 export default class PhaseManagerServer {
     currentIndex: number = -1;
@@ -15,6 +18,7 @@ export default class PhaseManagerServer {
     phases: Phase[] = [];
     playerManager: PlayerManagerServer;
     timeOut: NodeJS.Timeout;
+    concernedPlayerId: string;
     onPhaseChange: (phase: Phase) => void;
 
     constructor(playerManager: PlayerManagerServer, onPhaseChange: (phase: Phase) => void) {
@@ -55,13 +59,23 @@ export default class PhaseManagerServer {
             this.timeOut = setTimeout(() => this.next(), (phase as TimedPhase).duration * 1000);
         }
 
+        if (phase.isSolo) {
+            this.concernedPlayerId = (phase as SoloActionPhase).playerId;
+        } else {
+            this.concernedPlayerId = null;
+        }
+
         this.playerManager.handlePlayersState(phase);
 
         this.currentPhase = phase;
         this.onPhaseChange(phase);
     }
 
-    next() {
+    async next(delay: number = 0) {
+        clearTimeout(this.timeOut);
+
+        await wait(delay);
+        
         this.currentIndex = (this.currentIndex + 1) % this.phases.length;
 
         const phase = this.phases[this.currentIndex];
@@ -75,7 +89,17 @@ export default class PhaseManagerServer {
         }
     }
 
+    async endTurn(playerId: string) {
+        if (playerId !== this.concernedPlayerId) return;
+
+        clearTimeout(this.timeOut);
+        await wait(250);
+        this.next();
+    }
+
     actionChoice(playerId: string, action: Action) {
+        if (playerId !== this.concernedPlayerId) return;
+        
         const player = this.playerManager.getPlayer(playerId);
 
         if (action === Action.Move) {
@@ -89,5 +113,17 @@ export default class PhaseManagerServer {
                 playerId: playerId
             }));
         }
+    }
+
+    isConcerned(playerId: string) {
+        return this.currentPhase.isSolo
+            ? this.concernedPlayerId === playerId
+            : this.concernedPlayerId === playerId || this.concernedPlayerId === null;
+    }
+
+    disableAction(playerBody: PlayerServer) {
+        clearTimeout(this.timeOut);
+        playerBody.setState(PlayerState.Inactive);
+        this.concernedPlayerId = null;
     }
 }

@@ -6,4 +6,5 @@ export enum RequestTypes {
     FullSynchro = "full-synchro",
     HealthUpdate = "health-update",
     SelectAction = "select-action",
+    EndTurn = "end-turn",
 }
