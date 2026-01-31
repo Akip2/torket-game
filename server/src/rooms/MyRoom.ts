@@ -20,6 +20,7 @@ import Phase from "@shared/data/phases/Phase";
 import StartingPhase from "@shared/data/phases/StartingPhase";
 import { canPlayerShoot } from "@shared/logics/player-logic";
 import { Action } from "@shared/enums/Action.enum";
+import ShootingPhase from "@shared/data/phases/ShootingPhase";
 
 dotenv.config();
 
@@ -58,10 +59,14 @@ export class MyRoom extends Room<MyRoomState> {
             player.inputQueue.push(inputPayload);
         });
 
-        this.onMessage(RequestTypes.Shoot, (client, shootInfo: ShootInfo) => {
+        this.onMessage(RequestTypes.Shoot, (client, shootInfo: ShootInfo) => {                
             const playerBody = this.playerManager.getPlayer(client.sessionId);
 
-            if(!canPlayerShoot(playerBody)) return;
+            if (canPlayerShoot(playerBody)) {
+                this.phaseManager.disableAction(playerBody);
+            } else { // can't shoot, refusing action
+                return;
+            }
 
             const originPosition = generateBulletOriginPosition(playerBody.getX(), playerBody.getY(), shootInfo.targetX, shootInfo.targetY);
 
@@ -112,7 +117,11 @@ export class MyRoom extends Room<MyRoomState> {
                 const hasPlayerCollision = playerLabel ? true : false;
 
                 if (labels.includes(RessourceKeys.Bullet) && (labels.includes(RessourceKeys.Ground) || hasPlayerCollision)) {
-                    const bullet = (bodyA.label === RessourceKeys.Bullet ? bodyA : bodyB);
+                    const bullet = (bodyA.label === RessourceKeys.Bullet ? bodyA : bodyB) as any;
+
+                    if (bullet.hasAlreadyExplosed) continue;
+
+                    bullet.hasAlreadyExplosed = true;
 
                     if (bullet) {
                         this.explode(bullet.position.x, bullet.position.y, EXPLOSION_RADIUS);
@@ -195,6 +204,8 @@ export class MyRoom extends Room<MyRoomState> {
     explode(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
         this.terrainManager.explodeTerrain(cx, cy, EXPLOSION_RADIUS);
         this.playerManager.applyExplosion(cx, cy, radius);
+
+        this.phaseManager.next(500);
     }
 
     broadcastDamage(playerId: string, hp: number) {
