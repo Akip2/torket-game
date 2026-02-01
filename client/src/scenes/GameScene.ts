@@ -6,7 +6,6 @@ import { Client, Room } from "colyseus.js";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import TextureManager from "../managers/TextureManager";
 import TerrainManagerClient from "../managers/TerrainManagerClient";
-import { getExplosionSpriteScale } from "@shared/utils";
 import ShotManager from "../managers/ShotManager";
 import PlayerManagerClient from "../managers/PlayerManagerClient";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
@@ -17,13 +16,15 @@ import PhaseDisplayer from "../ui/PhaseDisplayer";
 import { TextStyle } from "../ui/ui-styles";
 import UiText from "../ui/UiText";
 import { canPlayerShoot } from "@shared/logics/player-logic";
-import ActionChoicePanel from "../ui/ActionChoicePanel";
+import ActionChoicePanel from "../ui/containers/ActionChoicePanel";
 import EndTurnButton from "../ui/buttons/EndTurnButton";
 import UiButton from "../ui/buttons/UiButton";
 import type Phase from "@shared/data/phases/Phase";
 import ActionPhase from "@shared/data/phases/ActionPhase";
 import SimulationBorderClient from "../game-objects/SimulationBorderClient";
 import { Border } from "@shared/enums/Border.enum";
+import { getExplosionSpriteScale } from "../client-utils";
+import GameEndScreen from "../ui/containers/GameEndScreen";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "localhost:2567";
 
@@ -55,6 +56,7 @@ export default class GameScene extends Phaser.Scene {
     phaseDisplayer!: PhaseDisplayer;
     actionChoicePanel!: ActionChoicePanel;
     endTurnButton!: EndTurnButton;
+    gameEndScreen: GameEndScreen | null = null;
 
     constructor() {
         super(SceneNames.Game);
@@ -67,7 +69,8 @@ export default class GameScene extends Phaser.Scene {
     preload() {
         this.keyboard = this.input.keyboard!.createCursorKeys();
         this.load.image(RessourceKeys.Ground, `assets/ground/${GROUND_TYPE}_${TEXTURE_SIZE}.png`);
-        this.load.image(RessourceKeys.Particle, 'assets/explosion/particle.png');
+        this.load.image(RessourceKeys.ExplosionParticle, 'assets/particles/explosion-particle.png');
+        this.load.image(RessourceKeys.DeathParticle, 'assets/particles/death-particle.png');
     }
 
     async create() {
@@ -145,8 +148,23 @@ export default class GameScene extends Phaser.Scene {
             playerObject.hp = healthUpdateInfo.hp;
 
             if (playerObject.hp <= 0) {
-                playerObject.isAlive = false;
+                playerObject.setDead();
             }
+        });
+
+        this.room.onMessage(RequestTypes.GameEnd, (gameEndInfo) => {
+            if (this.gameEndScreen) {
+                return;
+            }
+
+            const winnerId = gameEndInfo.winnerId;
+            const winner = this.playerManager.getPlayer(winnerId);
+            const isPlayerWinner = winnerId === this.room.sessionId;
+
+            this.gameEndScreen = new GameEndScreen(this, {
+                isWin: isPlayerWinner,
+                winnerName: winner.getName()
+            });
         });
     }
 
@@ -255,7 +273,7 @@ export default class GameScene extends Phaser.Scene {
         const scale = getExplosionSpriteScale(radius);
         const speedCoef = Math.max(scale * 0.5, 1);
 
-        const emitter = this.add.particles(cx, cy, RessourceKeys.Particle, {
+        const emitter = this.add.particles(cx, cy, RessourceKeys.ExplosionParticle, {
             lifespan: 500,
             speed: {
                 min: 100 * speedCoef,

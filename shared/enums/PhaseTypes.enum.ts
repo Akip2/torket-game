@@ -4,5 +4,6 @@ export enum PhaseTypes {
     PowerChoice = "Power choice",
     ActionChoice = "choosing action",
     Waiting = "Waiting for players",
-    Starting = "Starting"
+    Starting = "Starting",
+    GameEnd = "Game end",
 }

@@ -28,12 +28,14 @@ export default class PlayerManagerClient {
     }
 
     addPlayer(scene: GameScene, player: any, sessionId: string) {
-        const playerObject = new PlayerClient(scene, player.pseudo, player.x, player.y);
+        const isSelf = sessionId === this.room.sessionId;
+
+        const playerObject = new PlayerClient(scene, player.pseudo, player.x, player.y, isSelf);
         playerObject.hp = player.hp;
         playerObject.isAlive = player.isAlive;
         this.playerObjects[sessionId] = playerObject;
 
-        if (sessionId === this.room.sessionId) {
+        if (isSelf) {
             this.remoteRef = scene.add.rectangle(0, 0, playerObject.width, playerObject.height);
             this.remoteRef.setStrokeStyle(1, 0xff0000)
                 .setDepth(Depths.Debug)
@@ -68,6 +70,10 @@ export default class PlayerManagerClient {
                 playerObject.state = player.state;
                 shotManager.cancelShot();
             }
+
+            if (!playerObject.isAlive && player.isAlive === false) {
+                //playerObject.setDead();
+            }
         });
     }
 
@@ -83,6 +89,10 @@ export default class PlayerManagerClient {
             });
 
             playerObject.state = player.state;
+
+            if (!playerObject.isAlive && player.isAlive === false) {
+                //playerObject.setDead();
+            }
         });
     }
 
@@ -123,5 +133,17 @@ export default class PlayerManagerClient {
 
     getPlayer(id: string) {
         return this.playerObjects[id];
+    }
+
+    getPlayersAlive() {
+        const res = [];
+        for (const sessionId in this.playerObjects) {
+            const player = this.playerObjects[sessionId];
+            if (player.isAlive) {
+                res.push(player);
+            }
+        }
+
+        return res;
     }
 }

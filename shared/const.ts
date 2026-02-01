@@ -23,7 +23,10 @@ export const PLAYER_CONST = {
     WIDTH: 32,
     SPEED: 4.5,
     JUMP: -18,
-    MAX_HP: 100
+    MAX_HP: 100,
+
+    SELF_COLOR: 0x3498db,
+    ENNEMY_COLOR: 0xdb3445,
 }
 
 export const BULLET_CONST = {
@@ -65,6 +68,6 @@ export const BORDERS_CONST = {
     },
 } as Record<Border, Rectangle>
 
-export const DAMAGE_BASE = 5;
+export const DAMAGE_BASE = 8;
 export const BASE_MAX_SHOT_FORCE = 15;
 export const MIN_SHOT_FORCE = 2;

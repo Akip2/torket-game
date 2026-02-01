@@ -11,6 +11,7 @@ import MovingPhase from "@shared/data/phases/MovingPhase";
 import { wait } from "@shared/utils";
 import PlayerServer from "src/bodies/PlayerServer";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
+import GameEndPhase from "@shared/data/phases/GameEndPhase";
 
 export default class PhaseManagerServer {
     currentIndex: number = -1;
@@ -75,6 +76,8 @@ export default class PhaseManagerServer {
         clearTimeout(this.timeOut);
 
         await wait(delay);
+
+        if (this.isOver()) return;
         
         this.currentIndex = (this.currentIndex + 1) % this.phases.length;
 
@@ -125,5 +128,14 @@ export default class PhaseManagerServer {
         clearTimeout(this.timeOut);
         playerBody.setState(PlayerState.Inactive);
         this.concernedPlayerId = null;
+    }
+
+    endGame() {
+        clearTimeout(this.timeOut);
+        this.setCurrentPhase(new GameEndPhase());
+    }
+
+    isOver() {
+        return this.currentPhase instanceof GameEndPhase;
     }
 }

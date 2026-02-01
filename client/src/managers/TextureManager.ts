@@ -1,5 +1,6 @@
-import { BULLET_CONST } from "@shared/const";
+import { BULLET_CONST, PLAYER_CONST } from "@shared/const";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
+import { darkenHexColor } from "../client-utils";
 
 export default class TextureManager {
     factory: Phaser.GameObjects.GameObjectFactory;
@@ -9,21 +10,26 @@ export default class TextureManager {
     }
 
     generateTextures() {
-        this.generatePlayerTexture();
+        this.generatePlayerTexture(true);
+        this.generatePlayerTexture(false);
         this.generateBulletTexture();
         this.generateGunTexture();
     }
 
-    generatePlayerTexture(size = 32, baseColor = 0x3498db) {
+    generatePlayerTexture(self: boolean = true, size = 32) {
         const g = this.factory.graphics();
+
+        const baseColor = self ? PLAYER_CONST.SELF_COLOR : PLAYER_CONST.ENNEMY_COLOR;
+        const borderColor = darkenHexColor(baseColor, 25);
+        const key = self ? RessourceKeys.Player : RessourceKeys.PlayerEnnemy; 
 
         g.fillStyle(baseColor, 1);
         g.fillRect(0, 0, size, size);
 
-        g.lineStyle(size / 4, 0x21618c, 1);
+        g.lineStyle(size / 4, borderColor, 1);
         g.strokeRect(0, 0, size, size);
 
-        g.generateTexture(RessourceKeys.Player, size, size);
+        g.generateTexture(key, size, size);
         g.destroy();
     }
 
