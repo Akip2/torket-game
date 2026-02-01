@@ -16,7 +16,7 @@ import PhaseDisplayer from "../ui/PhaseDisplayer";
 import { TextStyle } from "../ui/ui-styles";
 import UiText from "../ui/UiText";
 import { canPlayerShoot } from "@shared/logics/player-logic";
-import ActionChoicePanel from "../ui/ActionChoicePanel";
+import ActionChoicePanel from "../ui/containers/ActionChoicePanel";
 import EndTurnButton from "../ui/buttons/EndTurnButton";
 import UiButton from "../ui/buttons/UiButton";
 import type Phase from "@shared/data/phases/Phase";
@@ -24,7 +24,7 @@ import ActionPhase from "@shared/data/phases/ActionPhase";
 import SimulationBorderClient from "../game-objects/SimulationBorderClient";
 import { Border } from "@shared/enums/Border.enum";
 import { getExplosionSpriteScale } from "../client-utils";
-import GameEndScreen from "../ui/GameEndScreen";
+import GameEndScreen from "../ui/containers/GameEndScreen";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "localhost:2567";
 
@@ -150,8 +150,21 @@ export default class GameScene extends Phaser.Scene {
             if (playerObject.hp <= 0) {
                 playerObject.setDead();
             }
+        });
 
-            this.checkGameEnd();
+        this.room.onMessage(RequestTypes.GameEnd, (gameEndInfo) => {
+            if (this.gameEndScreen) {
+                return;
+            }
+
+            const winnerId = gameEndInfo.winnerId;
+            const winner = this.playerManager.getPlayer(winnerId);
+            const isPlayerWinner = winnerId === this.room.sessionId;
+
+            this.gameEndScreen = new GameEndScreen(this, {
+                isWin: isPlayerWinner,
+                winnerName: winner.getName()
+            });
         });
     }
 
@@ -332,24 +345,6 @@ export default class GameScene extends Phaser.Scene {
             const rect = originalRectangle.apply(this.add, args);
             this.worldContainer.add(rect);
             return rect;
-        }
-    }
-
-    private checkGameEnd() {
-        if (this.gameEndScreen) {
-            return;
-        }
-
-        const alivePlayers = this.playerManager.getPlayersAlive();
-
-        if (alivePlayers.length === 1) {
-            const winner = alivePlayers[0];
-            const isPlayerWinner = winner === this.playerManager.currentPlayer;
-
-            this.gameEndScreen = new GameEndScreen(this, {
-                isWin: isPlayerWinner,
-                winnerName: winner.getName()
-            });
         }
     }
 }

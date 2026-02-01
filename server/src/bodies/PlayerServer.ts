@@ -71,4 +71,8 @@ export default class PlayerServer extends GameBody implements IPlayer {
         this.playerRef.x = this.getX();
         this.playerRef.y = this.getY();
     }
+
+    isAlive() {
+        return this.playerRef.isAlive;
+    }
 }

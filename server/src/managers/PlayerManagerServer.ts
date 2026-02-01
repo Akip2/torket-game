@@ -7,6 +7,9 @@ import Phase from "@shared/data/phases/Phase";
 import SoloActionPhase from "@shared/data/phases/SoloActionPhase";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
 import ShootingPhase from "@shared/data/phases/ShootingPhase";
+import ActionChoicePhase from "@shared/data/phases/ActionChoicePhase";
+import MovingPhase from "@shared/data/phases/MovingPhase";
+import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
 
 export default class PlayerManagerServer {
     playerBodies: Map<string, PlayerServer>;
@@ -31,7 +34,20 @@ export default class PlayerManagerServer {
         if (phase instanceof SoloActionPhase) {
             const actionPhase = phase as SoloActionPhase;
             const concernedPlayerId = actionPhase.playerId;
-            const concernedPlayerState = phase instanceof ShootingPhase ? PlayerState.Shooting : PlayerState.Moving;
+
+            let concernedPlayerState;
+            switch (phase.type) {
+                case PhaseTypes.Shooting:
+                    concernedPlayerState = PlayerState.Shooting
+                    break;
+                
+                case PhaseTypes.Moving:
+                    concernedPlayerState = PlayerState.Moving
+                    break;
+                
+                default:
+                    concernedPlayerState = PlayerState.Inactive;
+            }
 
             this.playerBodies.forEach((playerBody, id) => {
                 if (id === concernedPlayerId) {
@@ -79,6 +95,17 @@ export default class PlayerManagerServer {
 
     getPlayerNb() {
         return this.playerBodies.size;
+    }
+
+    getPlayersAlive() {
+        const res: PlayerServer[] = [];
+        this.playerBodies.forEach((playerBody, key) => {
+            if (playerBody.isAlive()) {
+                res.push(playerBody);
+            }
+        })
+
+        return res;
     }
 
     removePlayer(sessionId: string, physicsManager: PhysicsManager) {

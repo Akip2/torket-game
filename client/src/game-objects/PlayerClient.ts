@@ -22,7 +22,6 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     gun: Gun;
     healthBar: Bar;
     nameTag: NameTag;
-    tombstone: Phaser.Physics.Matter.Sprite | null = null;
 
     generateDeathParticles: (x: number, y: number) => void;
 
@@ -65,7 +64,6 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
 
             emmiter.explode(50);
         }
-
     }
 
     getState(): PlayerState {

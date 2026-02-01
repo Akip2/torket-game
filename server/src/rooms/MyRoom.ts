@@ -174,7 +174,7 @@ export class MyRoom extends Room<MyRoomState> {
         player.timeStamp = 0;
         player.hp = PLAYER_CONST.MAX_HP;
 
-        this.playerManager.addPlayer(client.sessionId, player, (hp: number) => this.broadcastDamage(client.sessionId, hp), this.physicsManager)
+        this.playerManager.addPlayer(client.sessionId, player, (hp: number) => this.onPlayerDamage(client.sessionId, hp), this.physicsManager)
         this.state.players.set(client.sessionId, player);
 
         this.synchronizeFully(client);
@@ -235,6 +235,18 @@ export class MyRoom extends Room<MyRoomState> {
             client.send(RequestTypes.FullSynchro, content);
         } else {
             this.broadcast(RequestTypes.FullSynchro, content);
+        }
+    }
+
+    onPlayerDamage(playerId: string, hp: number) {
+        this.broadcastDamage(playerId, hp);
+
+        const playersAlive = this.playerManager.getPlayersAlive();
+        if (playersAlive.length === 1) {
+            this.phaseManager.endGame();
+            this.broadcast(RequestTypes.GameEnd, {
+                winnerId: playersAlive[0].sessionId
+            });
         }
     }
 }

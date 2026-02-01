@@ -1,5 +1,5 @@
 import { Depths } from "@shared/enums/Depths.eunum";
-import type GameScene from "../scenes/GameScene";
+import type GameScene from "../../scenes/GameScene";
 import { wait } from "@shared/utils";
 
 export type GameEndScreenConfig = {
@@ -72,7 +72,7 @@ export default class GameEndScreen extends Phaser.GameObjects.Container {
     async appear(scene: GameScene) {
         this.alpha = 0;
 
-        await wait(1750);
+        await wait(1200);
     
         scene.tweens.add({
             targets: this,
