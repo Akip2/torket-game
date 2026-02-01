@@ -23,8 +23,8 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     healthBar: Bar;
     nameTag: NameTag;
 
-    constructor(scene: GameScene, name: string, x: number, y: number) {
-        super(scene.matter.world, x, y, RessourceKeys.Player);
+    constructor(scene: GameScene, name: string, x: number, y: number, self: boolean = true) {
+        super(scene.matter.world, x, y, self ? RessourceKeys.Player : RessourceKeys.PlayerEnnemy);
 
         scene.add.existing(this);
         (this.body as MatterJS.BodyType).label = RessourceKeys.Player;

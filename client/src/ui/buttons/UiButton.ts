@@ -1,6 +1,6 @@
 import type { UIButtonStyle } from "@shared/types";
 import type GameScene from "../../scenes/GameScene";
-import { lightenHexColor } from "client/src/client-utils";
+import { lightenHexColor } from "../../client-utils";
 
 export default class UiButton extends Phaser.GameObjects.Container {
     private bg: Phaser.GameObjects.Rectangle;

@@ -28,12 +28,14 @@ export default class PlayerManagerClient {
     }
 
     addPlayer(scene: GameScene, player: any, sessionId: string) {
-        const playerObject = new PlayerClient(scene, player.pseudo, player.x, player.y);
+        const isSelf = sessionId === this.room.sessionId;
+
+        const playerObject = new PlayerClient(scene, player.pseudo, player.x, player.y, isSelf);
         playerObject.hp = player.hp;
         playerObject.isAlive = player.isAlive;
         this.playerObjects[sessionId] = playerObject;
 
-        if (sessionId === this.room.sessionId) {
+        if (isSelf) {
             this.remoteRef = scene.add.rectangle(0, 0, playerObject.width, playerObject.height);
             this.remoteRef.setStrokeStyle(1, 0xff0000)
                 .setDepth(Depths.Debug)
