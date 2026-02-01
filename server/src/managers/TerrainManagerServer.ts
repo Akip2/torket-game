@@ -32,7 +32,7 @@ export default class TerrainManagerServer {
     }
 
     recreateTerrain() {
-        this.terrainBlocks.forEach(t => this.physicsManager.remove(t));
+        this.terrainBlocks.forEach(t => t.removeFromWorld());
         this.terrainBlocks = [];
         this.createTerrain();
     }

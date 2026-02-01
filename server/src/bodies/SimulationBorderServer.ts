@@ -15,7 +15,8 @@ export default class SimulationBorderServer extends GameBody {
             frictionAir: 0,
             frictionStatic: 0,
             isStatic: true,
-            label: RessourceKeys.Border
+            label: RessourceKeys.Border,
+            plugin: placement
         });
     }
 }

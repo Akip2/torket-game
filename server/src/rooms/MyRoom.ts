@@ -21,6 +21,7 @@ import { canPlayerShoot } from "@shared/logics/player-logic";
 import { Action } from "@shared/enums/Action.enum";
 import ShootingPhase from "@shared/data/phases/ShootingPhase";
 import { parsePlayerLabel } from "src/server-utils";
+import { Border } from "@shared/enums/Border.enum";
 
 dotenv.config();
 
@@ -112,6 +113,7 @@ export class MyRoom extends Room<MyRoomState> {
             for (const pair of event.pairs) {
                 const { bodyA, bodyB, collision } = pair;
                 const labels = [bodyA.label, bodyB.label];
+                const plugins = [bodyA.plugin, bodyB.plugin];
                 const playerLabel = labels.find(label => label.startsWith(`${RessourceKeys.Player}:`));
 
                 const hasPlayerCollision = playerLabel ? true : false;
@@ -134,20 +136,25 @@ export class MyRoom extends Room<MyRoomState> {
                     }
                 }
 
-                if (hasPlayerCollision && labels.includes(RessourceKeys.Ground)) {
+                if (hasPlayerCollision && (labels.includes(RessourceKeys.Ground) || plugins.includes(Border.Bottom))) {
                     const sessionId = parsePlayerLabel(playerLabel).sessionId;
                     const playerBody = this.playerManager.getPlayer(sessionId);
 
                     if (!playerBody) continue;
 
-                    const isPlayerA = bodyA.label.startsWith(`${RessourceKeys.Player}:`);
-                    const normal = isPlayerA ? collision.normal : { x: -collision.normal.x, y: -collision.normal.y };
+                    if (labels.includes(RessourceKeys.Ground)) { // Ground
+                        const isPlayerA = bodyA.label.startsWith(`${RessourceKeys.Player}:`);
 
-                    const isGroundCollision = normal.y < -0.3;
-                    const isFalling = playerBody.getVelocity().y > 0.5;
+                        const normal = isPlayerA ? collision.normal : { x: -collision.normal.x, y: -collision.normal.y };
 
-                    if (isGroundCollision && isFalling) {
-                        playerBody.isOnGround = true;
+                        const isGroundCollision = normal.y < -0.3;
+                        const isFalling = playerBody.getVelocity().y > 0.5;
+
+                        if (isGroundCollision && isFalling) {
+                            playerBody.isOnGround = true;
+                        }
+                    } else { // Bottom border
+                        playerBody.instantDeath();
                     }
                 }
             }
@@ -185,7 +192,7 @@ export class MyRoom extends Room<MyRoomState> {
     }
 
     onLeave(client: Client, consented: boolean) {
-        this.playerManager.removePlayer(client.sessionId, this.physicsManager);
+        this.playerManager.removePlayer(client.sessionId);
         this.state.players.delete(client.sessionId);
 
         this.playerStartingPositions.find((p) => p.playerId === client.sessionId).playerId = null;

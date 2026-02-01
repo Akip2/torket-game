@@ -38,9 +38,13 @@ export default abstract class GameBody implements IBasicBody {
 
     addToWorld(world: World) {
         World.add(world, this.body);
+
+        this.removeFromWorld = () => {
+            World.remove(world, this.body);
+        }
     }
 
-    removeFromWorld(world: World) {
-        World.remove(world, this.body);
+    removeFromWorld() {
+        throw new Error("GameBody wasn't added to the world");
     }
 }
