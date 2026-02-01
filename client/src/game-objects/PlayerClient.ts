@@ -22,6 +22,9 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     gun: Gun;
     healthBar: Bar;
     nameTag: NameTag;
+    tombstone: Phaser.Physics.Matter.Sprite | null = null;
+
+    generateDeathParticles: (x: number, y: number) => void;
 
     constructor(scene: GameScene, name: string, x: number, y: number, self: boolean = true) {
         super(scene.matter.world, x, y, self ? RessourceKeys.Player : RessourceKeys.PlayerEnnemy);
@@ -47,6 +50,22 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.gun = new Gun(scene, x, y);
         this.healthBar = new Bar(scene, this.x, this.y, 1, BarStyle.Player);
         this.nameTag = new NameTag(scene, name, x, y, TextStyle.NameTag);
+
+        this.generateDeathParticles = (x: number, y: number) => {
+            const emmiter = scene.add.particles(x, y, RessourceKeys.DeathParticle, {
+                lifespan: 500,
+                speed: { min: 80, max: 700 },
+                angle: { min: 0, max: 360 },
+                scale: { start: 1.125, end: 0 },
+                quantity: 500,
+                gravityY: 50,
+                blendMode: 'ADD',
+                emitting: false
+            }).setDepth(Depths.First);
+
+            emmiter.explode(50);
+        }
+
     }
 
     getState(): PlayerState {
@@ -77,6 +96,18 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     updateUI() {
         this.healthBar.updateGraphics(this.x, this.y, this.hp / PLAYER_CONST.MAX_HP);
         this.nameTag.updatePlacement(this.x, this.y);
+    }
+
+    setDead() {
+        if (!this.isAlive) {
+            return;
+        }
+        this.isAlive = false;
+
+        this.destroyComponents();
+        this.setVisible(false);
+
+        this.generateDeathParticles(this.x, this.y);
     }
 
     getPosition(): Position {
@@ -125,10 +156,18 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         return false;
     }
 
+    getName() {
+        return this.nameTag.text;
+    }
+
     destroy(fromScene?: boolean): void {
+        this.destroyComponents(fromScene);
+        super.destroy(fromScene);
+    }
+
+    destroyComponents(fromScene?: boolean) {
         this.gun.destroy(fromScene);
         this.healthBar.destroy(fromScene);
         this.nameTag.destroy(fromScene);
-        super.destroy(fromScene);
     }
 }

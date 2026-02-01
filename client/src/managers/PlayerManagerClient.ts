@@ -70,6 +70,10 @@ export default class PlayerManagerClient {
                 playerObject.state = player.state;
                 shotManager.cancelShot();
             }
+
+            if (!playerObject.isAlive && player.isAlive === false) {
+                //playerObject.setDead();
+            }
         });
     }
 
@@ -85,6 +89,10 @@ export default class PlayerManagerClient {
             });
 
             playerObject.state = player.state;
+
+            if (!playerObject.isAlive && player.isAlive === false) {
+                //playerObject.setDead();
+            }
         });
     }
 
@@ -125,5 +133,17 @@ export default class PlayerManagerClient {
 
     getPlayer(id: string) {
         return this.playerObjects[id];
+    }
+
+    getPlayersAlive() {
+        const res = [];
+        for (const sessionId in this.playerObjects) {
+            const player = this.playerObjects[sessionId];
+            if (player.isAlive) {
+                res.push(player);
+            }
+        }
+
+        return res;
     }
 }

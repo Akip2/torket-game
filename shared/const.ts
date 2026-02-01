@@ -68,6 +68,6 @@ export const BORDERS_CONST = {
     },
 } as Record<Border, Rectangle>
 
-export const DAMAGE_BASE = 5;
+export const DAMAGE_BASE = 100;
 export const BASE_MAX_SHOT_FORCE = 15;
 export const MIN_SHOT_FORCE = 2;

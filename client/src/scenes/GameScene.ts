@@ -24,6 +24,7 @@ import ActionPhase from "@shared/data/phases/ActionPhase";
 import SimulationBorderClient from "../game-objects/SimulationBorderClient";
 import { Border } from "@shared/enums/Border.enum";
 import { getExplosionSpriteScale } from "../client-utils";
+import GameEndScreen from "../ui/GameEndScreen";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "localhost:2567";
 
@@ -55,6 +56,7 @@ export default class GameScene extends Phaser.Scene {
     phaseDisplayer!: PhaseDisplayer;
     actionChoicePanel!: ActionChoicePanel;
     endTurnButton!: EndTurnButton;
+    gameEndScreen: GameEndScreen | null = null;
 
     constructor() {
         super(SceneNames.Game);
@@ -67,7 +69,8 @@ export default class GameScene extends Phaser.Scene {
     preload() {
         this.keyboard = this.input.keyboard!.createCursorKeys();
         this.load.image(RessourceKeys.Ground, `assets/ground/${GROUND_TYPE}_${TEXTURE_SIZE}.png`);
-        this.load.image(RessourceKeys.Particle, 'assets/explosion/particle.png');
+        this.load.image(RessourceKeys.ExplosionParticle, 'assets/particles/explosion-particle.png');
+        this.load.image(RessourceKeys.DeathParticle, 'assets/particles/death-particle.png');
     }
 
     async create() {
@@ -145,8 +148,10 @@ export default class GameScene extends Phaser.Scene {
             playerObject.hp = healthUpdateInfo.hp;
 
             if (playerObject.hp <= 0) {
-                playerObject.isAlive = false;
+                playerObject.setDead();
             }
+
+            this.checkGameEnd();
         });
     }
 
@@ -255,7 +260,7 @@ export default class GameScene extends Phaser.Scene {
         const scale = getExplosionSpriteScale(radius);
         const speedCoef = Math.max(scale * 0.5, 1);
 
-        const emitter = this.add.particles(cx, cy, RessourceKeys.Particle, {
+        const emitter = this.add.particles(cx, cy, RessourceKeys.ExplosionParticle, {
             lifespan: 500,
             speed: {
                 min: 100 * speedCoef,
@@ -327,6 +332,24 @@ export default class GameScene extends Phaser.Scene {
             const rect = originalRectangle.apply(this.add, args);
             this.worldContainer.add(rect);
             return rect;
+        }
+    }
+
+    private checkGameEnd() {
+        if (this.gameEndScreen) {
+            return;
+        }
+
+        const alivePlayers = this.playerManager.getPlayersAlive();
+
+        if (alivePlayers.length === 1) {
+            const winner = alivePlayers[0];
+            const isPlayerWinner = winner === this.playerManager.currentPlayer;
+
+            this.gameEndScreen = new GameEndScreen(this, {
+                isWin: isPlayerWinner,
+                winnerName: winner.getName()
+            });
         }
     }
 }
