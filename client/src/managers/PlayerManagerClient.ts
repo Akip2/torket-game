@@ -6,6 +6,9 @@ import { movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/pla
 import { CLIENT_PREDICTION, DEBUG } from "@shared/const";
 import { Depths } from "@shared/enums/Depths.eunum";
 import type ShotManager from "./ShotManager";
+import { PlayerState } from "@shared/enums/PlayerState.enum";
+import { setCursor } from "../client-utils";
+import { Cursor } from "@shared/enums/Cursor.enum";
 
 export default class PlayerManagerClient {
     room: Room;
@@ -68,11 +71,17 @@ export default class PlayerManagerClient {
 
             if (playerObject.state != player.state) {
                 playerObject.state = player.state;
-                shotManager.cancelShot();
-            }
 
-            if (!playerObject.isAlive && player.isAlive === false) {
-                //playerObject.setDead();
+                switch (playerObject.state) {
+                    case PlayerState.Shooting:
+                        setCursor(Cursor.Crosshair);
+                        break;
+                    
+                    default:
+                        setCursor(Cursor.Default);
+                }
+
+                shotManager.cancelShot();
             }
         });
     }
@@ -89,10 +98,6 @@ export default class PlayerManagerClient {
             });
 
             playerObject.state = player.state;
-
-            if (!playerObject.isAlive && player.isAlive === false) {
-                //playerObject.setDead();
-            }
         });
     }
 
