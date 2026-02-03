@@ -7,6 +7,8 @@ import { wait } from "@shared/utils";
 import { BASE_MAX_SHOT_FORCE, BULLET_CONST, GAME_HEIGHT, GAME_WIDTH, GRAVITY, MIN_SHOT_FORCE, TIME_STEP } from "@shared/const";
 import Vector from "@shared/data/Vector";
 import { Depths } from "@shared/enums/Depths.eunum";
+import SoundManager from "./SoundManager";
+import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 
 export default class ShotManager {
     scene: GameScene;
@@ -58,7 +60,7 @@ export default class ShotManager {
 
     releaseShot() {
         if (!this.isCharging) return;
-        
+
         this.isCharging = false;
 
         this.shootBullet();
@@ -81,6 +83,8 @@ export default class ShotManager {
         this.shootBulletFromInfo(shotInfo);
         this.scene.room.send(RequestTypes.Shoot, shotInfo);
         this.trajectoryDrawer?.clear();
+
+        SoundManager.play(RessourceKeys.Shot);
     }
 
     drawTrajectory(shootInfo: ShootInfo) {

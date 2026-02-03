@@ -9,6 +9,8 @@ import type ShotManager from "./ShotManager";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
 import { setCursor } from "../client-utils";
 import { Cursor } from "@shared/enums/Cursor.enum";
+import SoundManager from "./SoundManager";
+import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 
 export default class PlayerManagerClient {
     room: Room;
@@ -74,6 +76,7 @@ export default class PlayerManagerClient {
 
                 switch (playerObject.state) {
                     case PlayerState.Shooting:
+                        SoundManager.play(RessourceKeys.Reloading);
                         setCursor(Cursor.Crosshair);
                         break;
                     

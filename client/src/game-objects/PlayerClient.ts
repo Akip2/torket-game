@@ -9,6 +9,7 @@ import type { Position } from "@shared/types";
 import { Depths } from "@shared/enums/Depths.eunum";
 import NameTag from "../ui/NameTag";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
+import SoundManager from "../managers/SoundManager";
 
 export default class PlayerClient extends Phaser.Physics.Matter.Sprite implements IPlayer {
     state: PlayerState = PlayerState.Inactive;
@@ -100,7 +101,9 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         if (!this.isAlive) {
             return;
         }
+
         this.isAlive = false;
+        SoundManager.play(RessourceKeys.Death);
 
         this.destroyComponents();
         this.setVisible(false);
@@ -167,5 +170,11 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.gun.destroy(fromScene);
         this.healthBar.destroy(fromScene);
         this.nameTag.destroy(fromScene);
+    }
+
+    setPlayerState(state: PlayerState) {
+        this.state = state;
+        
+        if(state === PlayerState.Shooting) SoundManager.play(RessourceKeys.Reloading);
     }
 }

@@ -7,7 +7,7 @@ export default class SimulationBorderClient extends Phaser.GameObjects.Rectangle
     constructor(scene: GameScene, placement: Border) {
         const { x, y, width, height } = BORDERS_CONST[placement];
 
-        super(scene, x, y, width, height);
+        super(scene, x, y, width, height, 0xFF0000);
 
         scene.add.existing(this);
 
