@@ -27,11 +27,13 @@ export function movePlayerFromInputs(player: IPlayer, inputPayload: InputPayload
 }
 
 export function canPlayerMove(player: IPlayer) {
-    return player.getState() === PlayerState.Moving;
+    const playerState = player.getState();
+    return playerState === PlayerState.Moving || playerState === PlayerState.Free;
 }
 
 export function canPlayerShoot(player: IPlayer) {
-    return player.getState() === PlayerState.Shooting;
+    const playerState = player.getState();
+    return playerState === PlayerState.Shooting || playerState === PlayerState.Free;
 }
 
 export function canPlayerJump(player: IPlayer) {

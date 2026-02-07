@@ -2,6 +2,7 @@ import { Border } from "./enums/Border.enum";
 import type { Rectangle } from "./types";
 
 export const DEBUG = false;
+export const FREE_ROAM = false;
 export const CLIENT_PREDICTION = false;
 
 export const GAME_WIDTH = 1600;

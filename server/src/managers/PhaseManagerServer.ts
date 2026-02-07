@@ -12,6 +12,7 @@ import { wait } from "@shared/utils";
 import PlayerServer from "src/bodies/PlayerServer";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
 import GameEndPhase from "@shared/data/phases/GameEndPhase";
+import { FREE_ROAM } from "@shared/const";
 
 export default class PhaseManagerServer {
     currentIndex: number = -1;
@@ -66,7 +67,7 @@ export default class PhaseManagerServer {
             this.concernedPlayerId = null;
         }
 
-        this.playerManager.handlePlayersState(phase);
+        if(!FREE_ROAM) this.playerManager.handlePlayersState(phase);
 
         this.currentPhase = phase;
         this.onPhaseChange(phase);
@@ -126,6 +127,7 @@ export default class PhaseManagerServer {
 
     disableAction(playerBody: PlayerServer) {
         clearTimeout(this.timeOut);
+        if(FREE_ROAM) return;
         playerBody.setState(PlayerState.Inactive);
         this.concernedPlayerId = null;
     }
