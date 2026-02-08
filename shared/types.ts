@@ -8,7 +8,7 @@ export type InputPayload = {
     left: boolean;
 
     mousePosition: Position,
-    
+
     timeStamp: number;
 }
 
@@ -17,7 +17,7 @@ export type ShootInfo = {
 
     originX: number,
     originY: number,
-    
+
     targetX: number,
     targetY: number
 }
@@ -50,6 +50,15 @@ export type BarStyleType = {
     depth?: Depths;
 }
 
+type PrimitiveTextStyle = {
+    fontFamily?: string;
+    fontSize?: number | string;
+    fontStyle?: string;
+    font?: string;
+    backgroundColor?: string;
+    color?: string | CanvasGradient | CanvasPattern;
+};
+
 export type UIButtonStyle = {
     width: number;
     height: number;
@@ -59,7 +68,7 @@ export type UIButtonStyle = {
     borderColor?: number;
     borderThickness?: number;
 
-    text: Phaser.Types.GameObjects.Text.TextStyle;
+    text: PrimitiveTextStyle;
 };
 
 export type GameMap = {
