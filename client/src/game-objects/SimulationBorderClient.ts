@@ -1,4 +1,4 @@
-import { BORDERS_CONST } from "@shared/const";
+import { BORDERS_CONST, DEBUG } from "@shared/const";
 import type { Border } from "@shared/enums/Border.enum";
 import type GameScene from "../scenes/GameScene";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
@@ -7,7 +7,7 @@ export default class SimulationBorderClient extends Phaser.GameObjects.Rectangle
     constructor(scene: GameScene, placement: Border) {
         const { x, y, width, height } = BORDERS_CONST[placement];
 
-        super(scene, x, y, width, height);
+        super(scene, x, y, width, height, DEBUG ? 0xFF0000 : undefined);
 
         scene.add.existing(this);
 

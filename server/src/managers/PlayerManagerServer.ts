@@ -108,10 +108,10 @@ export default class PlayerManagerServer {
         return res;
     }
 
-    removePlayer(sessionId: string, physicsManager: PhysicsManager) {
+    removePlayer(sessionId: string) {
         const playerBody = this.getPlayer(sessionId);
         if (playerBody) {
-            physicsManager.remove(playerBody);
+            playerBody.removeFromWorld();
             this.playerBodies.delete(sessionId);
         }
     }

@@ -1,4 +1,5 @@
 import { MapSchema, Schema, type } from "@colyseus/schema";
+import { FREE_ROAM } from "@shared/const";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
 import { InputPayload } from "@shared/types";
 
@@ -18,7 +19,7 @@ export class Player extends Schema {
   
   @type("number") timeStamp: number;
 
-  @type("string") state: PlayerState = PlayerState.Inactive;
+  @type("string") state: PlayerState = FREE_ROAM ? PlayerState.Free : PlayerState.Inactive;
 }
 
 export class MyRoomState extends Schema {

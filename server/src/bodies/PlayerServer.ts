@@ -1,5 +1,5 @@
 import { DAMAGE_BASE, PLAYER_CONST } from "@shared/const";
-import Matter, { Bodies, Body } from "matter-js";
+import Matter, { Bodies } from "matter-js";
 import GameBody from "./GameBody";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { IPlayer } from "@shared/interfaces/Player.interface";
@@ -42,10 +42,14 @@ export default class PlayerServer extends GameBody implements IPlayer {
         this.playerRef.hp -= damage;
 
         if (this.playerRef.hp <= 0) {
-            this.playerRef.hp = 0;
-            this.playerRef.isAlive = false;
+            this.die();
         }
 
+        this.onDamage(this.playerRef.hp);
+    }
+
+    instantDeath() {
+        this.die();
         this.onDamage(this.playerRef.hp);
     }
 
@@ -70,6 +74,13 @@ export default class PlayerServer extends GameBody implements IPlayer {
         this.playerRef.timeStamp = this.lastProcessedTimeStamp;
         this.playerRef.x = this.getX();
         this.playerRef.y = this.getY();
+    }
+
+    die() {
+        this.playerRef.hp = 0;
+        this.playerRef.isAlive = false;
+
+        this.removeFromWorld();
     }
 
     isAlive() {

@@ -2,6 +2,7 @@ import { Border } from "./enums/Border.enum";
 import type { Rectangle } from "./types";
 
 export const DEBUG = false;
+export const FREE_ROAM = false;
 export const CLIENT_PREDICTION = false;
 
 export const GAME_WIDTH = 1600;
@@ -34,36 +35,37 @@ export const BULLET_CONST = {
     AIR_FRICTION: 0.01
 }
 
+const BORDER_SAFE_MARGIN = 200; // increased size to make sure bullet collision detections work
 export const BORDERS_CONST = {
     [Border.Top]: {
         x: GAME_WIDTH / 2,
-        y: 0,
+        y: -BORDER_SAFE_MARGIN / 2,
 
         width: GAME_WIDTH,
-        height: 1
+        height: BORDER_SAFE_MARGIN
     },
 
     [Border.Bottom]: {
         x: GAME_WIDTH / 2,
-        y: GAME_HEIGHT,
+        y: GAME_HEIGHT + BORDER_SAFE_MARGIN / 2,
 
         width: GAME_WIDTH,
-        height: 1
+        height: BORDER_SAFE_MARGIN
     },
 
     [Border.Right]: {
-        x: GAME_WIDTH,
+        x: GAME_WIDTH + BORDER_SAFE_MARGIN / 2,
         y: GAME_HEIGHT / 2,
 
-        width: 1,
+        width: BORDER_SAFE_MARGIN,
         height: GAME_HEIGHT
     },
 
     [Border.Left]: {
-        x: 0,
+        x: - BORDER_SAFE_MARGIN / 2,
         y: GAME_HEIGHT / 2,
 
-        width: 1,
+        width: BORDER_SAFE_MARGIN,
         height: GAME_HEIGHT
     },
 } as Record<Border, Rectangle>

@@ -25,6 +25,7 @@ import SimulationBorderClient from "../game-objects/SimulationBorderClient";
 import { Border } from "@shared/enums/Border.enum";
 import { getExplosionSpriteScale } from "../client-utils";
 import GameEndScreen from "../ui/containers/GameEndScreen";
+import SoundManager from "../managers/SoundManager";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "localhost:2567";
 
@@ -71,9 +72,16 @@ export default class GameScene extends Phaser.Scene {
         this.load.image(RessourceKeys.Ground, `assets/ground/${GROUND_TYPE}_${TEXTURE_SIZE}.png`);
         this.load.image(RessourceKeys.ExplosionParticle, 'assets/particles/explosion-particle.png');
         this.load.image(RessourceKeys.DeathParticle, 'assets/particles/death-particle.png');
+
+        this.load.audio(RessourceKeys.Explosion, 'assets/sounds/explosion.wav');
+        this.load.audio(RessourceKeys.Death, 'assets/sounds/death.wav');
+        this.load.audio(RessourceKeys.Reloading, 'assets/sounds/reloading.wav');
+        this.load.audio(RessourceKeys.Shot, 'assets/sounds/shot.wav');
     }
 
     async create() {
+        SoundManager.init(this);
+
         try {
             await this.setupRoomEvents();
         } catch (e) {
@@ -272,6 +280,8 @@ export default class GameScene extends Phaser.Scene {
         //Explosion particles
         const scale = getExplosionSpriteScale(radius);
         const speedCoef = Math.max(scale * 0.5, 1);
+
+        SoundManager.play(RessourceKeys.Explosion);
 
         const emitter = this.add.particles(cx, cy, RessourceKeys.ExplosionParticle, {
             lifespan: 500,
