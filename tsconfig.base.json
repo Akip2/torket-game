@@ -29,9 +29,4 @@
       ],
     }
   },
-  "include": [
-    "client",
-    "server",
-    "shared"
-  ]
 }

@@ -27,11 +27,11 @@ import { getExplosionSpriteScale } from "../client-utils";
 import GameEndScreen from "../ui/containers/GameEndScreen";
 import SoundManager from "../managers/SoundManager";
 
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || "localhost:2567";
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || "ws://localhost:2567";
 
 export default class GameScene extends Phaser.Scene {
     active: boolean = true;
-    client = new Client(`ws://${SERVER_URL}`);
+    client = new Client(SERVER_URL);
     room!: Room;
 
     debugGraphics: Phaser.GameObjects.Graphics[] = [];
