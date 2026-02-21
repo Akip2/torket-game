@@ -6,10 +6,13 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "npm run build && gh-pages -d dist"
   },
   "devDependencies": {
+    "@types/node": "^25.2.3",
     "@types/tinycolor2": "^1.4.6",
+    "gh-pages": "^6.3.0",
     "typescript": "~5.8.3",
     "vite": "^7.0.4"
   },
