@@ -232,10 +232,14 @@ export default class GameScene extends Phaser.Scene {
         };
 
         this.playerManager.localInputBuffer.push(inputPayload);
+
+        if (this.playerManager.localInputBuffer.length > 60) {
+            this.playerManager.localInputBuffer.shift();
+        }
+
         this.room.send(RequestTypes.Move, inputPayload);
 
         this.playerManager.handleLocalInput(inputPayload, this.currentMousePosition);
-        this.playerManager.updatePlayers();
     }
 
     update(_time: number, delta: number): void {
@@ -248,6 +252,7 @@ export default class GameScene extends Phaser.Scene {
             this.fixedTick();
         }
 
+        this.playerManager.updatePlayers(delta);
         this.phaseDisplayer.update();
     }
 
