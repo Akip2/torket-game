@@ -1,7 +1,7 @@
 import { Border } from "./enums/Border.enum";
 import type { Rectangle } from "./types";
 
-export const DEBUG = false;
+export const DEBUG = true;
 export const FREE_ROAM = true;
 export const CLIENT_PREDICTION = true;
 
@@ -9,7 +9,7 @@ export const CLIENT_PREDICTION = true;
 export const INTERPOLATION_SPEED = 0.4; // Time-based lerp factor (0.4 = faster catch-up)
 export const INTERPOLATION_SPEED_Y = 0.5; // Vertical is more important for feel (gravity, jumps)
 export const MAX_PREDICTED_DISTANCE = 15; // Max pixels before forcing position (collision detection)
-export const NETWORK_TICK_RATE = 1000 / 60; // 60 Hz network sync
+export const NETWORK_TICK_RATE = 1000 / 30; // 30 Hz network sync
 
 export const GAME_WIDTH = 1600;
 export const GAME_HEIGHT = 800;

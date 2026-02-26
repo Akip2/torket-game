@@ -70,7 +70,7 @@ export default class PlayerManagerClient {
 
             this.setupLocalPlayer(player, playerObject, scene.shotManager);
         } else {
-            this.setupRemotePlayer(player, playerObject);
+            this.setupRemotePlayer(player, playerObject, sessionId);
         }
     }
 
@@ -114,11 +114,11 @@ export default class PlayerManagerClient {
         });
     }
 
-    setupRemotePlayer(player: any, playerObject: PlayerClient) {
+    setupRemotePlayer(player: any, playerObject: PlayerClient, sessionId: string) {
         const $ = getStateCallbacks(this.room);
 
         $(player).onChange(() => {
-            const state = this.remotePlayerStates[player.sessionId];
+            const state = this.remotePlayerStates[sessionId];
             if (!state) return;
 
             const newX = player.x;
@@ -155,31 +155,37 @@ export default class PlayerManagerClient {
 
     updatePlayers(_deltaTime: number = 16) {
         const now = Date.now();
+        const localSessionId = this.room.sessionId;
 
         for (const sessionId in this.playerObjects) {
             const playerObject = this.playerObjects[sessionId];
             const state = this.remotePlayerStates[sessionId];
             if (!state) continue;
 
-            const timeSinceUpdate = now - state.lastUpdateTime;
-            const expectedUpdateInterval = 1000 / 60; // 60 Hz expected
-            
-            // Adaptive lerp: faster catch-up, slower when recent
-            let alphaX = INTERPOLATION_SPEED;
-            let alphaY = INTERPOLATION_SPEED_Y;
-            
-            // If it's been a while, catch up faster
-            if (timeSinceUpdate > expectedUpdateInterval * 2) {
-                alphaX = 0.5; // Faster catch-up on X
-                alphaY = 0.6; // Faster on Y (gravity is critical)
-            } else if (timeSinceUpdate < expectedUpdateInterval / 2) {
-                alphaX = 0.2; // Slower for recent updates (smoother X)
-                alphaY = 0.3; // Still smooth but faster Y
-            }
+            if (sessionId === localSessionId) {
+                // Local player: snap to server position (no jitter, no trembling)
+                playerObject.x = state.targetX;
+                playerObject.y = state.targetY;
+            } else {
+                // Remote players: smooth interpolation
+                const timeSinceUpdate = now - state.lastUpdateTime;
+                const expectedUpdateInterval = 1000 / 60; // 60 Hz expected
+                
+                let alphaX = INTERPOLATION_SPEED;
+                let alphaY = INTERPOLATION_SPEED_Y;
+                
+                // If it's been a while, catch up faster
+                if (timeSinceUpdate > expectedUpdateInterval * 2) {
+                    alphaX = 0.5;
+                    alphaY = 0.6;
+                } else if (timeSinceUpdate < expectedUpdateInterval / 2) {
+                    alphaX = 0.25;
+                    alphaY = 0.35;
+                }
 
-            // Apply smooth interpolation to ALL players (local and remote)
-            playerObject.x = Phaser.Math.Linear(playerObject.x, state.targetX, alphaX);
-            playerObject.y = Phaser.Math.Linear(playerObject.y, state.targetY, alphaY);
+                playerObject.x = Phaser.Math.Linear(playerObject.x, state.targetX, alphaX);
+                playerObject.y = Phaser.Math.Linear(playerObject.y, state.targetY, alphaY);
+            }
 
             if (playerObject.data && playerObject.data.values) {
                 const { mousePosition } = playerObject.data.values;
