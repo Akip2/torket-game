@@ -14,6 +14,11 @@ export default class TimedPhase extends Phase {
         this.endTime = startTime + duration * 1000;
     }
 
+    setStartTime(startTime: number) {
+        this.startTime = startTime;
+        this.endTime = startTime + this.duration * 1000;
+    }
+
     getTimeLeft() {
         return Math.max(this.endTime - Date.now(), 0);
     }

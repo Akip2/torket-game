@@ -57,7 +57,7 @@ export default class PhaseManagerServer {
         clearTimeout(this.timeOut);
 
         if (phase instanceof TimedPhase) {
-            (phase as TimedPhase).startTime = Date.now();
+            (phase as TimedPhase).setStartTime(Date.now());
             this.timeOut = setTimeout(() => this.next(), (phase as TimedPhase).duration * 1000);
         }
 
