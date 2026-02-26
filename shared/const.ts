@@ -1,8 +1,8 @@
 import { Border } from "./enums/Border.enum";
 import type { Rectangle } from "./types";
 
-export const DEBUG = true;
-export const FREE_ROAM = true;
+export const DEBUG = false;
+export const FREE_ROAM = false;
 export const CLIENT_PREDICTION = true;
 
 // Client prediction & interpolation settings
