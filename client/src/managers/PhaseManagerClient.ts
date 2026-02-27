@@ -21,7 +21,7 @@ export default class PhaseManagerClient {
             }
 
             const timedPhaseCast = phase as TimedPhase;
-            this.currentPhase = new TimedPhase(timedPhaseCast.type, timedPhaseCast.name, timedPhaseCast.startTime, timedPhaseCast.duration);
+            this.currentPhase = new TimedPhase(timedPhaseCast.type, timedPhaseCast.name, Date.now(), timedPhaseCast.duration);
         } else {
             this.currentPhase = phase;
         }

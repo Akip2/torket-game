@@ -176,7 +176,7 @@ export class MyRoom extends Room<MyRoomState> {
         startingPosition.playerId = client.sessionId;
 
         player.pseudo = initData.name?.trim() || "Player";
-        player.x = startingPosition.x;
+        player.x = startingPosition.x + PLAYER_CONST.WIDTH / 2;
         player.y = startingPosition.y;
         player.timeStamp = 0;
         player.hp = PLAYER_CONST.MAX_HP;
