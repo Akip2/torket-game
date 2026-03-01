@@ -2,7 +2,7 @@ import { Border } from "./enums/Border.enum";
 import type { Rectangle } from "./types";
 
 export const DEBUG = false;
-export const FREE_ROAM = false;
+export const FREE_ROAM = true;
 export const CLIENT_PREDICTION = true;
 
 // Client prediction & interpolation settings
@@ -41,6 +41,12 @@ export const BULLET_CONST = {
     AIR_FRICTION: 0.01
 }
 
+export const SHOT_CONST = {
+    DAMAGE_BASE: 8, 
+    BASE_MAX_SHOT_FORCE: 15,
+    MIN_SHOT_FORCE: 2,
+}
+
 const BORDER_SAFE_MARGIN = 200; // increased size to make sure bullet collision detections work
 export const BORDERS_CONST = {
     [Border.Top]: {
@@ -75,7 +81,3 @@ export const BORDERS_CONST = {
         height: GAME_HEIGHT
     },
 } as Record<Border, Rectangle>
-
-export const DAMAGE_BASE = 8;
-export const BASE_MAX_SHOT_FORCE = 15;
-export const MIN_SHOT_FORCE = 2;

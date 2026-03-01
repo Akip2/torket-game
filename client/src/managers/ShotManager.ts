@@ -4,7 +4,7 @@ import { generateBulletOriginPosition, shoot } from "@shared/logics/bullet-logic
 import type GameScene from "../scenes/GameScene";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import { wait } from "@shared/utils";
-import { BASE_MAX_SHOT_FORCE, BULLET_CONST, GAME_HEIGHT, GAME_WIDTH, GRAVITY, MIN_SHOT_FORCE, TIME_STEP } from "@shared/const";
+import { BULLET_CONST, GAME_HEIGHT, GAME_WIDTH, GRAVITY, TIME_STEP, SHOT_CONST } from "@shared/const";
 import Vector from "@shared/data/Vector";
 import { Depths } from "@shared/enums/Depths.eunum";
 import SoundManager from "./SoundManager";
@@ -43,14 +43,14 @@ export default class ShotManager {
         this.isCharging = true;
 
         let sign = 1;
-        this.force = MIN_SHOT_FORCE;
+        this.force = SHOT_CONST.MIN_SHOT_FORCE;
 
         while (this.isCharging) {
             this.force += 0.33 * sign;
             this.drawTrajectory(this.generateShotInfo());
 
             await wait(TIME_STEP);
-            if (this.force <= MIN_SHOT_FORCE || this.force >= BASE_MAX_SHOT_FORCE) {
+            if (this.force <= SHOT_CONST.MIN_SHOT_FORCE || this.force >= SHOT_CONST.BASE_MAX_SHOT_FORCE) {
                 sign *= -1;
                 await wait(TIME_STEP);
             }

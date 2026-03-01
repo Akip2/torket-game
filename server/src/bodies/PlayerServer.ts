@@ -1,4 +1,4 @@
-import { DAMAGE_BASE, PLAYER_CONST } from "@shared/const";
+import { PLAYER_CONST, SHOT_CONST } from "@shared/const";
 import Matter, { Bodies } from "matter-js";
 import GameBody from "./GameBody";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
@@ -37,7 +37,7 @@ export default class PlayerServer extends GameBody implements IPlayer {
     }
 
     applyDamage(directHit: boolean) {
-        const damage = Math.round((DAMAGE_BASE) * (directHit ? 2 : 1) + (Math.random() * 15));
+        const damage = Math.round((SHOT_CONST.DAMAGE_BASE) * (directHit ? 2 : 1) + (Math.random() * 15));
 
         this.playerRef.hp -= damage;
 
