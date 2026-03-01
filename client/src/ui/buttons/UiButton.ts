@@ -40,14 +40,53 @@ export default class UiButton extends Phaser.GameObjects.Container {
 
         this.bg.on('pointerover', () => {
             this.bg.setFillStyle(lightenHexColor(this.baseColor));
+            // Scale up on hover
+            (this.scene as GameScene).tweens.add({
+                targets: this,
+                scale: 1.1,
+                duration: 150,
+                ease: 'Quad.easeOut'
+            });
         });
 
         this.bg.on('pointerout', () => {
             this.bg.setFillStyle(this.baseColor);
+            // Scale back down
+            (this.scene as GameScene).tweens.add({
+                targets: this,
+                scale: 1,
+                duration: 150,
+                ease: 'Quad.easeOut'
+            });
         });
 
-        this.bg.on('pointerdown', onClick);
+        this.bg.on('pointerdown', () => {
+            // Click pulse effect
+            this.createClickPulse(scene);
+            onClick();
+        });
 
         scene.add.existing(this);
+    }
+
+    private createClickPulse(scene: GameScene) {
+        // Create a small pulse/glow on click
+        const pulse = scene.add.circle(
+            this.x,
+            this.y,
+            30,
+            0xffffff,
+            0.3
+        );
+        pulse.setDepth(this.depth - 1);
+
+        scene.tweens.add({
+            targets: pulse,
+            radius: 60,
+            alpha: 0,
+            duration: 300,
+            ease: 'Quad.easeOut',
+            onComplete: () => pulse.destroy()
+        });
     }
 }
