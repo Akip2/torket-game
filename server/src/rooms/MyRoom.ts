@@ -19,7 +19,6 @@ import Phase from "@shared/data/phases/Phase";
 import StartingPhase from "@shared/data/phases/StartingPhase";
 import { canPlayerShoot } from "@shared/logics/player-logic";
 import { Action } from "@shared/enums/Action.enum";
-import ShootingPhase from "@shared/data/phases/ShootingPhase";
 import { parsePlayerLabel } from "src/server-utils";
 import { Border } from "@shared/enums/Border.enum";
 
@@ -35,6 +34,8 @@ export class MyRoom extends Room<MyRoomState> {
     phaseManager: PhaseManagerServer;
     physicsManager: PhysicsManager = new PhysicsManager();
     playerManager: PlayerManagerServer = new PlayerManagerServer();
+
+    bullets: BullerServer[] = [];
 
     async onCreate(options: any) {
         this.patchRate = TIME_STEP;
@@ -72,6 +73,7 @@ export class MyRoom extends Room<MyRoomState> {
             const originPosition = generateBulletOriginPosition(playerBody.getX(), playerBody.getY(), shootInfo.targetX, shootInfo.targetY);
 
             const bullet = new BullerServer(originPosition.x, originPosition.y, BULLET_CONST.RADIUS);
+            this.bullets.push(bullet);
             this.physicsManager.add(bullet);
 
             shoot(bullet, shootInfo.targetX, shootInfo.targetY, shootInfo.force);
@@ -128,6 +130,7 @@ export class MyRoom extends Room<MyRoomState> {
                     if (bullet) {
                         this.explode(bullet.position.x, bullet.position.y, EXPLOSION_RADIUS);
                         this.physicsManager.removeBrut(bullet);
+                        this.bullets = this.bullets.filter(b => b.body !== bullet); // remove bulllet from array
 
                         if (hasPlayerCollision) {
                             const sessionId = parsePlayerLabel(playerLabel).sessionId;
@@ -164,9 +167,17 @@ export class MyRoom extends Room<MyRoomState> {
     fixedTick(deltaTime: number) {
         this.playerManager.applyInputs();
 
+        this.bullets.forEach((bullet) => {
+            bullet.nullifyBaseGravity();
+        });
+
         this.physicsManager.update(deltaTime);
 
         this.playerManager.updateRefsPosition();
+
+        this.bullets.forEach((bullet) => {
+            bullet.applyCustomGravity();
+        });
     }
 
     onJoin(client: Client, initData: InitData) {

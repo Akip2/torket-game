@@ -3,29 +3,38 @@ import type { IBasicBody } from "@shared/interfaces/BasicBody.interface";
 import type GameScene from "../scenes/GameScene";
 import type { Position } from "@shared/types";
 import { Depths } from "@shared/enums/Depths.eunum";
+import { BULLET_CONST, GRAVITY } from "@shared/const";
 
 export default class BulletClient extends Phaser.Physics.Matter.Sprite implements IBasicBody {
     private lastTrailX: number = 0;
     private lastTrailY: number = 0;
-    private trailDistance: number = 5;
-    private trailActive: boolean = true;
+    private eventsActive: boolean = true;
+    private gravityScale: number;
 
-    constructor(scene: GameScene, x: number, y: number) {
+    constructor(scene: GameScene, x: number, y: number, gravityScale: number = BULLET_CONST.GRAVITY_SCALE) {
         super(scene.matter.world, x, y, RessourceKeys.Bullet);
 
         scene.add.existing(this);
 
         (this.body as MatterJS.BodyType).label = RessourceKeys.Bullet;
-        
+
+        this.gravityScale = gravityScale;
         this.lastTrailX = x;
         this.lastTrailY = y;
 
-        this.scene.events.on('update', this.updateTrail, this);
+        this.scene.events.on('update', this.updateCallback, this);
+
+        this.setIgnoreGravity(true);
+    }
+
+    private updateCallback() {
+        if (this.eventsActive) {
+            this.updateTrail();
+            this.applyCustomGravity();
+        }
     }
 
     private updateTrail() {
-        if (!this.trailActive) return;
-
         const distance = Phaser.Math.Distance.Between(
             this.lastTrailX,
             this.lastTrailY,
@@ -33,7 +42,7 @@ export default class BulletClient extends Phaser.Physics.Matter.Sprite implement
             this.y
         );
 
-        if (distance >= this.trailDistance) {
+        if (distance >= BULLET_CONST.TRAIL_DISTANCE) {
             this.createTrailParticle(this.lastTrailX, this.lastTrailY);
             this.lastTrailX = this.x;
             this.lastTrailY = this.y;
@@ -60,7 +69,17 @@ export default class BulletClient extends Phaser.Physics.Matter.Sprite implement
 
     destroy(fromScene?: boolean | undefined): void {
         this.scene.events.off('update', this.updateTrail, this);
-        this.trailActive = false;
+        this.eventsActive = false;
         super.destroy(fromScene);
+    }
+
+    private applyCustomGravity() {
+        const gravityForce =
+            (this.body as MatterJS.BodyType).mass *
+            GRAVITY *
+            0.001 *
+            this.gravityScale;
+        
+        this.applyForce(new Phaser.Math.Vector2(0, gravityForce));
     }
 }

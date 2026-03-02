@@ -95,7 +95,7 @@ export default class ShotManager {
         //this.trajectoryDrawer = this.scene.add.graphics();
         this.trajectoryDrawer.fillStyle(0xffffff, 0.9);
 
-        const gravityStep = GRAVITY * 0.001 * TIME_STEP * TIME_STEP;
+        const gravityStep = GRAVITY * 0.001 * TIME_STEP * TIME_STEP * BULLET_CONST.GRAVITY_SCALE;
         const frictionFactor = 1 - BULLET_CONST.AIR_FRICTION;
 
         let x = shootInfo.originX;

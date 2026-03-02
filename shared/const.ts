@@ -2,7 +2,7 @@ import { Border } from "./enums/Border.enum";
 import type { Rectangle } from "./types";
 
 export const DEBUG = false;
-export const FREE_ROAM = true;
+export const FREE_ROAM = false;
 export const CLIENT_PREDICTION = true;
 
 // Client prediction & interpolation settings
@@ -38,12 +38,14 @@ export const PLAYER_CONST = {
 
 export const BULLET_CONST = {
     RADIUS: 4,
-    AIR_FRICTION: 0.01
+    TRAIL_DISTANCE: 2,
+    AIR_FRICTION: 0.01,
+    GRAVITY_SCALE: 1,
 }
 
 export const SHOT_CONST = {
     DAMAGE_BASE: 8, 
-    BASE_MAX_SHOT_FORCE: 15,
+    BASE_MAX_SHOT_FORCE: 20,
     MIN_SHOT_FORCE: 2,
 }
 
