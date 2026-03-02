@@ -8,6 +8,7 @@ import TextureManager from "../managers/TextureManager";
 import TerrainManagerClient from "../managers/TerrainManagerClient";
 import ShotManager from "../managers/ShotManager";
 import PlayerManagerClient from "../managers/PlayerManagerClient";
+import EffectsManager from "../managers/EffectsManager";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
 import type { FullSynchroInfo, InitData, Position } from "@shared/types";
 import { Depths } from "@shared/enums/Depths.eunum";
@@ -45,6 +46,7 @@ export default class GameScene extends Phaser.Scene {
     terrainManager!: TerrainManagerClient;
     shotManager!: ShotManager;
     phaseManager: PhaseManagerClient = new PhaseManagerClient();
+    effectsManager!: EffectsManager;
 
     worldContainer!: Phaser.GameObjects.Container;
     uiContainer!: Phaser.GameObjects.Container;
@@ -100,6 +102,7 @@ export default class GameScene extends Phaser.Scene {
         this.terrainManager.createTerrainColliders();
 
         this.shotManager = new ShotManager(this);
+        this.effectsManager = new EffectsManager(this);
 
         this.setupCollisionEvents();
         this.setupPointerEvents();
@@ -304,7 +307,10 @@ export default class GameScene extends Phaser.Scene {
 
         this.terrainManager.explodeTerrain(cx, cy, radius, minSize);
 
-        this.cameras.main.shake(250, 0.005); // Shake camera
+        // JUICE: Enhanced effects
+        this.effectsManager.screenshake(12, 200);
+        this.effectsManager.flash(0xffa500, 200, 0.2);
+        this.effectsManager.burstParticles(cx, cy, 12, 0xff8800);
 
         this.playerManager.reactToExplosion(cx, cy, radius);
     }

@@ -38,7 +38,15 @@ export const PLAYER_CONST = {
 
 export const BULLET_CONST = {
     RADIUS: 4,
-    AIR_FRICTION: 0.01
+    TRAIL_DISTANCE: 2,
+    AIR_FRICTION: 0.01,
+    GRAVITY_SCALE: 1,
+}
+
+export const SHOT_CONST = {
+    DAMAGE_BASE: 8, 
+    BASE_MAX_SHOT_FORCE: 20,
+    MIN_SHOT_FORCE: 2,
 }
 
 const BORDER_SAFE_MARGIN = 200; // increased size to make sure bullet collision detections work
@@ -75,7 +83,3 @@ export const BORDERS_CONST = {
         height: GAME_HEIGHT
     },
 } as Record<Border, Rectangle>
-
-export const DAMAGE_BASE = 8;
-export const BASE_MAX_SHOT_FORCE = 15;
-export const MIN_SHOT_FORCE = 2;
