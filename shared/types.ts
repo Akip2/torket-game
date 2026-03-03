@@ -39,6 +39,7 @@ export type QuadBlockType = {
 export type BarStyleType = {
     mainColor: number;
     backgroundColor: number;
+    borderColor: number;
 
     height: number;
     width: number;
