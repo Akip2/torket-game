@@ -361,11 +361,18 @@ export default class GameScene extends Phaser.Scene {
             return g;
         };
 
-        const originalRectangle = this.add.rectangle;
-        this.add.rectangle = (...args) => {
-            const rect = originalRectangle.apply(this.add, args);
-            this.worldContainer.add(rect);
-            return rect;
-        }
+        const originalCircle = this.add.circle;
+        this.add.circle = (...args) => {
+            const circle = originalCircle.apply(this.add, args);
+            this.worldContainer.add(circle);
+            return circle;
+        };
+
+        const originalParticles = this.add.particles;
+        this.add.particles = (...args) => {
+            const particles = originalParticles.apply(this.add, args);
+            this.worldContainer.add(particles);
+            return particles;
+        };
     }
 }
