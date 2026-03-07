@@ -1,10 +1,11 @@
 import { Depths } from "@shared/enums/Depths.eunum"
-import type { UIButtonStyle } from "@shared/types";
+import type { BarStyleType, UIButtonStyle } from "@shared/types";
 
 export const BarStyle = {
     Player: {
         mainColor: 0x32CD32,
         backgroundColor: 0xDC143C,
+        borderColor: 0x444444,
 
         height: 7.5,
         width: 65,
@@ -15,7 +16,7 @@ export const BarStyle = {
         opacity: 0.75,
         depth: Depths.First,
     }
-}
+} as Record<string, BarStyleType>;
 
 export const TextStyle = {
     NameTag: {

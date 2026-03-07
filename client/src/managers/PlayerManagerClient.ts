@@ -67,6 +67,7 @@ export default class PlayerManagerClient {
             this.remoteRef.setStrokeStyle(1, 0xff0000)
                 .setDepth(Depths.Debug)
                 .setVisible(DEBUG);
+            scene.worldContainer.add(this.remoteRef);
 
             this.setupLocalPlayer(player, playerObject, scene.shotManager);
         } else {

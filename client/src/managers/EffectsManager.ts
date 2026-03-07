@@ -45,6 +45,7 @@ export default class EffectsManager {
         );
         flash.setDepth(Depths.First);
         flash.setScrollFactor(0);
+        this.scene.uiContainer.add(flash);
 
         this.scene.tweens.add({
             targets: flash,
@@ -93,6 +94,7 @@ export default class EffectsManager {
         });
         text.setOrigin(0.5);
         text.setDepth(Depths.Second);
+        this.scene.worldContainer.add(text);
 
         this.scene.tweens.add({
             targets: text,

@@ -104,6 +104,9 @@ export default class GameScene extends Phaser.Scene {
         this.shotManager = new ShotManager(this);
         this.effectsManager = new EffectsManager(this);
 
+        this.matter.world.autoUpdate = false;
+        //this.matter.set60Hz();
+
         this.setupCollisionEvents();
         this.setupPointerEvents();
         this.setupVisibilityHandler();
@@ -243,6 +246,9 @@ export default class GameScene extends Phaser.Scene {
         this.room.send(RequestTypes.Move, inputPayload);
 
         this.playerManager.handleLocalInput(inputPayload, this.currentMousePosition);
+
+        this.matter.world.step(TIME_STEP);
+        this.events.emit('fixed-tick');
     }
 
     update(_time: number, delta: number): void {
@@ -361,11 +367,18 @@ export default class GameScene extends Phaser.Scene {
             return g;
         };
 
-        const originalRectangle = this.add.rectangle;
-        this.add.rectangle = (...args) => {
-            const rect = originalRectangle.apply(this.add, args);
-            this.worldContainer.add(rect);
-            return rect;
-        }
+        const originalCircle = this.add.circle;
+        this.add.circle = (...args) => {
+            const circle = originalCircle.apply(this.add, args);
+            this.worldContainer.add(circle);
+            return circle;
+        };
+
+        const originalParticles = this.add.particles;
+        this.add.particles = (...args) => {
+            const particles = originalParticles.apply(this.add, args);
+            this.worldContainer.add(particles);
+            return particles;
+        };
     }
 }

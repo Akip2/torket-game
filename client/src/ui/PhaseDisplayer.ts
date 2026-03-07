@@ -6,12 +6,17 @@ import type Phase from "@shared/data/phases/Phase";
 import type TimedPhase from "@shared/data/phases/TimedPhase";
 import Timer from "./Timer";
 import { Depths } from "@shared/enums/Depths.eunum";
+import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
 
 export default class PhaseDisplayer extends UiText {
     phaseManager: PhaseManagerClient;
     lastDisplayedPhase?: Phase;
     background: Phaser.GameObjects.Rectangle;
     timer: Timer;
+
+    // FOR WAITING PHASE ANIMATION
+    dotCount: number = 0;
+    lastDotUpdateTime: number = 0;
 
     constructor(
         scene: GameScene,
@@ -39,8 +44,15 @@ export default class PhaseDisplayer extends UiText {
         const currentPhase = this.phaseManager.currentPhase;
         if (currentPhase.isTimed || currentPhase != this.lastDisplayedPhase) {
             this.lastDisplayedPhase = currentPhase;
-
-            this.setText(currentPhase.name);    
+            
+            if (currentPhase.type === PhaseTypes.Waiting) {
+                this.setText(currentPhase.name + '...');
+                this.dotCount = 3;
+                this.lastDotUpdateTime = Date.now();
+            } else {
+                this.setText(currentPhase.name);
+            }
+            
             this.x = (GAME_WIDTH / 2) - this.width / 2;
 
             const padding = 20;
@@ -54,6 +66,23 @@ export default class PhaseDisplayer extends UiText {
             } else {
                 this.timer.disable();
             }
+        }
+
+        if (currentPhase.type === PhaseTypes.Waiting) {
+            this.animateWaitingPhase();
+        }
+    }
+
+    private animateWaitingPhase() {
+        const currentTime = Date.now();
+            
+        if (currentTime - this.lastDotUpdateTime >= 500) {
+            this.lastDotUpdateTime = currentTime;
+            this.dotCount = (this.dotCount + 1) % 4;
+                
+            const dots = '.'.repeat(this.dotCount);
+            const spaces = ' '.repeat(3 - this.dotCount);
+            this.setText(this.phaseManager.currentPhase.name + dots + spaces);
         }
     }
 }

@@ -26,6 +26,8 @@ export const EXPLOSION_RADIUS = 50;
 
 export const TIME_STEP = 1000 / 60;
 
+export const HEALTH_TRANSITION_DURATION = 400;
+
 export const PLAYER_CONST = {
     WIDTH: 32,
     SPEED: 4.5,

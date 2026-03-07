@@ -3,13 +3,13 @@ import type { IPlayer } from "@shared/interfaces/Player.interface";
 import type GameScene from "../scenes/GameScene";
 import Gun from "./Gun";
 import { CLIENT_PREDICTION, PLAYER_CONST } from "@shared/const";
-import Bar from "../ui/Bar";
 import { BarStyle, TextStyle } from "../ui/ui-styles";
 import type { Position } from "@shared/types";
 import { Depths } from "@shared/enums/Depths.eunum";
 import NameTag from "../ui/NameTag";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
 import SoundManager from "../managers/SoundManager";
+import HealthBar from "../ui/bars/HealthBar";
 
 export default class PlayerClient extends Phaser.Physics.Matter.Sprite implements IPlayer {
     state: PlayerState = PlayerState.Inactive;
@@ -21,7 +21,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     isAlive: boolean = true;
 
     gun: Gun;
-    healthBar: Bar;
+    healthBar: HealthBar;
     nameTag: NameTag;
 
     generateDeathParticles: (x: number, y: number) => void;
@@ -48,7 +48,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.isOnGround = false;
 
         this.gun = new Gun(scene, x, y);
-        this.healthBar = new Bar(scene, this.x, this.y, 1, BarStyle.Player);
+        this.healthBar = new HealthBar(scene, this.x, this.y, 1, BarStyle.Player);
         this.nameTag = new NameTag(scene, name, x, y, TextStyle.NameTag);
 
         this.generateDeathParticles = (x: number, y: number) => {
