@@ -22,7 +22,7 @@ export default class BulletClient extends Phaser.Physics.Matter.Sprite implement
         this.lastTrailX = x;
         this.lastTrailY = y;
 
-        this.scene.events.on('update', this.updateCallback, this);
+        this.scene.events.on('fixed-tick', this.updateCallback, this);
 
         this.setIgnoreGravity(true);
     }
@@ -68,7 +68,7 @@ export default class BulletClient extends Phaser.Physics.Matter.Sprite implement
     }
 
     destroy(fromScene?: boolean | undefined): void {
-        this.scene.events.off('update', this.updateTrail, this);
+        this.scene.events.off('fixed-tick', this.updateTrail, this);
         this.eventsActive = false;
         super.destroy(fromScene);
     }
