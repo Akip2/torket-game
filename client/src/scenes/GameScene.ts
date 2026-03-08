@@ -39,7 +39,7 @@ export default class GameScene extends Phaser.Scene {
 
     elapsedTime = 0;
 
-    keyboard!: Phaser.Types.Input.Keyboard.CursorKeys;
+    keys!: { [key: string]: Phaser.Input.Keyboard.Key };
 
     playerManager!: PlayerManagerClient;
 
@@ -70,7 +70,21 @@ export default class GameScene extends Phaser.Scene {
     }
 
     preload() {
-        this.keyboard = this.input.keyboard!.createCursorKeys();
+        this.keys = this.input.keyboard!.addKeys({
+            W: Phaser.Input.Keyboard.KeyCodes.W,
+            A: Phaser.Input.Keyboard.KeyCodes.A,
+            S: Phaser.Input.Keyboard.KeyCodes.S,
+            D: Phaser.Input.Keyboard.KeyCodes.D,
+
+            Z: Phaser.Input.Keyboard.KeyCodes.Z,
+            Q: Phaser.Input.Keyboard.KeyCodes.Q,
+
+            UP: Phaser.Input.Keyboard.KeyCodes.UP,
+            DOWN: Phaser.Input.Keyboard.KeyCodes.DOWN,
+            LEFT: Phaser.Input.Keyboard.KeyCodes.LEFT,
+            RIGHT: Phaser.Input.Keyboard.KeyCodes.RIGHT
+        }) as { [key: string]: Phaser.Input.Keyboard.Key };
+
         this.load.image(RessourceKeys.Ground, `assets/ground/${GROUND_TYPE}_${TEXTURE_SIZE}.png`);
         this.load.image(RessourceKeys.ExplosionParticle, 'assets/particles/explosion-particle.png');
         this.load.image(RessourceKeys.DeathParticle, 'assets/particles/death-particle.png');
@@ -105,7 +119,6 @@ export default class GameScene extends Phaser.Scene {
         this.effectsManager = new EffectsManager(this);
 
         this.matter.world.autoUpdate = false;
-        //this.matter.set60Hz();
 
         this.setupCollisionEvents();
         this.setupPointerEvents();
@@ -227,16 +240,7 @@ export default class GameScene extends Phaser.Scene {
     fixedTick() {
         if (!this.room) { return; }
 
-        const inputPayload = {
-            left: this.keyboard.left.isDown,
-            right: this.keyboard.right.isDown,
-            up: this.keyboard.up.isDown,
-            down: this.keyboard.down.isDown,
-
-            mousePosition: this.currentMousePosition,
-            timeStamp: Date.now()
-        };
-
+        const inputPayload = this.getMovementInput();
         this.playerManager.localInputBuffer.push(inputPayload);
 
         if (this.playerManager.localInputBuffer.length > 60) {
@@ -347,6 +351,18 @@ export default class GameScene extends Phaser.Scene {
             x: pointer.x,
             y: pointer.y
         }
+    }
+
+    getMovementInput() {
+        return {
+            left: this.keys.A.isDown || this.keys.Q.isDown || this.keys.LEFT.isDown,
+            right: this.keys.D.isDown || this.keys.RIGHT.isDown,
+            up: this.keys.W.isDown || this.keys.Z.isDown || this.keys.UP.isDown,
+            down: this.keys.S.isDown || this.keys.DOWN.isDown,
+
+            mousePosition: this.currentMousePosition,
+            timeStamp: Date.now()
+        };
     }
 
     patchScene() {
