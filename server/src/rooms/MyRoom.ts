@@ -51,7 +51,7 @@ export class MyRoom extends Room<MyRoomState> {
 
         this.setupMessages();
         this.setupCollisionEvents();
-        this.phaseManager = new PhaseManagerServer(this.playerManager, (phase) => this.broadcastPhase(phase));
+        this.phaseManager = new PhaseManagerServer(this.playerManager, () => this.lock(), (phase) => this.broadcastPhase(phase));
         await this.setupTerrain();
     }
 

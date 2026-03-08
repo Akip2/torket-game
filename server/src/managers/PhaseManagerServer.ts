@@ -22,10 +22,12 @@ export default class PhaseManagerServer {
     timeOut: NodeJS.Timeout;
     concernedPlayerId: string;
     onPhaseChange: (phase: Phase) => void;
+    onGameStart: () => void;
 
-    constructor(playerManager: PlayerManagerServer, onPhaseChange: (phase: Phase) => void) {
+    constructor(playerManager: PlayerManagerServer, onGameStart: () => void, onPhaseChange: (phase: Phase) => void) {
         this.playerManager = playerManager;
         this.onPhaseChange = onPhaseChange;
+        this.onGameStart = onGameStart;
     }
 
     start() {
@@ -58,7 +60,13 @@ export default class PhaseManagerServer {
 
         if (phase instanceof TimedPhase) {
             (phase as TimedPhase).setStartTime(Date.now());
-            this.timeOut = setTimeout(() => this.next(), (phase as TimedPhase).duration * 1000);
+            this.timeOut = setTimeout(
+                () => {
+                    this.next()
+                    if(phase instanceof StartingPhase) this.onGameStart();
+                },
+                (phase as TimedPhase).duration * 1000
+            );
         }
 
         if (phase.isSolo) {
@@ -67,7 +75,7 @@ export default class PhaseManagerServer {
             this.concernedPlayerId = null;
         }
 
-        if(!FREE_ROAM) this.playerManager.handlePlayersState(phase);
+        if (!FREE_ROAM) this.playerManager.handlePlayersState(phase);
 
         this.currentPhase = phase;
         this.onPhaseChange(phase);
@@ -79,7 +87,7 @@ export default class PhaseManagerServer {
         await wait(delay);
 
         if (this.isOver()) return;
-        
+
         this.currentIndex = (this.currentIndex + 1) % this.phases.length;
 
         const phase = this.phases[this.currentIndex];
@@ -103,7 +111,7 @@ export default class PhaseManagerServer {
 
     actionChoice(playerId: string, action: Action) {
         if (playerId !== this.concernedPlayerId) return;
-        
+
         const player = this.playerManager.getPlayer(playerId);
 
         if (action === Action.Move) {
@@ -127,7 +135,7 @@ export default class PhaseManagerServer {
 
     disableAction(playerBody: PlayerServer) {
         clearTimeout(this.timeOut);
-        if(FREE_ROAM) return;
+        if (FREE_ROAM) return;
         playerBody.setState(PlayerState.Inactive);
         this.concernedPlayerId = null;
     }
