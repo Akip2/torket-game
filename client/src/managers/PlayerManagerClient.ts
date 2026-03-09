@@ -105,6 +105,10 @@ export default class PlayerManagerClient {
                         SoundManager.play(RessourceKeys.Reloading);
                         setCursor(Cursor.Crosshair);
                         break;
+                    
+                    case PlayerState.Moving:
+                        playerObject.fillMovementLeft();
+                        break;
 
                     default:
                         setCursor(Cursor.Default);
@@ -145,6 +149,7 @@ export default class PlayerManagerClient {
             });
 
             playerObject.state = player.state;
+            playerObject.movementLeft = player.movementLeft;
         });
     }
 

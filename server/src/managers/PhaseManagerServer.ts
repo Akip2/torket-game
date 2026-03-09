@@ -13,6 +13,7 @@ import PlayerServer from "src/bodies/PlayerServer";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
 import GameEndPhase from "@shared/data/phases/GameEndPhase";
 import { FREE_ROAM } from "@shared/const";
+import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
 
 export default class PhaseManagerServer {
     currentIndex: number = -1;
@@ -79,6 +80,8 @@ export default class PhaseManagerServer {
 
         this.currentPhase = phase;
         this.onPhaseChange(phase);
+
+        this.phaseStartEvent();
     }
 
     async next(delay: number = 0) {
@@ -147,5 +150,27 @@ export default class PhaseManagerServer {
 
     isOver() {
         return this.currentPhase instanceof GameEndPhase;
+    }
+
+    phaseStartEvent() {
+        switch (this.currentPhase.type) {
+            case PhaseTypes.Moving:
+                this.movingPhaseStartEvent();
+                break;
+        }
+    }
+
+    movingPhaseStartEvent() {
+        const concernedPlayer = this.playerManager.getPlayer(this.concernedPlayerId);
+        concernedPlayer.fillMovementLeft();
+
+        const loop = setInterval(() => {
+            if (this.currentPhase.type !== PhaseTypes.Moving) {
+                clearInterval(loop);
+            } else if (!concernedPlayer.hasMovementLeft()) {
+                clearInterval(loop);
+                this.next();
+            }
+        }, 500)
     }
 }

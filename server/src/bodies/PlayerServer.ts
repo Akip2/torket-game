@@ -32,6 +32,23 @@ export default class PlayerServer extends GameBody implements IPlayer {
         this.sessionId = sessionId;
     }
 
+    hasMovementLeft(): boolean {
+        return this.playerRef.movementLeft > 0;
+    }
+
+    decreaseMovementLeft(amount: number): void {
+        this.playerRef.movementLeft -= amount;
+
+        if (!this.hasMovementLeft()) {
+            this.setVelocityX(0);
+            this.isMoving = false;
+        }
+    }
+
+    fillMovementLeft() {
+        this.playerRef.movementLeft = PLAYER_CONST.BASE_MAX_MOVEMENT;
+    }
+
     moveHorizontally(speed: number): void {
         this.setVelocityX(speed);
     }

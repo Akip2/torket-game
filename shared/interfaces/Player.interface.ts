@@ -6,5 +6,8 @@ export interface IPlayer extends IBasicBody {
     isMoving: boolean;
 
     moveHorizontally(speed: number, instantly: boolean): void
+
     getState(): PlayerState;
+    hasMovementLeft(): boolean;
+    decreaseMovementLeft(amount: number): void;
 }

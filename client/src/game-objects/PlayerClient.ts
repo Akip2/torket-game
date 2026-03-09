@@ -24,6 +24,8 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     healthBar: HealthBar;
     nameTag: NameTag;
 
+    movementLeft: number = PLAYER_CONST.BASE_MAX_MOVEMENT;
+
     generateDeathParticles: (x: number, y: number) => void;
 
     constructor(scene: GameScene, name: string, x: number, y: number, self: boolean = true) {
@@ -176,5 +178,17 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.state = state;
         
         if(state === PlayerState.Shooting) SoundManager.play(RessourceKeys.Reloading);
+    }
+
+    hasMovementLeft(): boolean {
+        return this.movementLeft > 0;
+    }
+
+    decreaseMovementLeft(amount: number): void {
+       this.movementLeft -= amount;
+    }
+    
+    fillMovementLeft() {
+        this.movementLeft = PLAYER_CONST.BASE_MAX_MOVEMENT;
     }
 }
