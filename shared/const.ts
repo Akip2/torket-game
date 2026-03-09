@@ -6,7 +6,7 @@ export const FREE_ROAM = false;
 export const CLIENT_PREDICTION = true;
 
 // Client prediction & interpolation settings
-export const INTERPOLATION_SPEED = 0.4; // Time-based lerp factor (0.4 = faster catch-up)
+export const INTERPOLATION_SPEED_X = 0.4; // Time-based lerp factor (0.4 = faster catch-up)
 export const INTERPOLATION_SPEED_Y = 0.5; // Vertical is more important for feel (gravity, jumps)
 export const MAX_PREDICTED_DISTANCE = 15; // Max pixels before forcing position (collision detection)
 export const NETWORK_TICK_RATE = 1000 / 30; // 30 Hz network sync
@@ -37,7 +37,7 @@ export const PLAYER_CONST = {
     SELF_COLOR: 0x3498db,
     ENNEMY_COLOR: 0xdb3445,
 
-    BASE_MAX_MOVEMENT: 100,
+    BASE_MAX_MOVEMENT: 200,
 }
 
 export const BULLET_CONST = {

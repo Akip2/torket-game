@@ -265,7 +265,7 @@ export default class GameScene extends Phaser.Scene {
             this.fixedTick();
         }
 
-        this.playerManager.updatePlayers(delta);
+        this.playerManager.updatePlayers();
         this.phaseDisplayer.update();
     }
 
