@@ -23,7 +23,7 @@ export function movePlayerFromInputs(player: IPlayer, inputPayload: InputPayload
     if (inputPayload.up && canPlayerJump(player) && !instantly) {
         player.isOnGround = false;
         player.setVelocityY(PLAYER_CONST.JUMP);
-        player.decreaseMovementLeft(2);
+        player.decreaseMovementLeft(20);
     }
 }
 

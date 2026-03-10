@@ -2,7 +2,7 @@ import { Depths } from "@shared/enums/Depths.eunum"
 import type { BarStyleType, UIButtonStyle } from "@shared/types";
 
 export const BarStyle = {
-    Player: {
+    Health: {
         mainColor: 0x32CD32,
         backgroundColor: 0xDC143C,
         borderColor: 0x444444,
@@ -11,6 +11,21 @@ export const BarStyle = {
         width: 65,
 
         marginY: -30,
+        marginX: 0,
+
+        opacity: 0.75,
+        depth: Depths.First,
+    },
+
+    Movement: {
+        mainColor: 0x00b4d8,
+        backgroundColor: 0x023e8a,
+        borderColor: 0x444444,
+
+        height: 5,
+        width: 65,
+
+        marginY: -23,
         marginX: 0,
 
         opacity: 0.75,

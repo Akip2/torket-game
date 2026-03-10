@@ -10,6 +10,7 @@ import NameTag from "../ui/NameTag";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
 import SoundManager from "../managers/SoundManager";
 import HealthBar from "../ui/bars/HealthBar";
+import Bar from "../ui/bars/Bar";
 
 export default class PlayerClient extends Phaser.Physics.Matter.Sprite implements IPlayer {
     state: PlayerState = PlayerState.Inactive;
@@ -22,6 +23,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
 
     gun: Gun;
     healthBar: HealthBar;
+    movementBar: Bar;
     nameTag: NameTag;
 
     movementLeft: number = PLAYER_CONST.BASE_MAX_MOVEMENT;
@@ -50,7 +52,9 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.isOnGround = false;
 
         this.gun = new Gun(scene, x, y);
-        this.healthBar = new HealthBar(scene, this.x, this.y, 1, BarStyle.Player);
+        this.healthBar = new HealthBar(scene, this.x, this.y, 1, BarStyle.Health);
+        this.movementBar = new Bar(scene, this.x, this.y, 1, BarStyle.Movement);
+        this.movementBar.hide();
         this.nameTag = new NameTag(scene, name, x, y, TextStyle.NameTag);
 
         this.generateDeathParticles = (x: number, y: number) => {
@@ -96,6 +100,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
 
     updateUI() {
         this.healthBar.updateGraphics(this.x, this.y, this.hp / PLAYER_CONST.MAX_HP);
+        this.movementBar.updateGraphics(this.x, this.y, this.movementLeft / PLAYER_CONST.BASE_MAX_MOVEMENT);
         this.nameTag.updatePlacement(this.x, this.y);
     }
 
@@ -171,6 +176,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     destroyComponents(fromScene?: boolean) {
         this.gun.destroy(fromScene);
         this.healthBar.destroy(fromScene);
+        this.movementBar.destroy(fromScene);
         this.nameTag.destroy(fromScene);
     }
 

@@ -90,4 +90,12 @@ export default class Bar extends Phaser.GameObjects.Graphics {
         this.lineStyle(2, this.style.borderColor, 1);
         this.strokeRoundedRect(adjustedX, adjustedY, this.style.width, this.style.height, borderRadius);
     }
+
+    hide() {
+        this.setAlpha(0);
+    }
+
+    show() {
+        this.setAlpha(this.style.opacity ?? 1)
+    }
 }

@@ -90,23 +90,10 @@ export default class PlayerManagerClient {
             this.remoteRef.x = player.x;
             this.remoteRef.y = player.y;
 
+            playerObject.movementLeft = player.movementLeft; // probably temporary
+
             if (playerObject.state !== player.state) {
-                playerObject.state = player.state;
-
-                switch (playerObject.state) {
-                    case PlayerState.Shooting:
-                        SoundManager.play(RessourceKeys.Reloading);
-                        setCursor(Cursor.Crosshair);
-                        break;
-
-                    case PlayerState.Moving:
-                        playerObject.fillMovementLeft();
-                        break;
-
-                    default:
-                        setCursor(Cursor.Default);
-                }
-
+                this.handleStateChange(playerObject, player.state, true);
                 shotManager.cancelShot();
             }
         });
@@ -124,9 +111,38 @@ export default class PlayerManagerClient {
                 y: player.mouseY
             });
 
-            playerObject.state = player.state;
+            if (playerObject.state !== player.state) {
+                this.handleStateChange(playerObject, player.state, true);
+            }
+
             playerObject.movementLeft = player.movementLeft;
         });
+    }
+
+    handleStateChange(playerObject: PlayerClient, newState: PlayerState, local: boolean) {
+        playerObject.state = newState;
+        
+        switch (newState) {
+            case PlayerState.Shooting:
+                playerObject.movementBar.hide();
+                if (local) {
+                    SoundManager.play(RessourceKeys.Reloading);
+                    setCursor(Cursor.Crosshair);
+                }
+                break;
+
+            case PlayerState.Moving:
+                playerObject.movementBar.show();
+                playerObject.fillMovementLeft();
+                break;
+
+            default:
+                playerObject.movementBar.hide();
+
+                if (local) {
+                    setCursor(Cursor.Default);
+                }
+        }
     }
 
     removePlayer(sessionId: string) {
