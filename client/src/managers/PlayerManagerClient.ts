@@ -2,8 +2,8 @@ import { getStateCallbacks, type Room } from "colyseus.js";
 import PlayerClient from "../game-objects/PlayerClient";
 import type GameScene from "../scenes/GameScene";
 import type { InputPayload, Position } from "@shared/types";
-import { playerReactToExplosion } from "@shared/logics/player-logic";
-import { DEBUG, INTERPOLATION_SPEED_X, INTERPOLATION_SPEED_Y } from "@shared/const";
+import { movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
+import { CLIENT_PREDICTION, DEBUG, INTERPOLATION_SPEED_X, INTERPOLATION_SPEED_Y } from "@shared/const";
 import { Depths } from "@shared/enums/Depths.eunum";
 import type ShotManager from "./ShotManager";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
@@ -89,8 +89,6 @@ export default class PlayerManagerClient {
 
             this.remoteRef.x = player.x;
             this.remoteRef.y = player.y;
-
-            playerObject.movementLeft = player.movementLeft; // probably temporary
 
             if (playerObject.state !== player.state) {
                 this.handleStateChange(playerObject, player.state, true);
@@ -194,6 +192,7 @@ export default class PlayerManagerClient {
     }
 
     handleLocalInput(_inputPayload: InputPayload, mousePosition: Position) {
+        if(CLIENT_PREDICTION) movePlayerFromInputs(this.currentPlayer, _inputPayload);
         this.currentPlayer.updateGunPlacement(mousePosition);
     }
 

@@ -3,32 +3,28 @@ import type { BarStyleType, UIButtonStyle } from "@shared/types";
 
 export const BarStyle = {
     Health: {
-        mainColor: 0x32CD32,
-        backgroundColor: 0xDC143C,
-        borderColor: 0x444444,
+        mainColor: 0x4ade80,
+        backgroundColor: 0x1a0a0a,
+        borderColor: 0x2d2d2d,
 
-        height: 7.5,
+        height: 8,
         width: 65,
-
-        marginY: -30,
+        marginY: -32,
         marginX: 0,
-
-        opacity: 0.75,
+        opacity: 0.85,
         depth: Depths.First,
     },
 
     Movement: {
-        mainColor: 0x00b4d8,
-        backgroundColor: 0x023e8a,
-        borderColor: 0x444444,
+        mainColor: 0x38bdf8,
+        backgroundColor: 0x0a0f1a,
+        borderColor: 0x1e3a5f,
 
-        height: 5,
+        height: 6,
         width: 65,
-
-        marginY: -23,
+        marginY: -23.5,
         marginX: 0,
-
-        opacity: 0.75,
+        opacity: 0.85,
         depth: Depths.First,
     }
 } as Record<string, BarStyleType>;

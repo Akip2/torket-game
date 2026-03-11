@@ -37,7 +37,7 @@ export const PLAYER_CONST = {
     SELF_COLOR: 0x3498db,
     ENNEMY_COLOR: 0xdb3445,
 
-    BASE_MAX_MOVEMENT: 200,
+    BASE_MAX_MOVEMENT: 250,
 }
 
 export const BULLET_CONST = {
