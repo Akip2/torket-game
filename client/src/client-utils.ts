@@ -27,3 +27,11 @@ export function setCursor(
         canvas.style.cursor = `url(assets/cursors/${cursor}.png) ${hotspotX} ${hotspotY}, crosshair`;
     }
 }
+
+export function clearDomUi() {
+    getUiRoot().innerHTML = "";
+}
+
+export function getUiRoot() {
+    return document.getElementById("ui-container")!;
+}
