@@ -96,5 +96,27 @@ export type Rectangle = {
 }
 
 export type InitData = {
+    playerData: PlayerData;
+    roomData?: RoomData;
+}
+
+export type PlayerData = {
     name: string;
+}
+
+export type RoomData = {
+    creating: boolean;
+
+    roomCreation?: RoomCreationData;
+    roomJoining?: RoomJoiningData;
+}
+
+export type RoomCreationData = {
+    gameName: string;
+    password?: string;
+}
+
+export type RoomJoiningData = {
+    gameId: string;
+    password?: string;
 }

@@ -3,7 +3,7 @@ import { MyRoomState, Player } from "./schema/MyRoomState";
 import { BULLET_CONST, EXPLOSION_RADIUS, PLAYER_CONST, TILE_SIZE, TIME_STEP } from "@shared/const";
 import Matter from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
-import { InputPayload, GameMap, PlayerStartingPosition, ShootInfo, InitData } from "@shared/types";
+import { InputPayload, GameMap, PlayerStartingPosition, ShootInfo, InitData, PlayerData } from "@shared/types";
 import QuadBlock from "@shared/data/QuadBlock";
 import BullerServer from "src/bodies/BulletServer";
 import { generateBulletOriginPosition, shoot } from "@shared/logics/bullet-logic";
@@ -180,13 +180,13 @@ export class MyRoom extends Room<MyRoomState> {
         });
     }
 
-    onJoin(client: Client, initData: InitData) {
+    onJoin(client: Client, playerData: PlayerData) {
         const player = new Player();
 
         const startingPosition = this.playerStartingPositions.find((p) => p.playerId == null)
         startingPosition.playerId = client.sessionId;
 
-        player.pseudo = initData.name?.trim() || "Player";
+        player.pseudo = playerData.name?.trim() || "Player";
         player.x = startingPosition.x + PLAYER_CONST.WIDTH / 2;
         player.y = startingPosition.y;
         player.timeStamp = 0;

@@ -2,7 +2,6 @@ import { SceneNames } from "@shared/enums/SceneNames.enum";
 import titleScreenHtml from "../dom-ui/title-screen.html?raw";
 import roomCreationHtml from "../dom-ui/room-creation.html?raw";
 import { clearDomUi, getUiRoot } from "../client-utils";
-
 export default class TitleScreenScene extends Phaser.Scene {
     constructor() {
         super(SceneNames.TitleScreen);
@@ -17,7 +16,9 @@ export default class TitleScreenScene extends Phaser.Scene {
 
     private quickPlay() {
         this.scene.start(SceneNames.Game, {
-            name: this.getPlayerName()
+            playerData: {
+                name: this.getPlayerName()
+            }
         });
     }
 
@@ -26,7 +27,17 @@ export default class TitleScreenScene extends Phaser.Scene {
         const password = (document.getElementById("password") as HTMLInputElement).value;
 
         this.scene.start(SceneNames.Game, {
-            name: playerName
+            playerData: {
+                name: playerName
+            },
+            roomData: {
+                creating: true,
+
+                roomCreation: {
+                    gameName: gameName,
+                    password: password
+                }
+            }
         });
     }
 

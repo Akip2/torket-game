@@ -10,7 +10,7 @@ import ShotManager from "../managers/ShotManager";
 import PlayerManagerClient from "../managers/PlayerManagerClient";
 import EffectsManager from "../managers/EffectsManager";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
-import type { FullSynchroInfo, InitData, Position } from "@shared/types";
+import type { FullSynchroInfo, InitData, PlayerData, Position, RoomData } from "@shared/types";
 import { Depths } from "@shared/enums/Depths.eunum";
 import PhaseManagerClient from "../managers/PhaseManagerClient";
 import PhaseDisplayer from "../ui/PhaseDisplayer";
@@ -33,7 +33,7 @@ const SERVER_URL = import.meta.env.VITE_SERVER_URL || "ws://localhost:2567";
 export default class GameScene extends Phaser.Scene {
     active: boolean = true;
     client = new Client(SERVER_URL);
-    room!: Room;
+    room?: Room;
 
     debugGraphics: Phaser.GameObjects.Graphics[] = [];
 
@@ -53,7 +53,7 @@ export default class GameScene extends Phaser.Scene {
 
     currentMousePosition: Position = { x: 0, y: 0 }
 
-    initData!: InitData; // data related to the current player, sent to the server on connection
+    playerData!: PlayerData; // data related to the current player, sent to the server on connection
 
     //UI
     phaseDisplayer!: PhaseDisplayer;
@@ -66,7 +66,14 @@ export default class GameScene extends Phaser.Scene {
     }
 
     init(data: InitData) {
-        this.initData = data;
+        this.playerData = data.playerData;
+
+        try {
+            this.setupRoomEvents(data.roomData);
+        } catch (e) {
+            console.log(e);
+            throw e;
+        }
     }
 
     preload() {
@@ -98,13 +105,6 @@ export default class GameScene extends Phaser.Scene {
     async create() {
         SoundManager.init(this);
 
-        try {
-            await this.setupRoomEvents();
-        } catch (e) {
-            console.log(e);
-            throw e;
-        }
-
         this.worldContainer = this.add.container();
         this.uiContainer = this.add.container();
         this.patchScene()
@@ -127,8 +127,22 @@ export default class GameScene extends Phaser.Scene {
         this.setupBorders();
     }
 
-    async setupRoomEvents() {
-        if (!this.room) this.room = await this.client.joinOrCreate("my_room", this.initData);
+    async setupRoomEvents(roomData?: RoomData) {
+        if (!roomData) {
+            this.room = await this.client.joinOrCreate("my_room", this.playerData);
+        } else {
+            if (roomData.creating) {
+                const creationData: any = roomData.roomCreation;
+                creationData.name = this.playerData.name;
+
+                this.room = await this.client.create("my_room", creationData);
+            } else { // joining pre existing room
+                //TODO
+                this.room = await this.client.create("my_room", roomData.roomJoining);
+            }
+        }
+        
+        if (!this.room) return;
 
         this.playerManager = new PlayerManagerClient(this.room);
         this.playerManager.setupPlayerListeners(this);
@@ -147,7 +161,7 @@ export default class GameScene extends Phaser.Scene {
                 return;
             }
 
-            const isConcerned = this.phaseManager.isConcerned(this.room.sessionId);
+            const isConcerned = this.phaseManager.isConcerned(this.room!.sessionId);
 
             if (this.phaseManager.isActionChoicePhase()) {
                 this.endTurnButton.hide();
@@ -186,7 +200,7 @@ export default class GameScene extends Phaser.Scene {
 
             const winnerId = gameEndInfo.winnerId;
             const winner = this.playerManager.getPlayer(winnerId);
-            const isPlayerWinner = winnerId === this.room.sessionId;
+            const isPlayerWinner = winnerId === this.room!.sessionId;
 
             this.gameEndScreen = new GameEndScreen(this, {
                 isWin: isPlayerWinner,
@@ -207,7 +221,7 @@ export default class GameScene extends Phaser.Scene {
                 this.active = false;
             } else {
                 this.active = true;
-                this.room.send(RequestTypes.TerrainSynchro);
+                this.room!.send(RequestTypes.TerrainSynchro);
             }
         });
     }
@@ -226,7 +240,7 @@ export default class GameScene extends Phaser.Scene {
             this,
             GAME_WIDTH / 2,
             GAME_HEIGHT - 20,
-            () => { this.room.send(RequestTypes.EndTurn) }
+            () => { this.room!.send(RequestTypes.EndTurn) }
         );
     }
 
