@@ -2,6 +2,7 @@ import { SceneNames } from "@shared/enums/SceneNames.enum";
 import titleScreenHtml from "../dom-ui/title-screen.html?raw";
 import roomCreationHtml from "../dom-ui/room-creation.html?raw";
 import { clearDomUi, getUiRoot } from "../client-utils";
+import { generateDefaultRoomName } from "@shared/utils";
 export default class TitleScreenScene extends Phaser.Scene {
     constructor() {
         super(SceneNames.TitleScreen);
@@ -53,7 +54,7 @@ export default class TitleScreenScene extends Phaser.Scene {
         uiRoot.innerHTML = roomCreationHtml;
 
         const gameName = document.getElementById("game-name")! as HTMLInputElement;
-        gameName.value = `${playerName}'s game`;
+        gameName.value = generateDefaultRoomName(playerName);
 
         const form = document.querySelector("form")!;
         form.addEventListener("submit", (event) => {

@@ -128,17 +128,16 @@ export default class GameScene extends Phaser.Scene {
     }
 
     async setupRoomEvents(roomData?: RoomData) {
-        if (!roomData) {
-            this.room = await this.client.joinOrCreate("my_room", this.playerData);
+        if (!roomData) { // quick play
+            this.room = await this.client.joinOrCreate("my_room", { playerData: this.playerData });
         } else {
-            if (roomData.creating) {
+            if (roomData.creating) { // creating room
                 const creationData: any = roomData.roomCreation;
-                creationData.name = this.playerData.name;
+                creationData.playerData = this.playerData;
 
                 this.room = await this.client.create("my_room", creationData);
-            } else { // joining pre existing room
-                //TODO
-                this.room = await this.client.create("my_room", roomData.roomJoining);
+            } else { // joining pre existing room via id
+                this.room = await this.client.joinById(roomData.roomJoining!.gameId, { playerData: this.playerData });
             }
         }
         

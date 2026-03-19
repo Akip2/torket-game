@@ -120,3 +120,15 @@ export type RoomJoiningData = {
     gameId: string;
     password?: string;
 }
+
+export type RoomJoinOptions = {
+    password?: string;
+    playerData: PlayerData;
+}
+
+export type RoomCreationOptions = {
+    gameName: string;
+    password?: string;
+
+    playerData: PlayerData;
+}

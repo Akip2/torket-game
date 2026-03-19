@@ -8,6 +8,7 @@ const LATENCY = 0;
  * Import your Room files
  */
 import { MyRoom } from "./rooms/MyRoom";
+import { matchMaker } from "colyseus";
 
 export default config({
 
@@ -33,7 +34,7 @@ export default config({
          * (It is not recommended to expose this route in a production environment)
          */
         if (process.env.NODE_ENV !== "production") {
-            app.use("/", playground());
+            app.use("/playground", playground());
         }
 
         /**
@@ -42,6 +43,13 @@ export default config({
          * Read more: https://docs.colyseus.io/tools/monitor/#restrict-access-to-the-panel-using-a-password
          */
         app.use("/monitor", monitor());
+
+        app.get("/rooms", async (req, res) => {
+            res.json(await matchMaker.query({
+                name: "my_room",
+                locked: false
+            }));
+        });
     },
 
 

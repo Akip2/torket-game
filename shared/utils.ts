@@ -14,3 +14,7 @@ export function circleIntersectsRectangle(
 export function wait(ms: number) {
     return new Promise<void>(resolve => setTimeout(resolve, ms));
 }
+
+export function generateDefaultRoomName(playerName: string) {
+    return `${playerName}'s game`;
+}

@@ -3,7 +3,7 @@ import { MyRoomState, Player } from "./schema/MyRoomState";
 import { BULLET_CONST, EXPLOSION_RADIUS, PLAYER_CONST, TILE_SIZE, TIME_STEP } from "@shared/const";
 import Matter from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
-import { InputPayload, GameMap, PlayerStartingPosition, ShootInfo, InitData, PlayerData } from "@shared/types";
+import { InputPayload, GameMap, PlayerStartingPosition, ShootInfo, RoomJoinOptions, RoomCreationOptions } from "@shared/types";
 import QuadBlock from "@shared/data/QuadBlock";
 import BullerServer from "src/bodies/BulletServer";
 import { generateBulletOriginPosition, shoot } from "@shared/logics/bullet-logic";
@@ -21,12 +21,14 @@ import { canPlayerShoot } from "@shared/logics/player-logic";
 import { Action } from "@shared/enums/Action.enum";
 import { parsePlayerLabel } from "src/server-utils";
 import { Border } from "@shared/enums/Border.enum";
+import { generateDefaultRoomName } from "@shared/utils";
 
 dotenv.config();
 
 export class MyRoom extends Room<MyRoomState> {
     maxClients = 4;
     state = new MyRoomState();
+    password?: string;
 
     playerStartingPositions: PlayerStartingPosition[] = [];
 
@@ -37,8 +39,17 @@ export class MyRoom extends Room<MyRoomState> {
 
     bullets: BullerServer[] = [];
 
-    async onCreate(options: any) {
+    async onCreate(options: RoomCreationOptions) {
         this.patchRate = TIME_STEP;
+
+        if (options.password) {
+            this.setPrivate(true);
+            this.password = this.password;
+        }
+
+        this.setMetadata({
+            gameName: options.gameName ?? generateDefaultRoomName(options.playerData.name),
+        });
 
         let elapsedTime = 0;
         this.setSimulationInterval((deltaTime) => {
@@ -55,13 +66,54 @@ export class MyRoom extends Room<MyRoomState> {
         await this.setupTerrain();
     }
 
+    onJoin(client: Client, options: RoomJoinOptions) {
+        if (this.password && options.password !== this.password) throw new Error("Incorrect password");
+
+        const player = new Player();
+
+        const startingPosition = this.playerStartingPositions.find((p) => p.playerId == null)
+        startingPosition.playerId = client.sessionId;
+
+        player.pseudo = options.playerData.name?.trim() || "Player";
+        player.x = startingPosition.x + PLAYER_CONST.WIDTH / 2;
+        player.y = startingPosition.y;
+        player.timeStamp = 0;
+        player.hp = PLAYER_CONST.MAX_HP;
+
+        this.playerManager.addPlayer(client.sessionId, player, (hp: number) => this.onPlayerDamage(client.sessionId, hp), this.physicsManager)
+        this.state.players.set(client.sessionId, player);
+
+        this.synchronizeFully(client);
+
+        if (this.playerManager.getPlayerNb() === this.maxClients) { // if enough players we start the game
+            this.phaseManager.start();
+        }
+    }
+
+    onLeave(client: Client, consented: boolean) {
+        this.playerManager.removePlayer(client.sessionId);
+        this.state.players.delete(client.sessionId);
+
+        this.playerStartingPositions.find((p) => p.playerId === client.sessionId).playerId = null;
+
+        if (this.playerManager.getPlayerNb() === 0) {
+            this.phaseManager.stop();
+        } else {
+            if (this.phaseManager.currentPhase instanceof StartingPhase) {
+                this.phaseManager.reset();
+            }
+        }
+    }
+
+    onDispose() { }
+
     setupMessages() {
         this.onMessage(RequestTypes.Move, (client, inputPayload: InputPayload) => {
             const player = this.state.players.get(client.sessionId);
             player.inputQueue.push(inputPayload);
         });
 
-        this.onMessage(RequestTypes.Shoot, (client, shootInfo: ShootInfo) => {                
+        this.onMessage(RequestTypes.Shoot, (client, shootInfo: ShootInfo) => {
             const playerBody = this.playerManager.getPlayer(client.sessionId);
 
             if (canPlayerShoot(playerBody)) {
@@ -179,45 +231,6 @@ export class MyRoom extends Room<MyRoomState> {
             bullet.applyCustomGravity();
         });
     }
-
-    onJoin(client: Client, playerData: PlayerData) {
-        const player = new Player();
-
-        const startingPosition = this.playerStartingPositions.find((p) => p.playerId == null)
-        startingPosition.playerId = client.sessionId;
-
-        player.pseudo = playerData.name?.trim() || "Player";
-        player.x = startingPosition.x + PLAYER_CONST.WIDTH / 2;
-        player.y = startingPosition.y;
-        player.timeStamp = 0;
-        player.hp = PLAYER_CONST.MAX_HP;
-
-        this.playerManager.addPlayer(client.sessionId, player, (hp: number) => this.onPlayerDamage(client.sessionId, hp), this.physicsManager)
-        this.state.players.set(client.sessionId, player);
-
-        this.synchronizeFully(client);
-
-        if (this.playerManager.getPlayerNb() === this.maxClients) { // if enough players we start the game
-            this.phaseManager.start();
-        }
-    }
-
-    onLeave(client: Client, consented: boolean) {
-        this.playerManager.removePlayer(client.sessionId);
-        this.state.players.delete(client.sessionId);
-
-        this.playerStartingPositions.find((p) => p.playerId === client.sessionId).playerId = null;
-
-        if (this.playerManager.getPlayerNb() === 0) {
-            this.phaseManager.stop();
-        } else {
-            if (this.phaseManager.currentPhase instanceof StartingPhase) {
-                this.phaseManager.reset();
-            }
-        }
-    }
-
-    onDispose() { }
 
     explode(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
         this.terrainManager.explodeTerrain(cx, cy, EXPLOSION_RADIUS);
