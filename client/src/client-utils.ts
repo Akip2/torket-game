@@ -29,9 +29,26 @@ export function setCursor(
 }
 
 export function clearDomUi() {
-    getUiRoot().innerHTML = "";
+    clearPrimaryDomUi();
+    clearPrimaryDomUi();
 }
 
-export function getUiRoot() {
+export function clearSecondaryUiRoot() {
+    getSecondaryUiRoot().innerHTML = "";
+}
+
+export function clearPrimaryDomUi() {
+    getPrimaryUiRoot().innerHTML = "";
+}
+
+export function getPrimaryUiRoot() {
     return document.getElementById("ui-container")!;
+}
+
+export function getSecondaryUiRoot() {
+    return document.getElementById("secondary-ui-container")!;
+}
+
+export function getCloseButton(index: number = 0) {
+    return document.getElementsByClassName("close-btn")[index];
 }

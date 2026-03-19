@@ -1,7 +1,7 @@
 import { SceneNames } from "@shared/enums/SceneNames.enum";
 import titleScreenHtml from "../dom-ui/title-screen.html?raw";
 import roomCreationHtml from "../dom-ui/room-creation.html?raw";
-import { clearDomUi, getUiRoot } from "../client-utils";
+import { clearDomUi, getCloseButton, getPrimaryUiRoot } from "../client-utils";
 import { generateDefaultRoomName } from "@shared/utils";
 export default class TitleScreenScene extends Phaser.Scene {
     constructor() {
@@ -50,7 +50,7 @@ export default class TitleScreenScene extends Phaser.Scene {
         const playerName = this.getPlayerName();
         clearDomUi();
 
-        const uiRoot = getUiRoot();
+        const uiRoot = getPrimaryUiRoot();
         uiRoot.innerHTML = roomCreationHtml;
 
         const gameName = document.getElementById("game-name")! as HTMLInputElement;
@@ -62,10 +62,16 @@ export default class TitleScreenScene extends Phaser.Scene {
 
             this.createGame(playerName);
         });
+
+        const closeButton = getCloseButton();
+        closeButton.addEventListener("click", () => {
+            clearDomUi();
+            this.showTitleScreen();
+        })
     }
 
     private showTitleScreen() {
-        const uiRoot = getUiRoot();
+        const uiRoot = getPrimaryUiRoot();
         uiRoot.innerHTML = titleScreenHtml;
 
         const quickPlay = document.getElementById("quick-play")!;

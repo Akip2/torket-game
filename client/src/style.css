@@ -190,6 +190,37 @@ canvas {
   color: #1a1a1a;
 }
 
+.close-btn {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+
+  background-color: #e74c3c;
+  color: white;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 28px;
+  font-weight: bold;
+
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+
+.close-btn:hover {
+  background-color: #c0392b;
+}
+
+#secondary-ui-container{
+  opacity: 0.975;
+}
+
 .room-creation-form {
   background-color: rgba(226, 226, 226);
   font-size: large;
