@@ -132,3 +132,15 @@ export type RoomCreationOptions = {
 
     playerData: PlayerData;
 }
+
+export type AvailableRoomData = {
+    clients: number;
+    maxClients: number;
+
+    metadata: {
+        gameName: "Player's game"
+    };
+
+    private: boolean;
+    roomId: string;
+}

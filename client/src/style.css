@@ -50,20 +50,83 @@ h1 {
   padding: 2em;
 }
 
+thead {
+  background-color: rgb(186, 186, 186);
+  border: none;
+
+  tr {
+    border-bottom: solid #1a1a1a 2px;
+    border-top: solid #1a1a1a 2px;
+  }
+}
+
+thead,
+tbody tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+tbody {
+  height: 400px;
+  max-height: 400px;
+  overflow-y: auto;
+  display: block;
+
+  tr {
+    height: 3em;
+    border-bottom: solid #1a1a1a 1px;
+
+    transition: 0.1s background-color;
+
+    &:nth-child(even) {
+      background: rgb(215, 215, 215);
+    }
+
+    &:hover {
+      background: rgb(200, 200, 210);
+      cursor: pointer;
+    }
+  }
+
+  tr.selected {
+    background: rgb(190, 190, 210);
+  }
+}
+
+th {
+  padding: 0.175em 2em;
+}
+
+td {
+  text-align: center;
+  padding: 0em 0em;
+}
+
+table {
+  border-collapse: collapse;
+}
+
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
   padding: 0.6em 1.2em;
   font-size: large;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
   cursor: pointer;
-  transition: border-color 0.25s;
+
+  background-color: rgb(121, 85, 72);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75em;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  min-width: 100px;
 }
 
 button:hover {
-  border-color: #646cff;
+  background-color: rgb(141, 110, 99);
 }
 
 button:focus,
@@ -107,6 +170,15 @@ canvas {
   button {
     background-color: #f9f9f9;
   }
+}
+
+.room-list-buttons {
+  position: absolute;
+  bottom: -3.5em;
+  right: 0;
+  display: flex;
+  flex-direction: row;
+  gap: 1em;
 }
 
 .central-container {
@@ -166,20 +238,6 @@ canvas {
   text-align: center;
 
   width: fit-content;
-
-  button {
-    background-color: rgb(121, 85, 72);
-    color: #ffffff;
-    border: none;
-    border-radius: 8px;
-    padding: 0.75em;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-
-  button:hover {
-    background-color: rgb(141, 110, 99);
-  }
 }
 
 .input-div {
@@ -217,13 +275,14 @@ canvas {
   background-color: #c0392b;
 }
 
-#secondary-ui-container{
+#secondary-ui-container {
   opacity: 0.975;
 }
 
-.room-creation-form {
+.popup {
   background-color: rgba(226, 226, 226);
   font-size: large;
+  color: black;
 
   h1 {
     background-color: rgb(0, 150, 136);
@@ -234,7 +293,9 @@ canvas {
     padding-bottom: 2%;
     padding-top: 2%;
   }
+}
 
+.room-creation-form {
   input {
     font-size: large;
 

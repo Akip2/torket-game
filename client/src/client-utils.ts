@@ -1,6 +1,10 @@
 import { EXPLOSION_SPRITE_SIZE } from "@shared/const";
 import { Cursor } from "@shared/enums/Cursor.enum";
+import type { AvailableRoomData } from "@shared/types";
 import tinycolor from "tinycolor2";
+
+const SERVER_URL: string = import.meta.env.VITE_SERVER_URL || "ws://localhost:2567";
+const TRANSFORMED_SERVER_URL = SERVER_URL.replace("ws", "http");
 
 export function lightenHexColor(hex: number, coef: number = 7.5) {
     return parseInt(tinycolor(hex.toString(16)).lighten(coef).toHexString().replace("#", ""), 16);
@@ -51,4 +55,12 @@ export function getSecondaryUiRoot() {
 
 export function getCloseButton(index: number = 0) {
     return document.getElementsByClassName("close-btn")[index];
+}
+
+export function getServerUrl() {
+    return SERVER_URL;
+}
+
+export async function getAvailableRooms(): Promise<AvailableRoomData[]> {
+    return (await fetch(`${TRANSFORMED_SERVER_URL}/rooms`)).json();
 }
