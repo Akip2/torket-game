@@ -22,6 +22,7 @@ import { Action } from "@shared/enums/Action.enum";
 import { parsePlayerLabel } from "src/server-utils";
 import { Border } from "@shared/enums/Border.enum";
 import { generateDefaultRoomName } from "@shared/utils";
+import { ServerErrorCode } from "@shared/enums/ServerErrorCode.enum";
 
 dotenv.config();
 
@@ -44,7 +45,7 @@ export class MyRoom extends Room<MyRoomState> {
 
         if (options.password) {
             this.setPrivate(true);
-            this.password = this.password;
+            this.password = options.password;
         }
 
         this.setMetadata({
@@ -67,7 +68,7 @@ export class MyRoom extends Room<MyRoomState> {
     }
 
     onJoin(client: Client, options: RoomJoinOptions) {
-        if (this.password && options.password !== this.password) throw new Error("Incorrect password");
+        if (this.password && options.password !== this.password) throw new Error(ServerErrorCode.IncorrectPassword);
 
         const player = new Player();
 

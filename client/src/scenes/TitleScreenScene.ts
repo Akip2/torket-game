@@ -2,7 +2,8 @@ import { SceneNames } from "@shared/enums/SceneNames.enum";
 import titleScreenHtml from "../dom-ui/title-screen.html?raw";
 import roomCreationHtml from "../dom-ui/room-creation.html?raw";
 import roomList from "../dom-ui/room-list.html?raw";
-import { clearDomUi, getAvailableRooms, getCloseButton, getPrimaryUiRoot } from "../client-utils";
+import passwordForm from "../dom-ui/password-form.html?raw";
+import { clearDomUi, clearSecondaryUiRoot, getAvailableRooms, getCloseButton, getPrimaryUiRoot, getSecondaryUiRoot } from "../client-utils";
 import { generateDefaultRoomName } from "@shared/utils";
 import { generateRoomList } from "../dom-ui/component-generator";
 import type { RoomJoiningData } from "@shared/types";
@@ -60,6 +61,26 @@ export default class TitleScreenScene extends Phaser.Scene {
         });
     }
 
+    private showPasswordForm(playerName: string) {
+        const uiRoot = getSecondaryUiRoot();
+        uiRoot.innerHTML = passwordForm;
+
+        const form = document.getElementById("password-form")!;
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+
+            const password = (document.getElementById("password") as HTMLInputElement).value;
+            
+            this.currentRoomSelected!.password = password;
+            this.joinGame(playerName);
+        });
+
+        const closeButton = getCloseButton(1);
+        closeButton.addEventListener("click", () => {
+            clearSecondaryUiRoot();
+        })
+    }
+
     private async showAvailableRooms() {
         const playerName = this.getPlayerName();
         clearDomUi();
@@ -78,7 +99,13 @@ export default class TitleScreenScene extends Phaser.Scene {
 
         const joinButton = document.getElementById("join-btn")!;
         joinButton.addEventListener("click", () => {
-            this.joinGame(playerName);
+            if (this.currentRoomSelected) {
+                if (this.currentRoomSelected.password) {
+                    this.showPasswordForm(playerName);
+                } else {
+                    this.joinGame(playerName);
+                }
+            }
         })
 
         const refreshButton = document.getElementById("refresh-btn");
@@ -113,6 +140,10 @@ export default class TitleScreenScene extends Phaser.Scene {
             this.currentRoomSelected = {
                 gameId: tr.id
             };
+
+            if (tr.dataset.private == "true") {
+                this.currentRoomSelected.password = "PLACEHOLDER";
+            }
         });
     }
 

@@ -137,7 +137,7 @@ export default class GameScene extends Phaser.Scene {
 
                 this.room = await this.client.create("my_room", creationData);
             } else { // joining pre existing room via id
-                this.room = await this.client.joinById(roomData.roomJoining!.gameId, { playerData: this.playerData });
+                this.room = await this.client.joinById(roomData.roomJoining!.gameId, { playerData: this.playerData, password: roomData.roomJoining?.password });
             }
         }
         

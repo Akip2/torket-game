@@ -129,9 +129,8 @@ button:hover {
   background-color: rgb(141, 110, 99);
 }
 
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+button:focus {
+  outline: none !important;
 }
 
 #game-container {
@@ -283,6 +282,7 @@ canvas {
   background-color: rgba(226, 226, 226);
   font-size: large;
   color: black;
+  border: solid #1a1a1a 1px;
 
   h1 {
     background-color: rgb(0, 150, 136);
@@ -295,7 +295,7 @@ canvas {
   }
 }
 
-.room-creation-form {
+.popup {
   input {
     font-size: large;
 
