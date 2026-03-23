@@ -82,3 +82,11 @@ export function showToast(message: string) {
         toast.addEventListener("transitionend", () => toast.remove());
     }, 1000);
 }
+
+export function mountWithTransition(root: HTMLElement, html: string) {
+    root.innerHTML = html;
+    const popup = root.querySelector(".central-container");
+    if (!popup) return;
+
+    requestAnimationFrame(() => popup.classList.add("popup--visible"));
+}

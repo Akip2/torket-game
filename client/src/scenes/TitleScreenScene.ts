@@ -1,9 +1,9 @@
 import { SceneNames } from "@shared/enums/SceneNames.enum";
 import titleScreenHtml from "../dom-ui/title-screen.html?raw";
 import roomCreationHtml from "../dom-ui/room-creation.html?raw";
-import roomList from "../dom-ui/room-list.html?raw";
-import passwordForm from "../dom-ui/password-form.html?raw";
-import { clearDomUi, clearSecondaryUiRoot, getAvailableRooms, getCloseButton, getPrimaryUiRoot, getSecondaryUiRoot, showToast } from "../client-utils";
+import roomListHtml from "../dom-ui/room-list.html?raw";
+import passwordFormHtml from "../dom-ui/password-form.html?raw";
+import { clearDomUi, clearSecondaryUiRoot, getAvailableRooms, getCloseButton, getPrimaryUiRoot, getSecondaryUiRoot, mountWithTransition, showToast } from "../client-utils";
 import { generateDefaultRoomName } from "@shared/utils";
 import { generateRoomList } from "../dom-ui/component-generator";
 import type { RoomJoiningData } from "@shared/types";
@@ -96,7 +96,7 @@ export default class TitleScreenScene extends Phaser.Scene {
 
     private showPasswordForm(playerName: string) {
         const uiRoot = getSecondaryUiRoot();
-        uiRoot.innerHTML = passwordForm;
+        mountWithTransition(uiRoot, passwordFormHtml);
 
         const form = document.getElementById("password-form")!;
         form.addEventListener("submit", (event) => {
@@ -115,7 +115,7 @@ export default class TitleScreenScene extends Phaser.Scene {
         clearDomUi();
 
         const uiRoot = getPrimaryUiRoot();
-        uiRoot.innerHTML = roomList;
+        mountWithTransition(uiRoot, roomListHtml);
 
         const closeButton = getCloseButton();
         closeButton.addEventListener("click", () => {
@@ -176,7 +176,7 @@ export default class TitleScreenScene extends Phaser.Scene {
         clearDomUi();
 
         const uiRoot = getPrimaryUiRoot();
-        uiRoot.innerHTML = roomCreationHtml;
+        mountWithTransition(uiRoot, roomCreationHtml);
 
         const gameName = document.getElementById("game-name")! as HTMLInputElement;
         gameName.value = generateDefaultRoomName(playerName);

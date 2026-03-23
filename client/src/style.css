@@ -333,6 +333,17 @@ canvas {
   }
 }
 
+.popup {
+  opacity: 0;
+  transform: translate(-50%, -48%);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.popup--visible {
+  opacity: 1;
+  transform: translate(-50%, -50%);
+}
+
 @media (max-width: 1090px) {
   .central-container h1 {
     font-size: 50px;
