@@ -1,5 +1,6 @@
 import type Phase from "./data/phases/Phase";
 import type { Depths } from "./enums/Depths.eunum";
+import type { RequestTypes } from "./enums/RequestTypes.enum";
 
 export type InputPayload = {
     up: boolean,
@@ -97,7 +98,8 @@ export type Rectangle = {
 
 export type InitData = {
     playerData: PlayerData;
-    roomData?: RoomData;
+    room?: any;
+    messageBuffer?: { type: RequestTypes, data: any }[];
 }
 
 export type PlayerData = {

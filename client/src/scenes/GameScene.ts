@@ -10,7 +10,7 @@ import ShotManager from "../managers/ShotManager";
 import PlayerManagerClient from "../managers/PlayerManagerClient";
 import EffectsManager from "../managers/EffectsManager";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
-import type { FullSynchroInfo, InitData, PlayerData, Position, RoomData } from "@shared/types";
+import type { FullSynchroInfo, InitData, PlayerData, Position } from "@shared/types";
 import { Depths } from "@shared/enums/Depths.eunum";
 import PhaseManagerClient from "../managers/PhaseManagerClient";
 import PhaseDisplayer from "../ui/PhaseDisplayer";
@@ -24,16 +24,15 @@ import type Phase from "@shared/data/phases/Phase";
 import ActionPhase from "@shared/data/phases/ActionPhase";
 import SimulationBorderClient from "../game-objects/SimulationBorderClient";
 import { Border } from "@shared/enums/Border.enum";
-import { getExplosionSpriteScale } from "../client-utils";
+import { getExplosionSpriteScale, getServerUrl } from "../client-utils";
 import GameEndScreen from "../ui/containers/GameEndScreen";
 import SoundManager from "../managers/SoundManager";
 
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || "ws://localhost:2567";
-
 export default class GameScene extends Phaser.Scene {
     active: boolean = true;
-    client = new Client(SERVER_URL);
+    client = new Client(getServerUrl());
     room?: Room;
+    messageBuffer: { type: RequestTypes, data: any }[] = [];
 
     debugGraphics: Phaser.GameObjects.Graphics[] = [];
 
@@ -69,7 +68,12 @@ export default class GameScene extends Phaser.Scene {
         this.playerData = data.playerData;
 
         try {
-            this.setupRoomEvents(data.roomData);
+            if (data.room) {
+                this.room = data.room;
+                this.messageBuffer = data.messageBuffer ?? [];
+            } else {
+                this.setupRoomEvents();
+            }
         } catch (e) {
             console.log(e);
             throw e;
@@ -125,26 +129,25 @@ export default class GameScene extends Phaser.Scene {
         this.setupVisibilityHandler();
         this.setupUi();
         this.setupBorders();
+
+        if (this.room) {
+            this.playerManager = new PlayerManagerClient(this.room);
+            this.playerManager.setupPlayerListeners(this);
+            this.setupRoomMessages();
+        }
     }
 
-    async setupRoomEvents(roomData?: RoomData) {
-        if (!roomData) { // quick play
-            this.room = await this.client.joinOrCreate("my_room", { playerData: this.playerData });
-        } else {
-            if (roomData.creating) { // creating room
-                const creationData: any = roomData.roomCreation;
-                creationData.playerData = this.playerData;
-
-                this.room = await this.client.create("my_room", creationData);
-            } else { // joining pre existing room via id
-                this.room = await this.client.joinById(roomData.roomJoining!.gameId, { playerData: this.playerData, password: roomData.roomJoining?.password });
-            }
-        }
-        
+    async setupRoomEvents() {
+        this.room = await this.client.joinOrCreate("my_room", { playerData: this.playerData });
         if (!this.room) return;
 
         this.playerManager = new PlayerManagerClient(this.room);
         this.playerManager.setupPlayerListeners(this);
+        this.setupRoomMessages();
+    }
+
+    async setupRoomMessages() {
+        if (!this.room) return;
 
         this.room.onMessage(RequestTypes.TerrainSynchro, (quadBlock) => {
             this.terrainManager.constructQuadBlock(quadBlock);
@@ -206,6 +209,23 @@ export default class GameScene extends Phaser.Scene {
                 winnerName: winner.getName()
             });
         });
+
+        for (const { type, data } of this.messageBuffer ?? []) {
+            if (type === RequestTypes.FullSynchro) {
+                this.terrainManager.constructQuadBlock(data.terrain);
+                this.terrainManager.redrawTerrain();
+                this.phaseManager.setCurrentPhase(data.phase);
+            }
+            if (type === RequestTypes.TerrainSynchro) {
+                this.terrainManager.constructQuadBlock(data);
+                this.terrainManager.redrawTerrain();
+            }
+            if (type === RequestTypes.PhaseSynchro) {
+                this.phaseManager.setCurrentPhase(data);
+            }
+        }
+
+        this.messageBuffer = []; // nettoyage
     }
 
     setupPointerEvents() {

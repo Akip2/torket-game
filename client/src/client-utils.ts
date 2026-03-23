@@ -34,7 +34,7 @@ export function setCursor(
 
 export function clearDomUi() {
     clearPrimaryDomUi();
-    clearPrimaryDomUi();
+    clearSecondaryUiRoot();
 }
 
 export function clearSecondaryUiRoot() {
@@ -63,4 +63,22 @@ export function getServerUrl() {
 
 export async function getAvailableRooms(): Promise<AvailableRoomData[]> {
     return (await fetch(`${TRANSFORMED_SERVER_URL}/rooms`)).json();
+}
+
+export function showToast(message: string) {
+    document.getElementById("toast")?.remove();
+
+    const toast = document.createElement("div");
+    toast.id = "toast";
+    toast.textContent = message;
+    toast.classList.add("toast");
+
+    document.body.appendChild(toast);
+
+    requestAnimationFrame(() => toast.classList.add("toast--visible"));
+
+    setTimeout(() => {
+        toast.classList.remove("toast--visible");
+        toast.addEventListener("transitionend", () => toast.remove());
+    }, 1000);
 }
