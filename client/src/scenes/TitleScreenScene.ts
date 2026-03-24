@@ -5,7 +5,7 @@ import roomListHtml from "../dom-ui/room-list.html?raw";
 import passwordFormHtml from "../dom-ui/password-form.html?raw";
 import { clearDomUi, clearSecondaryUiRoot, getAvailableRooms, getCloseButton, getPrimaryUiRoot, getSecondaryUiRoot, mountWithTransition, showToast } from "../client-utils";
 import { generateDefaultRoomName } from "@shared/utils";
-import { generateRoomList } from "../dom-ui/component-generator";
+import { generateRoomComponent } from "../dom-ui/component-generator";
 import type { RoomJoiningData } from "@shared/types";
 import { Client, Room, ServerError } from "colyseus.js";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
@@ -147,7 +147,10 @@ export default class TitleScreenScene extends Phaser.Scene {
         const tbody = document.getElementById("room-container");
         if (!tbody) return;
 
-        tbody.innerHTML = generateRoomList(rooms);
+        tbody.innerHTML = "";
+        rooms.forEach((room) => {
+            tbody.innerHTML += generateRoomComponent(room);
+        });
 
         tbody.addEventListener("click", (e) => {
             if (!(e.target instanceof HTMLElement)) return;
