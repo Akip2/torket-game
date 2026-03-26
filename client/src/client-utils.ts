@@ -1,6 +1,5 @@
-import { EXPLOSION_SPRITE_SIZE, GAME_HEIGHT, GAME_WIDTH, MAP_PREVIEW_HEIGHT, MAP_PREVIEW_WIDTH, PLAYER_CONST } from "@shared/const";
+import { EXPLOSION_SPRITE_SIZE } from "@shared/const";
 import { Cursor } from "@shared/enums/Cursor.enum";
-import type { MapPreviewData } from "@shared/types";
 import tinycolor from "tinycolor2";
 
 const SERVER_URL: string = import.meta.env.VITE_SERVER_URL || "ws://localhost:2567";
@@ -84,42 +83,4 @@ export function mountWithTransition(root: HTMLElement, html: string) {
     if (!popup) return;
 
     requestAnimationFrame(() => popup.classList.add("popup--visible"));
-}
-
-export function setupMapCard(mapCard: Element, mapData: MapPreviewData,) {
-    const mapName = mapCard.getElementsByClassName("map-name")[0]!;
-    mapName.textContent = mapData.name;
-
-    const mapPreview = mapCard.getElementsByClassName("map-preview")[0]! as HTMLCanvasElement;
-    const ctx = mapPreview.getContext("2d")!;
-
-    const { rowSize, columnSize, grid } = mapData.primitive;
-    const step = 1;
-
-    const tileW = MAP_PREVIEW_WIDTH / (rowSize / step);
-    const tileH = MAP_PREVIEW_HEIGHT / (columnSize / step);
-
-    ctx.clearRect(0, 0, MAP_PREVIEW_WIDTH, MAP_PREVIEW_HEIGHT);
-    ctx.fillStyle = "rgb(112, 118, 130)";
-
-    for (let row = 0; row < columnSize; row += step) {
-        for (let col = 0; col < rowSize; col += step) {
-            if (grid[row * rowSize + col] === 1) ctx.fillRect((col / step) * tileW, (row / step) * tileH, tileW, tileH);
-        }
-    }
-
-    const mapIdContainer = mapCard.getElementsByClassName("map-id")[0]!;
-    if (mapIdContainer instanceof HTMLInputElement) {
-        (mapIdContainer as HTMLInputElement).value = mapData.id;
-    } else {
-        mapIdContainer.textContent = mapData.id;
-    }
-
-    const scaleX = MAP_PREVIEW_WIDTH / GAME_WIDTH;
-    const scaleY = MAP_PREVIEW_HEIGHT / GAME_HEIGHT;
-
-    mapData.playerPositions.forEach(pos => {
-        ctx.fillStyle = "#" + PLAYER_CONST.SELF_COLOR.toString(16);
-        ctx.fillRect(pos.x * scaleX , pos.y * scaleY, 6, 6);
-    });
 }

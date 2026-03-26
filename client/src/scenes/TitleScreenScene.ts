@@ -3,10 +3,11 @@ import titleScreenHtml from "../dom-ui/title-screen.html?raw";
 import roomCreationHtml from "../dom-ui/room-creation.html?raw";
 import roomListHtml from "../dom-ui/room-list.html?raw";
 import passwordFormHtml from "../dom-ui/password-form.html?raw";
-import { clearDomUi, clearSecondaryUiRoot, getCloseButton, getPrimaryUiRoot, getSecondaryUiRoot, mountWithTransition, setupMapCard, showToast } from "../client-utils";
+import mapSelectionHtml from "../dom-ui/map-selection.html?raw";
+import { clearDomUi, clearSecondaryUiRoot, getCloseButton, getPrimaryUiRoot, getSecondaryUiRoot, mountWithTransition, showToast } from "../client-utils";
 import { generateDefaultRoomName } from "@shared/utils";
-import { generateRoomComponent } from "../dom-ui/component-generator";
-import type { AvailableRoomData, RoomJoiningData } from "@shared/types";
+import { generateMapCard, generateRoomComponent, setupMapCard } from "../dom-ui/component-generator";
+import type { AvailableRoomData, MapPreviewData, RoomJoiningData } from "@shared/types";
 import { Client, Room, ServerError } from "colyseus.js";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 
@@ -197,10 +198,30 @@ export default class TitleScreenScene extends Phaser.Scene {
 
         setupMapCard(mapCard, defaultMap);
 
+        const mapPreviewWrapper = document.getElementById("map-preview-wrapper")!;
+        mapPreviewWrapper.addEventListener("click", () => { this.showMapSelection() });
+
         const closeButton = getCloseButton();
         closeButton.addEventListener("click", () => {
             clearDomUi();
             this.showTitleScreen();
+        });
+    }
+
+    private async showMapSelection() {
+        const uiRoot = getSecondaryUiRoot();
+        mountWithTransition(uiRoot, mapSelectionHtml);
+
+        const mapContainer = document.getElementById("map-container");
+
+        const maps: MapPreviewData[] = (await this.client.http.get("/maps")).data;
+        maps.forEach(map => {
+            mapContainer?.appendChild(generateMapCard(map));
+        });
+
+        const closeButton = getCloseButton(1);
+        closeButton.addEventListener("click", () => {
+            clearSecondaryUiRoot();
         });
     }
 
