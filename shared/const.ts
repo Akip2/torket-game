@@ -5,6 +5,8 @@ export const DEBUG = false;
 export const FREE_ROAM = false;
 export const CLIENT_PREDICTION = true;
 
+export const DEFAULT_MAP_ID = "mirrorhold";
+
 // Client prediction & interpolation settings
 export const INTERPOLATION_SPEED_X = 0.4; // Time-based lerp factor (0.4 = faster catch-up)
 export const INTERPOLATION_SPEED_Y = 0.5; // Vertical is more important for feel (gravity, jumps)
@@ -87,3 +89,6 @@ export const BORDERS_CONST = {
         height: GAME_HEIGHT
     },
 } as Record<Border, Rectangle>
+
+export const MAP_PREVIEW_WIDTH = 300;
+export const MAP_PREVIEW_HEIGHT = 150;

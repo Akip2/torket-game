@@ -1,6 +1,6 @@
 import { Room, Client } from "@colyseus/core";
 import { MyRoomState, Player } from "./schema/MyRoomState";
-import { BULLET_CONST, EXPLOSION_RADIUS, PLAYER_CONST, TILE_SIZE, TIME_STEP } from "@shared/const";
+import { BULLET_CONST, DEFAULT_MAP_ID, EXPLOSION_RADIUS, PLAYER_CONST, TILE_SIZE, TIME_STEP } from "@shared/const";
 import Matter from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { InputPayload, GameMap, PlayerStartingPosition, ShootInfo, RoomJoinOptions, RoomCreationOptions } from "@shared/types";
@@ -50,6 +50,7 @@ export class MyRoom extends Room<MyRoomState> {
 
         this.setMetadata({
             gameName: options.gameName ?? generateDefaultRoomName(options.playerData.name),
+            mapId: options.mapId ?? DEFAULT_MAP_ID,
         });
 
         let elapsedTime = 0;
@@ -64,7 +65,7 @@ export class MyRoom extends Room<MyRoomState> {
         this.setupMessages();
         this.setupCollisionEvents();
         this.phaseManager = new PhaseManagerServer(this.playerManager, () => this.lock(), (phase) => this.broadcastPhase(phase));
-        await this.setupTerrain();
+        await this.setupTerrain(options.mapId);
     }
 
     onJoin(client: Client, options: RoomJoinOptions) {
@@ -149,9 +150,8 @@ export class MyRoom extends Room<MyRoomState> {
         });
     }
 
-    async setupTerrain() {
-        const mapName = process.env.MAP_NAME ?? "test";
-        const mapPath = path.resolve(__dirname, `../../maps/${mapName}.json`);
+    async setupTerrain(mapId: string = DEFAULT_MAP_ID) {
+        const mapPath = path.resolve(__dirname, `../../maps/${mapId}.json`);
         const data = await readFile(mapPath, "utf-8");
         const map: GameMap = JSON.parse(data);
 

@@ -156,6 +156,14 @@ canvas {
   display: block;
 }
 
+.map-preview {
+  background-color: black;
+}
+
+.map-id {
+  display: none;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
@@ -245,6 +253,8 @@ canvas {
   align-items: self-start;
 
   color: #1a1a1a;
+
+  align-self: center;
 }
 
 .close-btn {
@@ -330,6 +340,8 @@ canvas {
     padding: 0.4em;
 
     border: #1a1a1a solid 1px;
+
+    min-width: 280px;
   }
 }
 

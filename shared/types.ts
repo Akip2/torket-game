@@ -1,4 +1,5 @@
 import type Phase from "./data/phases/Phase";
+import type PrimitiveMap from "./data/PrimitiveMap";
 import type { Depths } from "./enums/Depths.eunum";
 import type { RequestTypes } from "./enums/RequestTypes.enum";
 
@@ -131,6 +132,7 @@ export type RoomJoinOptions = {
 export type RoomCreationOptions = {
     gameName: string;
     password?: string;
+    mapId: string;
 
     playerData: PlayerData;
 }
@@ -145,4 +147,12 @@ export type AvailableRoomData = {
 
     private: boolean;
     roomId: string;
+}
+
+export type MapPreviewData = {
+    id: string;
+    name: string;
+    maxPlayers: number;
+    primitive: PrimitiveMap;
+    playerPositions: Position[];
 }
