@@ -212,6 +212,8 @@ export default class TitleScreenScene extends Phaser.Scene {
         const uiRoot = getSecondaryUiRoot();
         mountWithTransition(uiRoot, mapSelectionHtml);
 
+        const currentMapCard = document.getElementsByClassName("map-card")[0]!;
+
         const mapContainer = document.getElementById("map-container");
 
         const maps: MapPreviewData[] = (await this.client.http.get("/maps")).data;
@@ -219,10 +221,30 @@ export default class TitleScreenScene extends Phaser.Scene {
             mapContainer?.appendChild(generateMapCard(map));
         });
 
+        mapContainer?.addEventListener("click", (e) => { this.selectMap(e, currentMapCard) });
+
         const closeButton = getCloseButton(1);
         closeButton.addEventListener("click", () => {
             clearSecondaryUiRoot();
         });
+    }
+
+    private selectMap(e: PointerEvent, currentMapCard: Element) {
+        if (!(e.target instanceof HTMLElement)) return;
+
+        const mapCard = e.target.closest(".map-card");
+        if (!mapCard) return;
+
+        const canvas = mapCard.querySelector(".map-preview")!;
+        const wrapper = document.createElement("div");
+        wrapper.id = "map-preview-wrapper";
+        canvas.replaceWith(wrapper);
+        wrapper.appendChild(canvas);
+        wrapper.addEventListener("click", () => { this.showMapSelection() });
+
+        currentMapCard.replaceWith(mapCard);
+
+        clearSecondaryUiRoot();
     }
 
     private showTitleScreen() {
