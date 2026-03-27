@@ -52,6 +52,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.isOnGround = false;
 
         this.gun = new Gun(scene, x, y);
+        this.gun.setVisible(false);
         this.healthBar = new HealthBar(scene, this.x, this.y, 1, BarStyle.Health);
         this.movementBar = new Bar(scene, this.x, this.y, 1, BarStyle.Movement);
         this.movementBar.hide();

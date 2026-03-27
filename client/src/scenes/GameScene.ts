@@ -27,6 +27,7 @@ import { Border } from "@shared/enums/Border.enum";
 import { getExplosionSpriteScale, getServerUrl } from "../client-utils";
 import GameEndScreen from "../ui/containers/GameEndScreen";
 import SoundManager from "../managers/SoundManager";
+import { setCookie } from "typescript-cookie";
 
 export default class GameScene extends Phaser.Scene {
     active: boolean = true;
@@ -66,18 +67,9 @@ export default class GameScene extends Phaser.Scene {
 
     init(data: InitData) {
         this.playerData = data.playerData;
-
-        try {
-            if (data.room) {
-                this.room = data.room;
-                this.messageBuffer = data.messageBuffer ?? [];
-            } else {
-                this.setupRoomEvents();
-            }
-        } catch (e) {
-            console.log(e);
-            throw e;
-        }
+        this.room = data.room;
+        this.messageBuffer = data.messageBuffer ?? [];
+        setCookie("playerName", this.playerData.name, { expires: 7 });
     }
 
     preload() {

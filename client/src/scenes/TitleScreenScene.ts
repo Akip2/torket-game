@@ -4,21 +4,22 @@ import roomCreationHtml from "../dom-ui/room-creation.html?raw";
 import roomListHtml from "../dom-ui/room-list.html?raw";
 import passwordFormHtml from "../dom-ui/password-form.html?raw";
 import mapSelectionHtml from "../dom-ui/map-selection.html?raw";
-import { clearDomUi, clearSecondaryUiRoot, getCloseButton, getPrimaryUiRoot, getSecondaryUiRoot, mountWithTransition, showToast } from "../client-utils";
+import { clearDomUi, clearSecondaryUiRoot, getCloseButton, getPrimaryUiRoot, getSecondaryUiRoot, getServerUrl, mountWithTransition, showToast } from "../client-utils";
 import { generateDefaultRoomName } from "@shared/utils";
 import { generateMapCard, generateRoomComponent, setupMapCard } from "../dom-ui/component-generator";
 import type { AvailableRoomData, MapPreviewData, RoomJoiningData } from "@shared/types";
 import { Client, Room, ServerError } from "colyseus.js";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
-
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || "ws://localhost:2567";
+import { getCookie } from 'typescript-cookie'
 
 export default class TitleScreenScene extends Phaser.Scene {
     private currentRoomSelected: RoomJoiningData | null = null;
-    private client = new Client(SERVER_URL);
+    private client = new Client(getServerUrl());
+    private playerName?: string;
 
     constructor() {
         super(SceneNames.TitleScreen);
+        this.playerName = getCookie("playerName");
     }
 
     private getPlayerName() {
@@ -26,20 +27,35 @@ export default class TitleScreenScene extends Phaser.Scene {
         return nameInput?.value?.trim() || "Player";
     }
 
-    private quickPlay() {
-        this.scene.start(SceneNames.Game, {
-            playerData: { name: this.getPlayerName() }
-        });
+    private async quickPlay() {
+        this.playerName = this.getPlayerName();
+
+        try {
+            const room = await this.client.joinOrCreate("my_room", {
+                playerData: { name: this.playerName }
+            });
+
+            const messageBuffer = this.bufferCriticalMessages(room);
+
+            this.scene.start(SceneNames.Game, {
+                playerData: { name: this.playerName },
+                room,
+                messageBuffer
+            });
+        } catch (e: any) {
+            const serverError = e as ServerError;
+            showToast(serverError.message || "Failed to join a room.");
+        }
     }
 
-    private async createGame(playerName: string) {
+    private async createGame() {
         const gameName = (document.getElementById("game-name") as HTMLInputElement).value;
         const password = (document.getElementById("password") as HTMLInputElement).value;
         const mapId = (document.getElementsByClassName("map-id")[0] as HTMLInputElement).value;
 
         try {
             const room = await this.client.create("my_room", {
-                playerData: { name: playerName },
+                playerData: { name: this.playerName },
                 gameName,
                 password,
                 mapId
@@ -48,7 +64,7 @@ export default class TitleScreenScene extends Phaser.Scene {
             const messageBuffer = this.bufferCriticalMessages(room);
 
             this.scene.start(SceneNames.Game, {
-                playerData: { name: playerName },
+                playerData: { name: this.playerName },
                 room,
                 messageBuffer
             });
@@ -58,12 +74,12 @@ export default class TitleScreenScene extends Phaser.Scene {
         }
     }
 
-    private async joinGame(playerName: string) {
+    private async joinGame() {
         try {
             const room = await this.client.joinById(
                 this.currentRoomSelected!.gameId,
                 {
-                    playerData: { name: playerName },
+                    playerData: { name: this.playerName },
                     password: this.currentRoomSelected?.password
                 }
             );
@@ -71,7 +87,7 @@ export default class TitleScreenScene extends Phaser.Scene {
             const messageBuffer = this.bufferCriticalMessages(room);
 
             this.scene.start(SceneNames.Game, {
-                playerData: { name: playerName },
+                playerData: { name: this.playerName },
                 room,
                 messageBuffer
             });
@@ -97,7 +113,7 @@ export default class TitleScreenScene extends Phaser.Scene {
         return messageBuffer;
     }
 
-    private showPasswordForm(playerName: string) {
+    private showPasswordForm() {
         const uiRoot = getSecondaryUiRoot();
         mountWithTransition(uiRoot, passwordFormHtml);
 
@@ -106,7 +122,7 @@ export default class TitleScreenScene extends Phaser.Scene {
             event.preventDefault();
             const password = (document.getElementById("password") as HTMLInputElement).value;
             this.currentRoomSelected!.password = password;
-            this.joinGame(playerName);
+            this.joinGame();
         });
 
         const closeButton = getCloseButton(1);
@@ -114,7 +130,7 @@ export default class TitleScreenScene extends Phaser.Scene {
     }
 
     private async showAvailableRooms() {
-        const playerName = this.getPlayerName();
+        this.playerName = this.getPlayerName();
         clearDomUi();
 
         const uiRoot = getPrimaryUiRoot();
@@ -132,9 +148,9 @@ export default class TitleScreenScene extends Phaser.Scene {
         joinButton.addEventListener("click", () => {
             if (this.currentRoomSelected) {
                 if (this.currentRoomSelected.password) {
-                    this.showPasswordForm(playerName);
+                    this.showPasswordForm();
                 } else {
-                    this.joinGame(playerName);
+                    this.joinGame();
                 }
             }
         });
@@ -178,19 +194,19 @@ export default class TitleScreenScene extends Phaser.Scene {
     }
 
     private async showRoomCreationForm() {
-        const playerName = this.getPlayerName();
+        this.playerName = this.getPlayerName();
         clearDomUi();
 
         const uiRoot = getPrimaryUiRoot();
         mountWithTransition(uiRoot, roomCreationHtml);
 
         const gameName = document.getElementById("game-name")! as HTMLInputElement;
-        gameName.value = generateDefaultRoomName(playerName);
+        gameName.value = generateDefaultRoomName(this.playerName);
 
         const form = document.querySelector("form")!;
         form.addEventListener("submit", (event) => {
             event.preventDefault();
-            this.createGame(playerName);
+            this.createGame();
         });
 
         const defaultMap = (await this.client.http.get("maps/default")).data;
@@ -250,6 +266,9 @@ export default class TitleScreenScene extends Phaser.Scene {
     private showTitleScreen() {
         const uiRoot = getPrimaryUiRoot();
         uiRoot.innerHTML = titleScreenHtml;
+
+        const playerNameInput = document.getElementById("player-name") as HTMLInputElement;
+        playerNameInput.value = this.playerName ?? "";
 
         document.getElementById("quick-play")!.addEventListener("click", () => this.quickPlay());
         document.getElementById("create-game")!.addEventListener("click", () => this.showRoomCreationForm());
