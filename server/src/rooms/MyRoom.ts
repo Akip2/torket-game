@@ -21,7 +21,7 @@ import { canPlayerShoot } from "@shared/logics/player-logic";
 import { Action } from "@shared/enums/Action.enum";
 import { parsePlayerLabel } from "src/server-utils";
 import { Border } from "@shared/enums/Border.enum";
-import { generateDefaultRoomName } from "@shared/utils";
+import { cleanPlayerName, generateDefaultRoomName } from "@shared/utils";
 import { ServerErrorCode } from "@shared/enums/ServerErrorCode.enum";
 
 dotenv.config();
@@ -76,7 +76,7 @@ export class MyRoom extends Room<MyRoomState> {
         const startingPosition = this.playerStartingPositions.find((p) => p.playerId == null)
         startingPosition.playerId = client.sessionId;
 
-        player.pseudo = options.playerData.name?.trim() || "Player";
+        player.pseudo = cleanPlayerName(options.playerData.name);
         player.x = startingPosition.x + PLAYER_CONST.WIDTH / 2;
         player.y = startingPosition.y;
         player.timeStamp = 0;
