@@ -23,6 +23,7 @@ import { parsePlayerLabel } from "src/server-utils";
 import { Border } from "@shared/enums/Border.enum";
 import { cleanPlayerName, generateDefaultRoomName } from "@shared/utils";
 import { ServerErrorCode } from "@shared/enums/ServerErrorCode.enum";
+import WaitingPhase from "@shared/data/phases/WaitingPhase";
 
 dotenv.config();
 
@@ -93,21 +94,34 @@ export class MyRoom extends Room<MyRoomState> {
     }
 
     onLeave(client: Client, consented: boolean) {
-        this.playerManager.removePlayer(client.sessionId);
-        this.state.players.delete(client.sessionId);
-
-        this.playerStartingPositions.find((p) => p.playerId === client.sessionId).playerId = null;
-
         if (this.playerManager.getPlayerNb() === 0) {
             this.phaseManager.stop();
+        } else if (this.phaseManager.currentPhase instanceof StartingPhase || this.phaseManager.currentPhase instanceof WaitingPhase) {
+            this.phaseManager.reset();
+            this.playerStartingPositions.find((p) => p.playerId === client.sessionId).playerId = null;
         } else {
-            if (this.phaseManager.currentPhase instanceof StartingPhase) {
-                this.phaseManager.reset();
-            }
+            this.handleDisconnection(client);
         }
+
+        this.playerManager.removePlayer(client.sessionId);
+        this.state.players.delete(client.sessionId);
     }
 
     onDispose() { }
+
+    handleDisconnection(client: Client) {
+        // Mark the player as dead instead of removing them
+        const playerBody = this.playerManager.getPlayer(client.sessionId);
+        if (playerBody) {
+            const player = this.state.players.get(client.sessionId);
+            if (player) {
+                player.hp = 0;
+                player.isAlive = false;
+                this.onPlayerDamage(client.sessionId, 0);
+            }
+            playerBody.instantDeath();
+        }
+    }
 
     setupMessages() {
         this.onMessage(RequestTypes.Move, (client, inputPayload: InputPayload) => {

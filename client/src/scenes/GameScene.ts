@@ -24,7 +24,7 @@ import type Phase from "@shared/data/phases/Phase";
 import ActionPhase from "@shared/data/phases/ActionPhase";
 import SimulationBorderClient from "../game-objects/SimulationBorderClient";
 import { Border } from "@shared/enums/Border.enum";
-import { getExplosionSpriteScale, getServerUrl } from "../client-utils";
+import { getExplosionSpriteScale, getServerUrl, showToast } from "../client-utils";
 import GameEndScreen from "../ui/containers/GameEndScreen";
 import SoundManager from "../managers/SoundManager";
 import { setCookie } from "typescript-cookie";
@@ -200,6 +200,11 @@ export default class GameScene extends Phaser.Scene {
                 isWin: isPlayerWinner,
                 winnerName: winner.getName()
             });
+        });
+
+        this.room.onLeave(() => {
+            this.scene.start(SceneNames.TitleScreen);
+            showToast("Disconnected from the game");
         });
 
         for (const { type, data } of this.messageBuffer ?? []) {
