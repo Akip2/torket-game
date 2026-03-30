@@ -101,4 +101,21 @@ export const ButtonStyle = {
             fontStyle: "bold",
         },
     },
+
+    GameEndButton: {
+        width: 200,
+        height: 60,
+        radius: 6,
+
+        backgroundColor: 0x1e40af,
+        borderColor: 0x60a5fa,
+        borderThickness: 3,
+
+        text: {
+            fontFamily: "Arial",
+            fontSize: "24px",
+            color: "#ffffff",
+            fontStyle: "bold"
+        }
+    },
 } as Record<string, UIButtonStyle>;
