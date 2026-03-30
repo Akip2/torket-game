@@ -172,6 +172,7 @@ export class MyRoom extends Room<MyRoomState> {
         const quadTree = QuadBlock.generateQuadBlockFromType(map.quadTree);
         this.playerStartingPositions = map.playerPositions;
         this.maxClients = this.playerStartingPositions.length;
+        this.maxClients = 2; // TEMPORARY
 
         this.terrainManager = new TerrainManagerServer(this.physicsManager, quadTree);
         this.terrainManager.createTerrain();

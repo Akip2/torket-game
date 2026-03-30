@@ -31,6 +31,7 @@ import { setCookie } from "typescript-cookie";
 
 export default class GameScene extends Phaser.Scene {
     active: boolean = true;
+    isOver: boolean = false;
     client = new Client(getServerUrl());
     room?: Room;
     messageBuffer: { type: RequestTypes, data: any }[] = [];
@@ -188,6 +189,7 @@ export default class GameScene extends Phaser.Scene {
         });
 
         this.room.onMessage(RequestTypes.GameEnd, (gameEndInfo) => {
+            this.isOver = true;
             if (this.gameEndScreen) {
                 return;
             }
@@ -203,8 +205,10 @@ export default class GameScene extends Phaser.Scene {
         });
 
         this.room.onLeave(() => {
-            this.scene.start(SceneNames.TitleScreen);
-            showToast("Disconnected from the game");
+            if (!this.isOver) {
+                this.scene.start(SceneNames.TitleScreen);
+                showToast("Disconnected from the game");
+            }
         });
 
         for (const { type, data } of this.messageBuffer ?? []) {
