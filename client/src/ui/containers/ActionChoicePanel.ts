@@ -69,10 +69,10 @@ export default class ActionChoicePanel {
         this.hideInstantly();
     }
 
-    selectAction(room: Room, action: Action) {
+    selectAction(room: Room | undefined, action: Action) {
         this.scene.effectsManager.flash(0x0000ff, 500, 0.4);
 
-        room.send(RequestTypes.SelectAction, { action });
+        room?.send(RequestTypes.SelectAction, { action });
         this.hide();
     }
 

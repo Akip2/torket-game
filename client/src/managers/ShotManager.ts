@@ -81,7 +81,7 @@ export default class ShotManager {
         const shotInfo = this.generateShotInfo();
 
         this.shootBulletFromInfo(shotInfo);
-        this.scene.room.send(RequestTypes.Shoot, shotInfo);
+        this.scene.room?.send(RequestTypes.Shoot, shotInfo);
         this.trajectoryDrawer?.clear();
 
         SoundManager.play(RessourceKeys.Shot);

@@ -237,7 +237,7 @@ export default class TitleScreenScene extends Phaser.Scene {
             mapContainer?.appendChild(generateMapCard(map));
         });
 
-        mapContainer?.addEventListener("click", (e) => { this.selectMap(e, currentMapCard) });
+        mapContainer?.addEventListener("click", (e) => { this.selectMap(e as PointerEvent, currentMapCard) });
 
         const closeButton = getCloseButton(1);
         closeButton.addEventListener("click", () => {
