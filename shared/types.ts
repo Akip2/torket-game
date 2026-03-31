@@ -1,5 +1,7 @@
 import type Phase from "./data/phases/Phase";
+import type PrimitiveMap from "./data/PrimitiveMap";
 import type { Depths } from "./enums/Depths.eunum";
+import type { RequestTypes } from "./enums/RequestTypes.enum";
 
 export type InputPayload = {
     up: boolean,
@@ -96,5 +98,61 @@ export type Rectangle = {
 }
 
 export type InitData = {
+    playerData: PlayerData;
+    room?: any;
+    messageBuffer?: { type: RequestTypes, data: any }[];
+}
+
+export type PlayerData = {
     name: string;
+}
+
+export type RoomData = {
+    creating: boolean;
+
+    roomCreation?: RoomCreationData;
+    roomJoining?: RoomJoiningData;
+}
+
+export type RoomCreationData = {
+    gameName: string;
+    password?: string;
+}
+
+export type RoomJoiningData = {
+    gameId: string;
+    password?: string;
+}
+
+export type RoomJoinOptions = {
+    password?: string;
+    playerData: PlayerData;
+}
+
+export type RoomCreationOptions = {
+    gameName: string;
+    password?: string;
+    mapId: string;
+
+    playerData: PlayerData;
+}
+
+export type AvailableRoomData = {
+    clients: number;
+    maxClients: number;
+
+    metadata: {
+        gameName: "Player's game"
+    };
+
+    private: boolean;
+    roomId: string;
+}
+
+export type MapPreviewData = {
+    id: string;
+    name: string;
+    maxPlayers: number;
+    primitive: PrimitiveMap;
+    playerPositions: Position[];
 }

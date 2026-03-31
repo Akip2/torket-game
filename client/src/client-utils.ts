@@ -2,6 +2,8 @@ import { EXPLOSION_SPRITE_SIZE } from "@shared/const";
 import { Cursor } from "@shared/enums/Cursor.enum";
 import tinycolor from "tinycolor2";
 
+const SERVER_URL: string = import.meta.env.VITE_SERVER_URL || "ws://localhost:2567";
+
 export function lightenHexColor(hex: number, coef: number = 7.5) {
     return parseInt(tinycolor(hex.toString(16)).lighten(coef).toHexString().replace("#", ""), 16);
 }
@@ -26,4 +28,59 @@ export function setCursor(
     } else {
         canvas.style.cursor = `url(assets/cursors/${cursor}.png) ${hotspotX} ${hotspotY}, crosshair`;
     }
+}
+
+export function clearDomUi() {
+    clearPrimaryDomUi();
+    clearSecondaryUiRoot();
+}
+
+export function clearSecondaryUiRoot() {
+    getSecondaryUiRoot().innerHTML = "";
+}
+
+export function clearPrimaryDomUi() {
+    getPrimaryUiRoot().innerHTML = "";
+}
+
+export function getPrimaryUiRoot() {
+    return document.getElementById("ui-container")!;
+}
+
+export function getSecondaryUiRoot() {
+    return document.getElementById("secondary-ui-container")!;
+}
+
+export function getCloseButton(index: number = 0) {
+    return document.getElementsByClassName("close-btn")[index];
+}
+
+export function getServerUrl() {
+    return SERVER_URL;
+}
+
+export function showToast(message: string) {
+    document.getElementById("toast")?.remove();
+
+    const toast = document.createElement("div");
+    toast.id = "toast";
+    toast.textContent = message;
+    toast.classList.add("toast");
+
+    document.body.appendChild(toast);
+
+    requestAnimationFrame(() => toast.classList.add("toast--visible"));
+
+    setTimeout(() => {
+        toast.classList.remove("toast--visible");
+        toast.addEventListener("transitionend", () => toast.remove());
+    }, 1000);
+}
+
+export function mountWithTransition(root: HTMLElement, html: string) {
+    root.innerHTML = html;
+    const popup = root.querySelector(".central-container");
+    if (!popup) return;
+
+    requestAnimationFrame(() => popup.classList.add("popup--visible"));
 }

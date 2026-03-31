@@ -39,19 +39,24 @@ export default class Bar extends Phaser.GameObjects.Graphics {
         try {
             if (this.lastValue !== value) {
                 this.lastValue = value;
-                this.scene.tweens.killTweensOf(this);
 
-                // Animate the display value
-                this.scene.tweens.add({
-                    targets: this,
-                    displayValue: value,
-                    duration: this.transitionDuration,
-                    ease: 'Quad.easeOut',
-                    onUpdate: () => {
-                        // Redraw as we animate
-                        this.redraw(x, y);
-                    }
-                });
+                if (this.transitionDuration > 0) {
+                    this.scene.tweens.killTweensOf(this);
+
+                    // Animate the display value
+                    this.scene.tweens.add({
+                        targets: this,
+                        displayValue: value,
+                        duration: this.transitionDuration,
+                        ease: 'Quad.easeOut',
+                        onUpdate: () => {
+                            // Redraw as we animate
+                            this.redraw(x, y);
+                        }
+                    });
+                } else {
+                    this.displayValue = value;
+                }
             }
 
             this.redraw(x, y);
@@ -73,21 +78,28 @@ export default class Bar extends Phaser.GameObjects.Graphics {
         const adjustedY = y + this.style.marginY - this.style.height / 2;
         const borderRadius = 3;
 
-        // Background (dark)
-        this.fillStyle(this.style.backgroundColor);
+        this.fillStyle(this.style.backgroundColor, 0.9);
         this.fillRoundedRect(adjustedX, adjustedY, this.style.width, this.style.height, borderRadius);
 
         if (this.displayValue > 0) {
             const barColor = this.getCustomBarColor(this.displayValue);
-            this.fillStyle(barColor);
-            const fillWidth = Math.max(1, Math.floor(this.style.width * this.displayValue));
-            this.fillRoundedRect(adjustedX, adjustedY, fillWidth, this.style.height, borderRadius);
+            const fillWidth = Math.max(borderRadius * 2, Math.floor(this.style.width * this.displayValue));
 
-            this.fillStyle(0xffffff, 0.2);
-            this.fillRect(adjustedX, adjustedY, fillWidth, Math.floor(this.style.height * 0.4));
+            // Main bar fill
+            this.fillStyle(barColor, 1);
+            this.fillRoundedRect(adjustedX, adjustedY, fillWidth, this.style.height, borderRadius);
         }
 
-        this.lineStyle(2, this.style.borderColor, 1);
+        // Border
+        this.lineStyle(2, this.style.borderColor, 0.8);
         this.strokeRoundedRect(adjustedX, adjustedY, this.style.width, this.style.height, borderRadius);
+    }
+
+    hide() {
+        this.setAlpha(0);
+    }
+
+    show() {
+        this.setAlpha(this.style.opacity ?? 1)
     }
 }

@@ -1,5 +1,5 @@
 import { MapSchema, Schema, type } from "@colyseus/schema";
-import { FREE_ROAM } from "@shared/const";
+import { FREE_ROAM, PLAYER_CONST } from "@shared/const";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
 import { InputPayload } from "@shared/types";
 
@@ -16,6 +16,8 @@ export class Player extends Schema {
 
   @type("boolean") isAlive: boolean = true;
   @type("number") hp: number;
+
+  @type("number") movementLeft: number = PLAYER_CONST.BASE_MAX_MOVEMENT;
   
   @type("number") timeStamp: number;
 

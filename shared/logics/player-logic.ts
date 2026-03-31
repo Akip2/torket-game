@@ -1,4 +1,4 @@
-import { PlayerState } from "@shared/enums/PlayerState.enum";
+import { PlayerState } from "../enums/PlayerState.enum";
 import { PLAYER_CONST } from "../const";
 import Vector from "../data/Vector";
 import type { IPlayer } from "../interfaces/Player.interface";
@@ -6,7 +6,7 @@ import type { InputPayload } from "../types";
 
 export function movePlayerFromInputs(player: IPlayer, inputPayload: InputPayload, instantly: boolean = false) {
     if (!canPlayerMove(player)) return;
-    
+
     if (inputPayload.right || inputPayload.left) {
         player.isMoving = true;
 
@@ -15,20 +15,26 @@ export function movePlayerFromInputs(player: IPlayer, inputPayload: InputPayload
         } else { //Right
             player.moveHorizontally(PLAYER_CONST.SPEED, instantly);
         }
+        player.decreaseMovementLeft(1);
     } else if (player.isMoving) {
-        player.isMoving = false;
-        player.setVelocityX(0);
+        immobilizePlayer(player);
     }
 
     if (inputPayload.up && canPlayerJump(player) && !instantly) {
         player.isOnGround = false;
         player.setVelocityY(PLAYER_CONST.JUMP);
+        player.decreaseMovementLeft(20);
     }
+}
+
+function immobilizePlayer(player: IPlayer) {
+    player.isMoving = false;
+    player.setVelocityX(0);
 }
 
 export function canPlayerMove(player: IPlayer) {
     const playerState = player.getState();
-    return playerState === PlayerState.Moving || playerState === PlayerState.Free;
+    return player.hasMovementLeft() && (playerState === PlayerState.Moving || playerState === PlayerState.Free);
 }
 
 export function canPlayerShoot(player: IPlayer) {

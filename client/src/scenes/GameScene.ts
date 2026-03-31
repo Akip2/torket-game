@@ -10,7 +10,7 @@ import ShotManager from "../managers/ShotManager";
 import PlayerManagerClient from "../managers/PlayerManagerClient";
 import EffectsManager from "../managers/EffectsManager";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
-import type { FullSynchroInfo, InitData, Position } from "@shared/types";
+import type { FullSynchroInfo, InitData, PlayerData, Position } from "@shared/types";
 import { Depths } from "@shared/enums/Depths.eunum";
 import PhaseManagerClient from "../managers/PhaseManagerClient";
 import PhaseDisplayer from "../ui/PhaseDisplayer";
@@ -24,22 +24,23 @@ import type Phase from "@shared/data/phases/Phase";
 import ActionPhase from "@shared/data/phases/ActionPhase";
 import SimulationBorderClient from "../game-objects/SimulationBorderClient";
 import { Border } from "@shared/enums/Border.enum";
-import { getExplosionSpriteScale } from "../client-utils";
+import { getExplosionSpriteScale, getServerUrl, showToast } from "../client-utils";
 import GameEndScreen from "../ui/containers/GameEndScreen";
 import SoundManager from "../managers/SoundManager";
-
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || "ws://localhost:2567";
+import { setCookie } from "typescript-cookie";
 
 export default class GameScene extends Phaser.Scene {
     active: boolean = true;
-    client = new Client(SERVER_URL);
-    room!: Room;
+    isOver: boolean = false;
+    client = new Client(getServerUrl());
+    room?: Room;
+    messageBuffer: { type: RequestTypes, data: any }[] = [];
 
     debugGraphics: Phaser.GameObjects.Graphics[] = [];
 
     elapsedTime = 0;
 
-    keyboard!: Phaser.Types.Input.Keyboard.CursorKeys;
+    keys!: { [key: string]: Phaser.Input.Keyboard.Key };
 
     playerManager!: PlayerManagerClient;
 
@@ -53,7 +54,7 @@ export default class GameScene extends Phaser.Scene {
 
     currentMousePosition: Position = { x: 0, y: 0 }
 
-    initData!: InitData; // data related to the current player, sent to the server on connection
+    playerData!: PlayerData; // data related to the current player, sent to the server on connection
 
     //UI
     phaseDisplayer!: PhaseDisplayer;
@@ -66,11 +67,28 @@ export default class GameScene extends Phaser.Scene {
     }
 
     init(data: InitData) {
-        this.initData = data;
+        this.playerData = data.playerData;
+        this.room = data.room;
+        this.messageBuffer = data.messageBuffer ?? [];
+        setCookie("playerName", this.playerData.name, { expires: 7 });
     }
 
     preload() {
-        this.keyboard = this.input.keyboard!.createCursorKeys();
+        this.keys = this.input.keyboard!.addKeys({
+            W: Phaser.Input.Keyboard.KeyCodes.W,
+            A: Phaser.Input.Keyboard.KeyCodes.A,
+            S: Phaser.Input.Keyboard.KeyCodes.S,
+            D: Phaser.Input.Keyboard.KeyCodes.D,
+
+            Z: Phaser.Input.Keyboard.KeyCodes.Z,
+            Q: Phaser.Input.Keyboard.KeyCodes.Q,
+
+            UP: Phaser.Input.Keyboard.KeyCodes.UP,
+            DOWN: Phaser.Input.Keyboard.KeyCodes.DOWN,
+            LEFT: Phaser.Input.Keyboard.KeyCodes.LEFT,
+            RIGHT: Phaser.Input.Keyboard.KeyCodes.RIGHT
+        }) as { [key: string]: Phaser.Input.Keyboard.Key };
+
         this.load.image(RessourceKeys.Ground, `assets/ground/${GROUND_TYPE}_${TEXTURE_SIZE}.png`);
         this.load.image(RessourceKeys.ExplosionParticle, 'assets/particles/explosion-particle.png');
         this.load.image(RessourceKeys.DeathParticle, 'assets/particles/death-particle.png');
@@ -83,13 +101,6 @@ export default class GameScene extends Phaser.Scene {
 
     async create() {
         SoundManager.init(this);
-
-        try {
-            await this.setupRoomEvents();
-        } catch (e) {
-            console.log(e);
-            throw e;
-        }
 
         this.worldContainer = this.add.container();
         this.uiContainer = this.add.container();
@@ -105,20 +116,31 @@ export default class GameScene extends Phaser.Scene {
         this.effectsManager = new EffectsManager(this);
 
         this.matter.world.autoUpdate = false;
-        //this.matter.set60Hz();
 
         this.setupCollisionEvents();
         this.setupPointerEvents();
         this.setupVisibilityHandler();
         this.setupUi();
         this.setupBorders();
+
+        if (this.room) {
+            this.playerManager = new PlayerManagerClient(this.room);
+            this.playerManager.setupPlayerListeners(this);
+            this.setupRoomMessages();
+        }
     }
 
     async setupRoomEvents() {
-        if (!this.room) this.room = await this.client.joinOrCreate("my_room", this.initData);
+        this.room = await this.client.joinOrCreate("my_room", { playerData: this.playerData });
+        if (!this.room) return;
 
         this.playerManager = new PlayerManagerClient(this.room);
         this.playerManager.setupPlayerListeners(this);
+        this.setupRoomMessages();
+    }
+
+    async setupRoomMessages() {
+        if (!this.room) return;
 
         this.room.onMessage(RequestTypes.TerrainSynchro, (quadBlock) => {
             this.terrainManager.constructQuadBlock(quadBlock);
@@ -134,7 +156,7 @@ export default class GameScene extends Phaser.Scene {
                 return;
             }
 
-            const isConcerned = this.phaseManager.isConcerned(this.room.sessionId);
+            const isConcerned = this.phaseManager.isConcerned(this.room!.sessionId);
 
             if (this.phaseManager.isActionChoicePhase()) {
                 this.endTurnButton.hide();
@@ -167,19 +189,44 @@ export default class GameScene extends Phaser.Scene {
         });
 
         this.room.onMessage(RequestTypes.GameEnd, (gameEndInfo) => {
+            this.isOver = true;
             if (this.gameEndScreen) {
                 return;
             }
 
             const winnerId = gameEndInfo.winnerId;
             const winner = this.playerManager.getPlayer(winnerId);
-            const isPlayerWinner = winnerId === this.room.sessionId;
+            const isPlayerWinner = winnerId === this.room!.sessionId;
 
             this.gameEndScreen = new GameEndScreen(this, {
                 isWin: isPlayerWinner,
                 winnerName: winner.getName()
             });
         });
+
+        this.room.onLeave(() => {
+            if (!this.isOver) {
+                this.scene.start(SceneNames.TitleScreen);
+                showToast("Disconnected from the game");
+            }
+        });
+
+        for (const { type, data } of this.messageBuffer ?? []) {
+            if (type === RequestTypes.FullSynchro) {
+                this.terrainManager.constructQuadBlock(data.terrain);
+                this.terrainManager.redrawTerrain();
+                this.phaseManager.setCurrentPhase(data.phase);
+            }
+            if (type === RequestTypes.TerrainSynchro) {
+                this.terrainManager.constructQuadBlock(data);
+                this.terrainManager.redrawTerrain();
+            }
+            if (type === RequestTypes.PhaseSynchro) {
+                this.phaseManager.setCurrentPhase(data);
+            }
+        }
+
+        this.messageBuffer = []; // nettoyage
     }
 
     setupPointerEvents() {
@@ -194,7 +241,7 @@ export default class GameScene extends Phaser.Scene {
                 this.active = false;
             } else {
                 this.active = true;
-                this.room.send(RequestTypes.TerrainSynchro);
+                this.room!.send(RequestTypes.TerrainSynchro);
             }
         });
     }
@@ -213,7 +260,7 @@ export default class GameScene extends Phaser.Scene {
             this,
             GAME_WIDTH / 2,
             GAME_HEIGHT - 20,
-            () => { this.room.send(RequestTypes.EndTurn) }
+            () => { this.room!.send(RequestTypes.EndTurn) }
         );
     }
 
@@ -227,16 +274,7 @@ export default class GameScene extends Phaser.Scene {
     fixedTick() {
         if (!this.room) { return; }
 
-        const inputPayload = {
-            left: this.keyboard.left.isDown,
-            right: this.keyboard.right.isDown,
-            up: this.keyboard.up.isDown,
-            down: this.keyboard.down.isDown,
-
-            mousePosition: this.currentMousePosition,
-            timeStamp: Date.now()
-        };
-
+        const inputPayload = this.getMovementInput();
         this.playerManager.localInputBuffer.push(inputPayload);
 
         if (this.playerManager.localInputBuffer.length > 60) {
@@ -261,7 +299,7 @@ export default class GameScene extends Phaser.Scene {
             this.fixedTick();
         }
 
-        this.playerManager.updatePlayers(delta);
+        this.playerManager.updatePlayers();
         this.phaseDisplayer.update();
     }
 
@@ -347,6 +385,18 @@ export default class GameScene extends Phaser.Scene {
             x: pointer.x,
             y: pointer.y
         }
+    }
+
+    getMovementInput() {
+        return {
+            left: this.keys.A.isDown || this.keys.Q.isDown || this.keys.LEFT.isDown,
+            right: this.keys.D.isDown || this.keys.RIGHT.isDown,
+            up: this.keys.W.isDown || this.keys.Z.isDown || this.keys.UP.isDown,
+            down: this.keys.S.isDown || this.keys.DOWN.isDown,
+
+            mousePosition: this.currentMousePosition,
+            timeStamp: Date.now()
+        };
     }
 
     patchScene() {

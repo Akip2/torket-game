@@ -1,6 +1,12 @@
 import { Depths } from "@shared/enums/Depths.eunum";
+import { SceneNames } from "@shared/enums/SceneNames.enum";
+import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import type GameScene from "../../scenes/GameScene";
 import { wait } from "@shared/utils";
+import { getServerUrl, showToast } from "../../client-utils";
+import UiButton from "../buttons/UiButton";
+import { ButtonStyle } from "../ui-styles";
+import { Client, ServerError } from "colyseus.js";
 
 export type GameEndScreenConfig = {
     isWin: boolean;
@@ -66,7 +72,71 @@ export default class GameEndScreen extends Phaser.GameObjects.Container {
         this.detailText.setScrollFactor(0);
         this.add(this.detailText);
 
+        // Back to Menu button
+        const backButton = new UiButton(
+            scene,
+            scene.cameras.main.centerX - 120,
+            scene.cameras.main.centerY + 130,
+            "BACK TO MENU",
+            () => {
+                scene.scene.start(SceneNames.TitleScreen);
+            },
+            ButtonStyle.GameEndButton
+        );
+        this.add(backButton);
+
+        // Play Again button
+        const playAgainButton = new UiButton(
+            scene,
+            scene.cameras.main.centerX + 120,
+            scene.cameras.main.centerY + 130,
+            "PLAY AGAIN",
+            () => {
+                this.quickPlay(scene);
+            },
+            ButtonStyle.GameEndButton
+        );
+        this.add(playAgainButton);
+
         this.appear(scene);
+    }
+
+    private async quickPlay(scene: GameScene) {
+        const client = new Client(getServerUrl());
+        
+        try {
+            const room = await client.joinOrCreate("my_room", {
+                playerData: { name: scene.playerData.name }
+            });
+
+            // Buffer critical messages
+            const messageBuffer: { type: RequestTypes, data: any }[] = [];
+            
+            room.onMessage(RequestTypes.FullSynchro, (data) => {
+                messageBuffer.push({ type: RequestTypes.FullSynchro, data });
+            });
+            room.onMessage(RequestTypes.TerrainSynchro, (data) => {
+                messageBuffer.push({ type: RequestTypes.TerrainSynchro, data });
+            });
+            room.onMessage(RequestTypes.PhaseSynchro, (data) => {
+                messageBuffer.push({ type: RequestTypes.PhaseSynchro, data });
+            });
+
+            // Close the current room before starting new game
+            if (scene.room) {
+                scene.room.leave();
+            }
+
+            // Start a new game
+            scene.scene.start(SceneNames.Game, {
+                playerData: { name: scene.playerData.name },
+                room,
+                messageBuffer
+            });
+        } catch (e: any) {
+            const serverError = e as ServerError;
+            showToast(serverError.message || "Failed to join a room.");
+        }
     }
 
     async appear(scene: GameScene) {

@@ -2,18 +2,29 @@ import { Depths } from "@shared/enums/Depths.eunum"
 import type { BarStyleType, UIButtonStyle } from "@shared/types";
 
 export const BarStyle = {
-    Player: {
-        mainColor: 0x32CD32,
-        backgroundColor: 0xDC143C,
-        borderColor: 0x444444,
+    Health: {
+        mainColor: 0x4ade80,
+        backgroundColor: 0x1a0a0a,
+        borderColor: 0x2d2d2d,
 
-        height: 7.5,
+        height: 8,
         width: 65,
-
-        marginY: -30,
+        marginY: -32,
         marginX: 0,
+        opacity: 0.85,
+        depth: Depths.First,
+    },
 
-        opacity: 0.75,
+    Movement: {
+        mainColor: 0x38bdf8,
+        backgroundColor: 0x0a0f1a,
+        borderColor: 0x1e3a5f,
+
+        height: 6,
+        width: 65,
+        marginY: -23.5,
+        marginX: 0,
+        opacity: 0.85,
         depth: Depths.First,
     }
 } as Record<string, BarStyleType>;
@@ -89,5 +100,22 @@ export const ButtonStyle = {
             color: "#ffffff",
             fontStyle: "bold",
         },
+    },
+
+    GameEndButton: {
+        width: 200,
+        height: 60,
+        radius: 6,
+
+        backgroundColor: 0x1e40af,
+        borderColor: 0x60a5fa,
+        borderThickness: 3,
+
+        text: {
+            fontFamily: "Arial",
+            fontSize: "24px",
+            color: "#ffffff",
+            fontStyle: "bold"
+        }
     },
 } as Record<string, UIButtonStyle>;
