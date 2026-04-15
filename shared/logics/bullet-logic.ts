@@ -1,4 +1,4 @@
-import { PLAYER_CONST } from "@shared/const";
+import { PLAYER_CONST } from "../const";
 import Vector from "../data/Vector";
 import type { IBasicBody } from "../interfaces/BasicBody.interface"
 

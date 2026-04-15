@@ -11,7 +11,7 @@ import PlayerManagerClient from "../managers/PlayerManagerClient";
 import EffectsManager from "../managers/EffectsManager";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
 import type { FullSynchroInfo, InitData, PlayerData, Position } from "@shared/types";
-import { Depths } from "@shared/enums/Depths.eunum";
+import { Depths } from "@shared/enums/Depths.enum.ts";
 import PhaseManagerClient from "../managers/PhaseManagerClient";
 import PhaseDisplayer from "../ui/PhaseDisplayer";
 import { TextStyle } from "../ui/ui-styles";

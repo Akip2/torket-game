@@ -1,4 +1,4 @@
-import type { Position } from "@shared/types";
+import type { Position } from "../types";
 import QuadBlock from "./QuadBlock";
 
 export default class PrimitiveMap {

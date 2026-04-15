@@ -3,7 +3,7 @@ import PrimitiveMap from "@shared/data/PrimitiveMap";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
 import TextureManager from "../managers/TextureManager";
-import { Depths } from "@shared/enums/Depths.eunum";
+import { Depths } from "@shared/enums/Depths.enum.ts";
 
 export default class MapEditionScene extends Phaser.Scene {
     currentMap: PrimitiveMap;

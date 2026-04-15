@@ -3,30 +3,29 @@ import Matter, { Bodies } from "matter-js";
 import GameBody from "./GameBody";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { IPlayer } from "@shared/interfaces/Player.interface";
-import { Player } from "src/rooms/schema/MyRoomState";
+import { Player } from "../rooms/schema/MyRoomState";
 import { Position } from "@shared/types";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
 
 export default class PlayerServer extends GameBody implements IPlayer {
-    isMoving: boolean;
-    isOnGround: boolean;
+    isMoving: boolean = false;
+    isOnGround: boolean = false;
     playerRef: Player;
     sessionId: string;
     onDamage: (hp: number) => void;
     lastProcessedTimeStamp: number = 0;
 
     constructor(playerRef: Player, sessionId: string, onDamage: (hp: number) => void, size: number = PLAYER_CONST.WIDTH) {
-        super();
-
-        this.body = Bodies.rectangle(playerRef.x, playerRef.y, size, size, {
+        const body = Bodies.rectangle(playerRef.x, playerRef.y, size, size, {
             friction: 0,
             frictionAir: 0.05,
             frictionStatic: 0,
             label: `${RessourceKeys.Player}:${sessionId}`,
         });
-        Matter.Body.setInertia(this.body, Infinity);
+        Matter.Body.setInertia(body, Infinity);
 
-        this.isMoving = false;
+        super(body);
+
         this.playerRef = playerRef;
         this.onDamage = onDamage;
         this.sessionId = sessionId;

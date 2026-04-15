@@ -1,14 +1,11 @@
 import { isPlayerInRadius, movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
 import { InputPayload } from "@shared/types";
-import PlayerServer from "src/bodies/PlayerServer";
-import { Player } from "src/rooms/schema/MyRoomState";
+import PlayerServer from "../bodies/PlayerServer";
+import { Player } from "../rooms/schema/MyRoomState";
 import PhysicsManager from "./PhysicsManager";
 import Phase from "@shared/data/phases/Phase";
 import SoloActionPhase from "@shared/data/phases/SoloActionPhase";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
-import ShootingPhase from "@shared/data/phases/ShootingPhase";
-import ActionChoicePhase from "@shared/data/phases/ActionChoicePhase";
-import MovingPhase from "@shared/data/phases/MovingPhase";
 import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
 
 export default class PlayerManagerServer {
@@ -72,7 +69,7 @@ export default class PlayerManagerServer {
                 playerBody.updatePlayerRefMouse(last.mousePosition);
             }
 
-            let input: InputPayload;
+            let input: InputPayload | undefined;
             while (input = queue.shift()) {
                 movePlayerFromInputs(playerBody, input);
             }

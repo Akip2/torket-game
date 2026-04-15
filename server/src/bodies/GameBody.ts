@@ -4,6 +4,10 @@ import Matter, { World, Body } from "matter-js";
 export default abstract class GameBody implements IBasicBody {
     body: Body;
 
+    constructor(body: Body) {
+        this.body = body;
+    }
+
     getX() {
         return this.body.position.x;
     }

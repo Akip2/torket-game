@@ -6,11 +6,9 @@ import { BORDERS_CONST } from "@shared/const";
 
 export default class SimulationBorderServer extends GameBody {
     constructor(placement: Border) {
-        super();
-
         const {x, y, width, height} = BORDERS_CONST[placement];
 
-        this.body = Bodies.rectangle(x, y, width, height, {
+        const body = Bodies.rectangle(x, y, width, height, {
             friction: 0,
             frictionAir: 0,
             frictionStatic: 0,
@@ -18,5 +16,7 @@ export default class SimulationBorderServer extends GameBody {
             label: RessourceKeys.Border,
             plugin: placement
         });
+
+        super(body);
     }
 }

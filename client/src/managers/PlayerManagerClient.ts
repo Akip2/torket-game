@@ -4,7 +4,7 @@ import type GameScene from "../scenes/GameScene";
 import type { InputPayload, Position } from "@shared/types";
 import { movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
 import { CLIENT_PREDICTION, DEBUG, INTERPOLATION_SPEED_X, INTERPOLATION_SPEED_Y } from "@shared/const";
-import { Depths } from "@shared/enums/Depths.eunum";
+import { Depths } from "@shared/enums/Depths.enum";
 import type ShotManager from "./ShotManager";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
 import { setCursor } from "../client-utils";

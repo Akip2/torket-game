@@ -1,4 +1,4 @@
-import type { Position } from "@shared/types";
+import type { Position } from "../types";
 
 export interface IBasicBody {    
     setVelocity(x: number, y: number): void;

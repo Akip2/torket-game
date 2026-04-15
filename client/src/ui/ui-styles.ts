@@ -1,4 +1,4 @@
-import { Depths } from "@shared/enums/Depths.eunum"
+import { Depths } from "@shared/enums/Depths.enum.ts"
 import type { BarStyleType, UIButtonStyle } from "@shared/types";
 
 export const BarStyle = {

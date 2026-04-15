@@ -1,6 +1,6 @@
-import { Depths } from "@shared/enums/Depths.eunum";
+import { Depths } from "@shared/enums/Depths.enum.ts";
 import type { BarStyleType } from "@shared/types";
-import type GameScene from "client/src/scenes/GameScene";
+import type GameScene from "../../scenes/GameScene";
 
 export default class Bar extends Phaser.GameObjects.Graphics {
     lastX?: number;

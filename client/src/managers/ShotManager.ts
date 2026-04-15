@@ -6,7 +6,7 @@ import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import { wait } from "@shared/utils";
 import { BULLET_CONST, GAME_HEIGHT, GAME_WIDTH, GRAVITY, TIME_STEP, SHOT_CONST } from "@shared/const";
 import Vector from "@shared/data/Vector";
-import { Depths } from "@shared/enums/Depths.eunum";
+import { Depths } from "@shared/enums/Depths.enum.ts";
 import SoundManager from "./SoundManager";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 

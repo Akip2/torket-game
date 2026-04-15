@@ -3,6 +3,11 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+
+  "imports": {
+    "@shared/*": "../shared/*"
+  },
+  
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

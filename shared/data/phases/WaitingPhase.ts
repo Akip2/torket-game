@@ -1,4 +1,4 @@
-import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
+import { PhaseTypes } from "../../enums/PhaseTypes.enum";
 import NonTimedPhase from "./NonTimedPhase";
 
 export default class WaitingPhase extends NonTimedPhase {

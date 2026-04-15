@@ -5,7 +5,7 @@ import Gun from "./Gun";
 import { CLIENT_PREDICTION, PLAYER_CONST } from "@shared/const";
 import { BarStyle, TextStyle } from "../ui/ui-styles";
 import type { Position } from "@shared/types";
-import { Depths } from "@shared/enums/Depths.eunum";
+import { Depths } from "@shared/enums/Depths.enum.ts";
 import NameTag from "../ui/NameTag";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
 import SoundManager from "../managers/SoundManager";

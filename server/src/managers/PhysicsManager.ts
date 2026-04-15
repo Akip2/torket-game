@@ -1,8 +1,8 @@
 import { GRAVITY } from "@shared/const";
 import { Border } from "@shared/enums/Border.enum";
 import { Body, Engine, World } from "matter-js";
-import GameBody from "src/bodies/GameBody";
-import SimulationBorderServer from "src/bodies/SimulationBorderServer";
+import GameBody from "../bodies/GameBody";
+import SimulationBorderServer from "../bodies/SimulationBorderServer";
 
 export default class PhysicsManager {
     engine: Engine;

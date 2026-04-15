@@ -1,6 +1,6 @@
 import { PLAYER_CONST } from "@shared/const";
 import type GameScene from "../scenes/GameScene";
-import { Depths } from "@shared/enums/Depths.eunum";
+import { Depths } from "@shared/enums/Depths.enum.ts";
 
 export default class NameTag extends Phaser.GameObjects.Text {
     constructor(scene: GameScene, name: string, playerX: number, playerY: number, style: Phaser.Types.GameObjects.Text.TextStyle) {

@@ -3,7 +3,7 @@ import type GameScene from "../scenes/GameScene";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { DEBUG, TEXTURE_SIZE, TILE_SIZE } from "@shared/const";
 import type { QuadBlockType } from "@shared/types";
-import { Depths } from "@shared/enums/Depths.eunum";
+import { Depths } from "@shared/enums/Depths.enum.ts";
 import BlockSprite from "../game-objects/BlockSprite";
 
 export default class TerrainManagerClient {

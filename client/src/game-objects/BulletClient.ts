@@ -2,7 +2,7 @@ import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import type { IBasicBody } from "@shared/interfaces/BasicBody.interface";
 import type GameScene from "../scenes/GameScene";
 import type { Position } from "@shared/types";
-import { Depths } from "@shared/enums/Depths.eunum";
+import { Depths } from "@shared/enums/Depths.enum.ts";
 import { BULLET_CONST, GRAVITY } from "@shared/const";
 
 export default class BulletClient extends Phaser.Physics.Matter.Sprite implements IBasicBody {

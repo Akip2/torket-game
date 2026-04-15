@@ -1,5 +1,5 @@
 import type { BarStyleType } from "@shared/types";
-import type GameScene from "client/src/scenes/GameScene";
+import type GameScene from "../../scenes/GameScene";
 import Bar from "./Bar";
 import { HEALTH_TRANSITION_DURATION } from "@shared/const";
 

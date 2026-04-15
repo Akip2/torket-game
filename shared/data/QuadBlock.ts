@@ -1,4 +1,4 @@
-import type { QuadBlockType, Rectangle } from "@shared/types";
+import type { QuadBlockType, Rectangle } from "../types";
 import { GAME_HEIGHT, GAME_WIDTH, TILE_SIZE } from "../const";
 import { circleIntersectsRectangle } from "../utils";
 

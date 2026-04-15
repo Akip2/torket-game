@@ -1,6 +1,6 @@
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import type GameScene from "../scenes/GameScene";
-import { Depths } from "@shared/enums/Depths.eunum";
+import { Depths } from "@shared/enums/Depths.enum.ts";
 
 export default class Gun extends Phaser.Physics.Matter.Sprite {
     constructor(scene: GameScene, x: number, y: number) {

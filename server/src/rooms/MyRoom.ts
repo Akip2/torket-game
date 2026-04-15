@@ -5,21 +5,21 @@ import Matter from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { InputPayload, GameMap, PlayerStartingPosition, ShootInfo, RoomJoinOptions, RoomCreationOptions } from "@shared/types";
 import QuadBlock from "@shared/data/QuadBlock";
-import BullerServer from "src/bodies/BulletServer";
+import BullerServer from "../bodies/BulletServer";
 import { generateBulletOriginPosition, shoot } from "@shared/logics/bullet-logic";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
-import TerrainManagerServer from "src/managers/TerrainManagerServer";
-import PhysicsManager from "src/managers/PhysicsManager";
+import TerrainManagerServer from "../managers/TerrainManagerServer";
+import PhysicsManager from "../managers/PhysicsManager";
 import path from "path";
 import { readFile } from "fs/promises";
 import dotenv from "dotenv";
-import PlayerManagerServer from "src/managers/PlayerManagerServer";
-import PhaseManagerServer from "src/managers/PhaseManagerServer";
+import PlayerManagerServer from "../managers/PlayerManagerServer";
+import PhaseManagerServer from "../managers/PhaseManagerServer";
 import Phase from "@shared/data/phases/Phase";
 import StartingPhase from "@shared/data/phases/StartingPhase";
 import { canPlayerShoot } from "@shared/logics/player-logic";
 import { Action } from "@shared/enums/Action.enum";
-import { parsePlayerLabel } from "src/server-utils";
+import { parsePlayerLabel } from "../server-utils";
 import { Border } from "@shared/enums/Border.enum";
 import { cleanPlayerName, generateDefaultRoomName } from "@shared/utils";
 import { ServerErrorCode } from "@shared/enums/ServerErrorCode.enum";
@@ -34,8 +34,8 @@ export class MyRoom extends Room<MyRoomState> {
 
     playerStartingPositions: PlayerStartingPosition[] = [];
 
-    terrainManager: TerrainManagerServer;
-    phaseManager: PhaseManagerServer;
+    terrainManager!: TerrainManagerServer;
+    phaseManager!: PhaseManagerServer;
     physicsManager: PhysicsManager = new PhysicsManager();
     playerManager: PlayerManagerServer = new PlayerManagerServer();
 
@@ -75,6 +75,8 @@ export class MyRoom extends Room<MyRoomState> {
         const player = new Player();
 
         const startingPosition = this.playerStartingPositions.find((p) => p.playerId == null)
+        if (!startingPosition) return;
+        
         startingPosition.playerId = client.sessionId;
 
         player.pseudo = cleanPlayerName(options.playerData.name);
@@ -98,7 +100,8 @@ export class MyRoom extends Room<MyRoomState> {
             this.phaseManager.stop();
         } else if (this.phaseManager.currentPhase instanceof StartingPhase || this.phaseManager.currentPhase instanceof WaitingPhase) {
             this.phaseManager.reset();
-            this.playerStartingPositions.find((p) => p.playerId === client.sessionId).playerId = null;
+            const playerStartingPosition = this.playerStartingPositions.find((p) => p.playerId === client.sessionId);
+            if(playerStartingPosition) playerStartingPosition.playerId = null
         } else {
             this.handleDisconnection(client);
         }
@@ -126,11 +129,12 @@ export class MyRoom extends Room<MyRoomState> {
     setupMessages() {
         this.onMessage(RequestTypes.Move, (client, inputPayload: InputPayload) => {
             const player = this.state.players.get(client.sessionId);
-            player.inputQueue.push(inputPayload);
+            player?.inputQueue.push(inputPayload);
         });
 
         this.onMessage(RequestTypes.Shoot, (client, shootInfo: ShootInfo) => {
             const playerBody = this.playerManager.getPlayer(client.sessionId);
+            if (!playerBody) return;
 
             if (canPlayerShoot(playerBody)) {
                 this.phaseManager.disableAction(playerBody);
@@ -186,9 +190,7 @@ export class MyRoom extends Room<MyRoomState> {
                 const plugins = [bodyA.plugin, bodyB.plugin];
                 const playerLabel = labels.find(label => label.startsWith(`${RessourceKeys.Player}:`));
 
-                const hasPlayerCollision = playerLabel ? true : false;
-
-                if (labels.includes(RessourceKeys.Bullet) && (labels.includes(RessourceKeys.Ground) || labels.includes(RessourceKeys.Border) || hasPlayerCollision)) {
+                if (labels.includes(RessourceKeys.Bullet) && (labels.includes(RessourceKeys.Ground) || labels.includes(RessourceKeys.Border) || playerLabel)) {
                     const bullet = (bodyA.label === RessourceKeys.Bullet ? bodyA : bodyB) as any;
 
                     if (bullet.hasAlreadyExplosed) continue;
@@ -200,14 +202,14 @@ export class MyRoom extends Room<MyRoomState> {
                         this.physicsManager.removeBrut(bullet);
                         this.bullets = this.bullets.filter(b => b.body !== bullet); // remove bulllet from array
 
-                        if (hasPlayerCollision) {
+                        if (playerLabel) {
                             const sessionId = parsePlayerLabel(playerLabel).sessionId;
                             this.playerManager.getPlayer(sessionId)?.applyDamage(true);
                         }
                     }
                 }
 
-                if (hasPlayerCollision && (labels.includes(RessourceKeys.Ground) || plugins.includes(Border.Bottom))) {
+                if (playerLabel && (labels.includes(RessourceKeys.Ground) || plugins.includes(Border.Bottom))) {
                     const sessionId = parsePlayerLabel(playerLabel).sessionId;
                     const playerBody = this.playerManager.getPlayer(sessionId);
 

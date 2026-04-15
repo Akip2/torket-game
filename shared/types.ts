@@ -1,6 +1,6 @@
 import type Phase from "./data/phases/Phase";
 import type PrimitiveMap from "./data/PrimitiveMap";
-import type { Depths } from "./enums/Depths.eunum";
+import type { Depths } from "./enums/Depths.enum";
 import type { RequestTypes } from "./enums/RequestTypes.enum";
 
 export type InputPayload = {
@@ -82,7 +82,7 @@ export type GameMap = {
 export type PlayerStartingPosition = {
     x: number,
     y: number,
-    playerId?: string
+    playerId?: string | null
 }
 
 export type Position = {

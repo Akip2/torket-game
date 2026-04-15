@@ -1,4 +1,4 @@
-import { Depths } from "@shared/enums/Depths.eunum";
+import { Depths } from "@shared/enums/Depths.enum.ts";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import type GameScene from "../../scenes/GameScene";

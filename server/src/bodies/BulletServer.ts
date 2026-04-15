@@ -7,11 +7,11 @@ export default class BullerServer extends GameBody {
     private gravityScale: number;
 
     constructor(x: number, y: number, radius: number, gravityScale: number = BULLET_CONST.GRAVITY_SCALE) {
-        super();
-
-        this.body = Bodies.rectangle(x, y, radius * 2, radius * 2, {
+        const body = Bodies.rectangle(x, y, radius * 2, radius * 2, {
             label: RessourceKeys.Bullet
         });
+
+        super(body);
 
         this.gravityScale = gravityScale;
     }

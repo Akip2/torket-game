@@ -9,7 +9,7 @@ import { Action } from "@shared/enums/Action.enum";
 import ShootingPhase from "@shared/data/phases/ShootingPhase";
 import MovingPhase from "@shared/data/phases/MovingPhase";
 import { wait } from "@shared/utils";
-import PlayerServer from "src/bodies/PlayerServer";
+import PlayerServer from "../bodies/PlayerServer";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
 import GameEndPhase from "@shared/data/phases/GameEndPhase";
 import { FREE_ROAM } from "@shared/const";
@@ -20,8 +20,8 @@ export default class PhaseManagerServer {
     currentPhase: Phase = new WaitingPhase();
     phases: Phase[] = [];
     playerManager: PlayerManagerServer;
-    timeOut: NodeJS.Timeout;
-    concernedPlayerId: string;
+    timeOut?: NodeJS.Timeout;
+    concernedPlayerId: string | null = null;
     onPhaseChange: (phase: Phase) => void;
     onGameStart: () => void;
 
@@ -113,9 +113,9 @@ export default class PhaseManagerServer {
     }
 
     actionChoice(playerId: string, action: Action) {
-        if (playerId !== this.concernedPlayerId) return;
-
         const player = this.playerManager.getPlayer(playerId);
+
+        if (playerId !== this.concernedPlayerId || !player) return;
 
         if (action === Action.Move) {
             this.setCurrentPhase(new MovingPhase(Date.now(), {
@@ -124,7 +124,7 @@ export default class PhaseManagerServer {
             }));
         } else if (action === Action.Shoot) {
             this.setCurrentPhase(new ShootingPhase(Date.now(), {
-                pseudo: player.playerRef.pseudo,
+                pseudo: player?.playerRef.pseudo,
                 playerId: playerId
             }));
         }
@@ -161,7 +161,9 @@ export default class PhaseManagerServer {
     }
 
     movingPhaseStartEvent() {
-        const concernedPlayer = this.playerManager.getPlayer(this.concernedPlayerId);
+        const concernedPlayer = this.playerManager.getPlayer(this.concernedPlayerId!);
+        if (!concernedPlayer) return;
+
         concernedPlayer.fillMovementLeft();
 
         const loop = setInterval(() => {

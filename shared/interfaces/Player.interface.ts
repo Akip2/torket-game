@@ -1,4 +1,4 @@
-import type { PlayerState } from "@shared/enums/PlayerState.enum";
+import type { PlayerState } from "../enums/PlayerState.enum";
 import type { IBasicBody } from "./BasicBody.interface";
 
 export interface IPlayer extends IBasicBody {

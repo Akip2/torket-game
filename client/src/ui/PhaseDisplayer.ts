@@ -5,7 +5,7 @@ import type PhaseManagerClient from "../managers/PhaseManagerClient";
 import type Phase from "@shared/data/phases/Phase";
 import type TimedPhase from "@shared/data/phases/TimedPhase";
 import Timer from "./Timer";
-import { Depths } from "@shared/enums/Depths.eunum";
+import { Depths } from "@shared/enums/Depths.enum.ts";
 import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
 
 export default class PhaseDisplayer extends UiText {

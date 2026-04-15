@@ -1,6 +1,6 @@
 import { TILE_SIZE } from "@shared/const";
 import QuadBlock from "@shared/data/QuadBlock";
-import TerrainBlock from "src/bodies/TerrainBlock";
+import TerrainBlock from "../bodies/TerrainBlock";
 import PhysicsManager from "./PhysicsManager";
 
 export default class TerrainManagerServer {

@@ -1,24 +1,21 @@
 {
   "compilerOptions": {
     "outDir": "build",
+    "rootDir": "..",
     "target": "ESNext",
-    "module": "CommonJS",
-    "moduleResolution": "node",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "strict": true,
     "allowJs": true,
-    "strictNullChecks": false,
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "useDefineForClassFields": false,
-    "baseUrl": ".",
+    "emitDecoratorMetadata": true,
     "paths": {
       "@shared/*": ["../shared/*"]
     }
   },
-  "include": [
-    "src",
-    "../shared/**/*"
-  ]
+  "include": ["src", "../shared/**/*"]
 }
