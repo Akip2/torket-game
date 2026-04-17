@@ -28,6 +28,7 @@ import { getExplosionSpriteScale, getServerUrl, showToast } from "../client-util
 import GameEndScreen from "../ui/containers/GameEndScreen";
 import SoundManager from "../managers/SoundManager";
 import { setCookie } from "typescript-cookie";
+import RoomManager from "../managers/RoomManager";
 
 export default class GameScene extends Phaser.Scene {
     active: boolean = true;
@@ -67,8 +68,8 @@ export default class GameScene extends Phaser.Scene {
     }
 
     init(data: InitData) {
+        this.room = RoomManager.getRoom();
         this.playerData = data.playerData;
-        this.room = data.room;
         this.messageBuffer = data.messageBuffer ?? [];
         setCookie("playerName", this.playerData.name, { expires: 7 });
     }

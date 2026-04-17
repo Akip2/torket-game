@@ -99,7 +99,6 @@ export type Rectangle = {
 
 export type InitData = {
     playerData: PlayerData;
-    room?: any;
     messageBuffer?: { type: RequestTypes, data: any }[];
 }
 
