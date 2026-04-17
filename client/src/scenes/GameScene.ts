@@ -34,7 +34,7 @@ export default class GameScene extends Phaser.Scene {
     active: boolean = true;
     isOver: boolean = false;
     client = new Client(getServerUrl());
-    room?: Room;
+    room!: Room;
     messageBuffer: { type: RequestTypes, data: any }[] = [];
 
     debugGraphics: Phaser.GameObjects.Graphics[] = [];
@@ -47,7 +47,7 @@ export default class GameScene extends Phaser.Scene {
 
     terrainManager!: TerrainManagerClient;
     shotManager!: ShotManager;
-    phaseManager: PhaseManagerClient = new PhaseManagerClient();
+    phaseManager!: PhaseManagerClient;
     effectsManager!: EffectsManager;
 
     worldContainer!: Phaser.GameObjects.Container;
@@ -61,13 +61,16 @@ export default class GameScene extends Phaser.Scene {
     phaseDisplayer!: PhaseDisplayer;
     actionChoicePanel!: ActionChoicePanel;
     endTurnButton!: EndTurnButton;
-    gameEndScreen: GameEndScreen | null = null;
+    gameEndScreen!: GameEndScreen;
 
     constructor() {
         super(SceneNames.Game);
     }
 
     init(data: InitData) {
+        this.active = true;
+        this.isOver = false;
+
         this.room = RoomManager.getRoom();
         this.playerData = data.playerData;
         this.messageBuffer = data.messageBuffer ?? [];
@@ -115,6 +118,9 @@ export default class GameScene extends Phaser.Scene {
 
         this.shotManager = new ShotManager(this);
         this.effectsManager = new EffectsManager(this);
+        this.phaseManager = new PhaseManagerClient();
+
+        this.gameEndScreen = new GameEndScreen(this);
 
         this.matter.world.autoUpdate = false;
 
@@ -124,16 +130,13 @@ export default class GameScene extends Phaser.Scene {
         this.setupUi();
         this.setupBorders();
 
-        if (this.room) {
-            this.playerManager = new PlayerManagerClient(this.room);
-            this.playerManager.setupPlayerListeners(this);
-            this.setupRoomMessages();
-        }
+        this.playerManager = new PlayerManagerClient(this.room);
+        this.playerManager.setupPlayerListeners(this);
+        this.setupRoomMessages();
     }
 
     async setupRoomEvents() {
         this.room = await this.client.joinOrCreate("my_room", { playerData: this.playerData });
-        if (!this.room) return;
 
         this.playerManager = new PlayerManagerClient(this.room);
         this.playerManager.setupPlayerListeners(this);
@@ -141,8 +144,6 @@ export default class GameScene extends Phaser.Scene {
     }
 
     async setupRoomMessages() {
-        if (!this.room) return;
-
         this.room.onMessage(RequestTypes.TerrainSynchro, (quadBlock) => {
             this.terrainManager.constructQuadBlock(quadBlock);
             this.terrainManager.redrawTerrain();
@@ -157,7 +158,7 @@ export default class GameScene extends Phaser.Scene {
                 return;
             }
 
-            const isConcerned = this.phaseManager.isConcerned(this.room!.sessionId);
+            const isConcerned = this.phaseManager.isConcerned(this.room.sessionId);
 
             if (this.phaseManager.isActionChoicePhase()) {
                 this.endTurnButton.hide();
@@ -190,19 +191,19 @@ export default class GameScene extends Phaser.Scene {
         });
 
         this.room.onMessage(RequestTypes.GameEnd, (gameEndInfo) => {
+            if (this.isOver) return;
             this.isOver = true;
-            if (this.gameEndScreen) {
-                return;
-            }
 
             const winnerId = gameEndInfo.winnerId;
             const winner = this.playerManager.getPlayer(winnerId);
-            const isPlayerWinner = winnerId === this.room!.sessionId;
+            const isPlayerWinner = winnerId === this.room.sessionId;
 
-            this.gameEndScreen = new GameEndScreen(this, {
+            this.gameEndScreen.setConfig({
                 isWin: isPlayerWinner,
                 winnerName: winner.getName()
             });
+
+            this.gameEndScreen.appear(this);
         });
 
         this.room.onLeave(() => {
@@ -242,7 +243,7 @@ export default class GameScene extends Phaser.Scene {
                 this.active = false;
             } else {
                 this.active = true;
-                this.room!.send(RequestTypes.TerrainSynchro);
+                this.room.send(RequestTypes.TerrainSynchro);
             }
         });
     }
@@ -261,7 +262,7 @@ export default class GameScene extends Phaser.Scene {
             this,
             GAME_WIDTH / 2,
             GAME_HEIGHT - 20,
-            () => { this.room!.send(RequestTypes.EndTurn) }
+            () => { this.room.send(RequestTypes.EndTurn) }
         );
     }
 
@@ -273,8 +274,6 @@ export default class GameScene extends Phaser.Scene {
     }
 
     fixedTick() {
-        if (!this.room) { return; }
-
         const inputPayload = this.getMovementInput();
         this.playerManager.localInputBuffer.push(inputPayload);
 

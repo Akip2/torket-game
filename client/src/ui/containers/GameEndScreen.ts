@@ -1,12 +1,12 @@
 import { Depths } from "@shared/enums/Depths.enum.ts";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
-import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import type GameScene from "../../scenes/GameScene";
 import { wait } from "@shared/utils";
-import { getServerUrl, showToast } from "../../client-utils";
+import { showToast } from "../../client-utils";
 import UiButton from "../buttons/UiButton";
 import { ButtonStyle } from "../ui-styles";
-import { Client, ServerError } from "colyseus.js";
+import { ServerError } from "colyseus.js";
+import RoomManager from "../../managers/RoomManager";
 
 export type GameEndScreenConfig = {
     isWin: boolean;
@@ -18,11 +18,11 @@ export default class GameEndScreen extends Phaser.GameObjects.Container {
     messageText: Phaser.GameObjects.Text;
     detailText: Phaser.GameObjects.Text;
 
-    constructor(scene: GameScene, config: GameEndScreenConfig) {
+    constructor(scene: GameScene) {
         super(scene, 0, 0);
 
         scene.uiContainer.add(this);
-        this.setDepth(Depths.First);
+        this.setDepth(Depths.First + 1);
         this.setScrollFactor(0);
 
         this.background = scene.add.rectangle(
@@ -36,32 +36,26 @@ export default class GameEndScreen extends Phaser.GameObjects.Container {
         this.background.setOrigin(0.5);
         this.add(this.background);
 
-        const messageColor = config.isWin ? "#00ff00" : "#ff0000";
-        const messageText = config.isWin ? "VICTORY !" : "DEFEAT !";
-
+        // Message principal (vide au départ)
         this.messageText = scene.add.text(
             scene.cameras.main.centerX,
             scene.cameras.main.centerY - 60,
-            messageText,
+            "",
             {
                 fontSize: "64px",
-                color: messageColor,
+                color: "#ffffff",
                 fontStyle: "bold",
                 fontFamily: "Arial",
             }
         );
         this.messageText.setOrigin(0.5);
-        this.messageText.setScrollFactor(0);
         this.add(this.messageText);
 
-        const detailTextContent = config.isWin
-            ? `Congratulations ${config.winnerName}!`
-            : `${config.winnerName} won the game...`;
-
+        // Détail (vide)
         this.detailText = scene.add.text(
             scene.cameras.main.centerX,
             scene.cameras.main.centerY + 40,
-            detailTextContent,
+            "",
             {
                 fontSize: "24px",
                 color: "#ffffff",
@@ -69,10 +63,9 @@ export default class GameEndScreen extends Phaser.GameObjects.Container {
             }
         );
         this.detailText.setOrigin(0.5);
-        this.detailText.setScrollFactor(0);
         this.add(this.detailText);
 
-        // Back to Menu button
+        // Boutons (inchangés)
         const backButton = new UiButton(
             scene,
             scene.cameras.main.centerX - 120,
@@ -85,52 +78,43 @@ export default class GameEndScreen extends Phaser.GameObjects.Container {
         );
         this.add(backButton);
 
-        // Play Again button
         const playAgainButton = new UiButton(
             scene,
             scene.cameras.main.centerX + 120,
             scene.cameras.main.centerY + 130,
             "PLAY AGAIN",
             () => {
-                this.quickPlay(scene);
+                this.playAgain(scene);
             },
             ButtonStyle.GameEndButton
         );
         this.add(playAgainButton);
 
-        this.appear(scene);
+        this.alpha = 0;
     }
 
-    private async quickPlay(scene: GameScene) {
-        const client = new Client(getServerUrl());
-        
+    setConfig(config: GameEndScreenConfig) {
+        const messageColor = config.isWin ? "#00ff00" : "#ff0000";
+        const messageText = config.isWin ? "VICTORY !" : "DEFEAT !";
+
+        this.messageText.setText(messageText);
+        this.messageText.setColor(messageColor);
+
+        const detailTextContent = config.isWin
+            ? `Congratulations ${config.winnerName}!`
+            : `${config.winnerName} won the game...`;
+
+        this.detailText.setText(detailTextContent);
+    }
+
+    private async playAgain(scene: GameScene) {
         try {
-            const room = await client.joinOrCreate("my_room", {
-                playerData: { name: scene.playerData.name }
-            });
-
             // Buffer critical messages
-            const messageBuffer: { type: RequestTypes, data: any }[] = [];
-            
-            room.onMessage(RequestTypes.FullSynchro, (data) => {
-                messageBuffer.push({ type: RequestTypes.FullSynchro, data });
-            });
-            room.onMessage(RequestTypes.TerrainSynchro, (data) => {
-                messageBuffer.push({ type: RequestTypes.TerrainSynchro, data });
-            });
-            room.onMessage(RequestTypes.PhaseSynchro, (data) => {
-                messageBuffer.push({ type: RequestTypes.PhaseSynchro, data });
-            });
-
-            // Close the current room before starting new game
-            if (scene.room) {
-                scene.room.leave();
-            }
+            const messageBuffer = await RoomManager.quickPlay(scene.playerData.name);
 
             // Start a new game
             scene.scene.start(SceneNames.Game, {
                 playerData: { name: scene.playerData.name },
-                room,
                 messageBuffer
             });
         } catch (e: any) {
@@ -143,7 +127,7 @@ export default class GameEndScreen extends Phaser.GameObjects.Container {
         this.alpha = 0;
 
         await wait(1200);
-    
+
         scene.tweens.add({
             targets: this,
             alpha: 1,
