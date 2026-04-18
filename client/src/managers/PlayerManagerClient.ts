@@ -110,7 +110,7 @@ export default class PlayerManagerClient {
             });
 
             if (playerObject.state !== player.state) {
-                this.handleStateChange(playerObject, player.state, true);
+                this.handleStateChange(playerObject, player.state, false);
             }
 
             playerObject.movementLeft = player.movementLeft;
