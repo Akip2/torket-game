@@ -1,4 +1,4 @@
-import { isPlayerInRadius, movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
+import { immobilizePlayer, isPlayerInRadius, movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
 import { InputPayload } from "@shared/types";
 import PlayerServer from "../bodies/PlayerServer";
 import { Player } from "../rooms/schema/MyRoomState";
@@ -7,6 +7,8 @@ import Phase from "@shared/data/phases/Phase";
 import SoloActionPhase from "@shared/data/phases/SoloActionPhase";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
 import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
+import { PLAYER_CONST } from "@shared/const";
+import { MassConfig } from "@shared/enums/MassConfig.enum";
 
 export default class PlayerManagerServer {
     playerBodies: Map<string, PlayerServer>;
@@ -49,8 +51,15 @@ export default class PlayerManagerServer {
             this.playerBodies.forEach((playerBody, id) => {
                 if (id === concernedPlayerId) {
                     playerBody.setState(concernedPlayerState);
+                    playerBody.setMassConfig(MassConfig.Basic);
                 } else {
                     playerBody.setState(PlayerState.Inactive);
+
+                    if (concernedPlayerState === PlayerState.Moving) {
+                        playerBody.setMassConfig(MassConfig.Pushed);
+                    } else {
+                        playerBody.setMassConfig(MassConfig.Basic);
+                    }
                 }
             });
         } else {
@@ -74,6 +83,12 @@ export default class PlayerManagerServer {
                 movePlayerFromInputs(playerBody, input);
             }
         });
+    }
+
+    immobilizeInactivePlayers() {
+        this.playerBodies.forEach((playerBody) => {
+            if(playerBody.getState() === PlayerState.Inactive) immobilizePlayer(playerBody);
+        })
     }
 
     applyExplosion(cx: number, cy: number, radius: number) {

@@ -1,11 +1,12 @@
 import { PLAYER_CONST, SHOT_CONST } from "@shared/const";
-import Matter, { Bodies } from "matter-js";
+import Matter, { Bodies, Body } from "matter-js";
 import GameBody from "./GameBody";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { IPlayer } from "@shared/interfaces/Player.interface";
 import { Player } from "../rooms/schema/MyRoomState";
 import { Position } from "@shared/types";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
+import { MassConfig } from "@shared/enums/MassConfig.enum";
 
 export default class PlayerServer extends GameBody implements IPlayer {
     isMoving: boolean = false;
@@ -75,6 +76,20 @@ export default class PlayerServer extends GameBody implements IPlayer {
 
     setState(state: PlayerState) {
         this.playerRef.state = state;
+    }
+
+    setMassConfig(config: MassConfig) {
+        switch (config) {
+            case MassConfig.Basic:
+                Body.setMass(this.body, PLAYER_CONST.BASE_MASS);
+                break;
+            case MassConfig.Exploded:
+                Body.setMass(this.body, PLAYER_CONST.EXPLODED_MASS);
+                break;
+            case MassConfig.Pushed:
+                Body.setMass(this.body, PLAYER_CONST.PUSH_MASS);
+                break;
+        }
     }
 
     getInputQueue() {

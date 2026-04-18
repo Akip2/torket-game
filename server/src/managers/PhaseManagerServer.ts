@@ -171,7 +171,7 @@ export default class PhaseManagerServer {
                 clearInterval(loop);
             } else if (!concernedPlayer.hasMovementLeft()) {
                 clearInterval(loop);
-                this.next();
+                this.next(500);
             }
         }, 500)
     }

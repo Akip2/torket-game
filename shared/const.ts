@@ -40,6 +40,28 @@ export const PLAYER_CONST = {
     ENNEMY_COLOR: 0xdb3445,
 
     BASE_MAX_MOVEMENT: 250,
+
+    BASE_MASS: 1.024,
+    PUSH_MASS: 500,
+    EXPLODED_MASS: 0.5,
+
+    BASE_FRICTION: {
+        FRICTION: 0,
+        FRICTION_STATIC: 0,
+        FRICTION_AIR: 0.05,
+    },
+
+    PUSH_FRICTION: {
+        FRICTION: 1,
+        FRICTION_STATIC: 0,
+        FRICTION_AIR: 0.5,
+    },
+
+    EXPLODED_FRICTION: {
+        FRICTION: 0,
+        FRICTION_STATIC: 0,
+        FRICTION_AIR: 0.05,
+    },
 }
 
 export const BULLET_CONST = {

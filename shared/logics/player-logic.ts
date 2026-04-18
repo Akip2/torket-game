@@ -27,7 +27,7 @@ export function movePlayerFromInputs(player: IPlayer, inputPayload: InputPayload
     }
 }
 
-function immobilizePlayer(player: IPlayer) {
+export function immobilizePlayer(player: IPlayer) {
     player.isMoving = false;
     player.setVelocityX(0);
 }

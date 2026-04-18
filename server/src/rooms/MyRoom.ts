@@ -24,6 +24,7 @@ import { Border } from "@shared/enums/Border.enum";
 import { cleanPlayerName, generateDefaultRoomName } from "@shared/utils";
 import { ServerErrorCode } from "@shared/enums/ServerErrorCode.enum";
 import WaitingPhase from "@shared/data/phases/WaitingPhase";
+import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
 
 dotenv.config();
 
@@ -248,11 +249,15 @@ export class MyRoom extends Room<MyRoomState> {
         this.bullets.forEach((bullet) => {
             bullet.applyCustomGravity();
         });
+
+        if (this.phaseManager.currentPhase.type === PhaseTypes.Moving) { // prevent inactive player from gaining 
+            this.playerManager.immobilizeInactivePlayers();
+        }
     }
 
     explode(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
-        this.terrainManager.explodeTerrain(cx, cy, EXPLOSION_RADIUS);
         this.playerManager.applyExplosion(cx, cy, radius);
+        this.terrainManager.explodeTerrain(cx, cy, EXPLOSION_RADIUS);
 
         this.phaseManager.next(500);
     }
