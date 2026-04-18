@@ -39,7 +39,7 @@ export default class PlayerServer extends GameBody implements IPlayer {
         this.playerRef.movementLeft -= amount;
 
         if (!this.hasMovementLeft()) {
-            this.setVelocityX(0);
+            //this.setVelocityX(0);
             this.isMoving = false;
         }
     }
