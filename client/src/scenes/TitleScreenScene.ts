@@ -44,8 +44,8 @@ export default class TitleScreenScene extends Phaser.Scene {
     }
 
     private async createGame() {
-        const gameName = (document.getElementById("game-name") as HTMLInputElement).value;
-        const password = (document.getElementById("password") as HTMLInputElement).value;
+        const gameName = (document.getElementById("game-name") as HTMLInputElement).value.trim() || generateDefaultRoomName(this.playerName);
+        const password = (document.getElementById("password") as HTMLInputElement).value.trim();
         const mapId = (document.getElementsByClassName("map-id")[0] as HTMLInputElement).value;
 
         try {
@@ -165,7 +165,8 @@ export default class TitleScreenScene extends Phaser.Scene {
         mountWithTransition(uiRoot, roomCreationHtml);
 
         const gameName = document.getElementById("game-name")! as HTMLInputElement;
-        gameName.value = generateDefaultRoomName(this.playerName);
+        const placeholder = generateDefaultRoomName(this.playerName);
+        gameName.placeholder = placeholder;
 
         const form = document.querySelector("form")!;
         form.addEventListener("submit", (event) => {
