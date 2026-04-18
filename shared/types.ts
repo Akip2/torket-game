@@ -141,7 +141,8 @@ export type AvailableRoomData = {
     maxClients: number;
 
     metadata: {
-        gameName: "Player's game"
+        gameName: string;
+        mapId: string;
     };
 
     private: boolean;

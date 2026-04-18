@@ -15,7 +15,7 @@ const MAPS = fs.readdirSync(MAPS_DIR)
         const map = JSON.parse(raw);
         return {
             id: path.basename(file, ".json"),
-            name: parseMapName(path.basename(file, ".json")),
+            name: convertMapIdToName(path.basename(file, ".json")),
             maxPlayers: map.playerPositions.length,
             playerPositions: map.playerPositions,
             primitive: map.primitive
@@ -29,9 +29,8 @@ const DEFAULT_MAP = MAPS.find(m => m.id === DEFAULT_MAP_ID);
  */
 import { MyRoom } from "./rooms/MyRoom";
 import { matchMaker } from "colyseus";
-import { parseMapName } from "./server-utils";
 import { DEFAULT_MAP_ID } from "@shared/const";
-import { GameMap } from "@shared/types";
+import { convertMapIdToName } from "@shared/utils";
 
 export default config({
 

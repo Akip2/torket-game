@@ -1,6 +1,7 @@
 import type { AvailableRoomData } from "@shared/types";
 import type { MapPreviewData } from "@shared/types";
 import { GAME_HEIGHT, GAME_WIDTH, MAP_PREVIEW_HEIGHT, MAP_PREVIEW_WIDTH, PLAYER_CONST } from "@shared/const";
+import { convertMapIdToName } from "@shared/utils";
 
 export function generateRoomComponent(room: AvailableRoomData) {
     return `
@@ -8,6 +9,7 @@ export function generateRoomComponent(room: AvailableRoomData) {
             <td>${room.metadata.gameName}</td>
             <td>${room.clients} / ${room.maxClients}</td>
             <td>${room.private ? "❌" : "✅"}</td>
+            <td>${convertMapIdToName(room.metadata.mapId)}</td>
         </tr>
         `;
 }
