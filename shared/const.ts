@@ -56,10 +56,12 @@ export const SHOT_CONST = {
 }
 
 const BORDER_SAFE_MARGIN = 200; // increased size to make sure bullet collision detections work
+const TOP_OFFSET = 150;
+
 export const BORDERS_CONST = {
     [Border.Top]: {
         x: GAME_WIDTH / 2,
-        y: -BORDER_SAFE_MARGIN / 2,
+        y: -BORDER_SAFE_MARGIN / 2 - TOP_OFFSET,
 
         width: GAME_WIDTH,
         height: BORDER_SAFE_MARGIN
@@ -75,20 +77,20 @@ export const BORDERS_CONST = {
 
     [Border.Right]: {
         x: GAME_WIDTH + BORDER_SAFE_MARGIN / 2,
-        y: GAME_HEIGHT / 2,
+        y: (GAME_HEIGHT - TOP_OFFSET) / 2,
 
         width: BORDER_SAFE_MARGIN,
-        height: GAME_HEIGHT
+        height: GAME_HEIGHT + TOP_OFFSET
     },
 
     [Border.Left]: {
-        x: - BORDER_SAFE_MARGIN / 2,
-        y: GAME_HEIGHT / 2,
+        x: -BORDER_SAFE_MARGIN / 2,
+        y: (GAME_HEIGHT - TOP_OFFSET) / 2,
 
         width: BORDER_SAFE_MARGIN,
-        height: GAME_HEIGHT
+        height: GAME_HEIGHT + TOP_OFFSET
     },
-} as Record<Border, Rectangle>
+} as Record<Border, Rectangle>;
 
 export const MAP_PREVIEW_WIDTH = 300;
 export const MAP_PREVIEW_HEIGHT = 150;
