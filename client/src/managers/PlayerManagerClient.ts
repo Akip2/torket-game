@@ -184,10 +184,10 @@ export default class PlayerManagerClient {
         }
     }
 
-    reactToExplosion(cx: number, cy: number, radius: number) {
+    reactToExplosion(cx: number, cy: number, radius: number, pushCoef: number) {
         for (const sessionId in this.playerObjects) {
             const playerObject = this.playerObjects[sessionId];
-            playerReactToExplosion(playerObject, cx, cy, radius);
+            playerReactToExplosion(playerObject, cx, cy, radius, pushCoef);
         }
     }
 

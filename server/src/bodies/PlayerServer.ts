@@ -1,12 +1,11 @@
 import { PLAYER_CONST, SHOT_CONST } from "@shared/const";
-import Matter, { Bodies, Body } from "matter-js";
+import { Bodies, Body } from "matter-js";
 import GameBody from "./GameBody";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { IPlayer } from "@shared/interfaces/Player.interface";
 import { Player } from "../rooms/schema/MyRoomState";
 import { Position } from "@shared/types";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
-import { MassConfig } from "@shared/enums/MassConfig.enum";
 
 export default class PlayerServer extends GameBody implements IPlayer {
     isMoving: boolean = false;
@@ -16,14 +15,15 @@ export default class PlayerServer extends GameBody implements IPlayer {
     onDamage: (hp: number) => void;
     lastProcessedTimeStamp: number = 0;
 
-    constructor(playerRef: Player, sessionId: string, onDamage: (hp: number) => void, size: number = PLAYER_CONST.WIDTH) {
+    constructor(playerRef: Player, sessionId: string, onDamage: (hp: number) => void, size: number = PLAYER_CONST.BASE_WIDTH) {
         const body = Bodies.rectangle(playerRef.x, playerRef.y, size, size, {
             friction: 0,
             frictionAir: 0.05,
             frictionStatic: 0,
             label: `${RessourceKeys.Player}:${sessionId}`,
         });
-        Matter.Body.setInertia(body, Infinity);
+        Body.setMass(body, PLAYER_CONST.BASE_MASS);
+        Body.setInertia(body, Infinity);
 
         super(body);
 
@@ -54,7 +54,7 @@ export default class PlayerServer extends GameBody implements IPlayer {
     }
 
     applyDamage(directHit: boolean) {
-        const damage = Math.round((SHOT_CONST.DAMAGE_BASE) * (directHit ? 2 : 1) + (Math.random() * 15));
+        const damage = Math.round((SHOT_CONST.BASE_DAMAGE) * (directHit ? 2 : 1) + (Math.random() * 15));
 
         this.playerRef.hp -= damage;
 
@@ -76,20 +76,6 @@ export default class PlayerServer extends GameBody implements IPlayer {
 
     setState(state: PlayerState) {
         this.playerRef.state = state;
-    }
-
-    setMassConfig(config: MassConfig) {
-        switch (config) {
-            case MassConfig.Basic:
-                Body.setMass(this.body, PLAYER_CONST.BASE_MASS);
-                break;
-            case MassConfig.Exploded:
-                Body.setMass(this.body, PLAYER_CONST.EXPLODED_MASS);
-                break;
-            case MassConfig.Pushed:
-                Body.setMass(this.body, PLAYER_CONST.PUSH_MASS);
-                break;
-        }
     }
 
     getInputQueue() {

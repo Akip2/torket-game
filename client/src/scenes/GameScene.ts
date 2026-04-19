@@ -1,4 +1,4 @@
-import { EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, GROUND_TYPE, TEXTURE_SIZE, TILE_SIZE, TIME_STEP } from "@shared/const";
+import { EXPLOSION_CONST, GAME_HEIGHT, GAME_WIDTH, GROUND_TYPE, TEXTURE_SIZE, TILE_SIZE, TIME_STEP } from "@shared/const";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import BulletClient from "../game-objects/BulletClient";
 import PlayerClient from "../game-objects/PlayerClient";
@@ -312,7 +312,7 @@ export default class GameScene extends Phaser.Scene {
                     const bullet = (bodyA.label === RessourceKeys.Bullet) ? bodyA.gameObject as BulletClient : bodyB.gameObject as BulletClient;
 
                     if (bullet) {
-                        this.explode(bullet.x, bullet.y, EXPLOSION_RADIUS);
+                        this.explode(bullet.x, bullet.y, EXPLOSION_CONST.BASE_RADIUS);
                         bullet.destroy();
                     }
                 }
@@ -356,7 +356,7 @@ export default class GameScene extends Phaser.Scene {
         this.effectsManager.flash(0xffa500, 200, 0.2);
         this.effectsManager.burstParticles(cx, cy, 12, 0xff8800);
 
-        this.playerManager.reactToExplosion(cx, cy, radius);
+        this.playerManager.reactToExplosion(cx, cy, radius, EXPLOSION_CONST.BASE_PUSH);
     }
 
     pointerDownEvent(pointer: Phaser.Input.Pointer) {

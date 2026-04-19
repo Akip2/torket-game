@@ -7,8 +7,7 @@ import Phase from "@shared/data/phases/Phase";
 import SoloActionPhase from "@shared/data/phases/SoloActionPhase";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
 import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
-import { PLAYER_CONST } from "@shared/const";
-import { MassConfig } from "@shared/enums/MassConfig.enum";
+import { EXPLOSION_CONST } from "@shared/const";
 
 export default class PlayerManagerServer {
     playerBodies: Map<string, PlayerServer>;
@@ -51,15 +50,8 @@ export default class PlayerManagerServer {
             this.playerBodies.forEach((playerBody, id) => {
                 if (id === concernedPlayerId) {
                     playerBody.setState(concernedPlayerState);
-                    playerBody.setMassConfig(MassConfig.Basic);
                 } else {
                     playerBody.setState(PlayerState.Inactive);
-
-                    if (concernedPlayerState === PlayerState.Moving) {
-                        playerBody.setMassConfig(MassConfig.Pushed);
-                    } else {
-                        playerBody.setMassConfig(MassConfig.Basic);
-                    }
                 }
             });
         } else {
@@ -93,7 +85,7 @@ export default class PlayerManagerServer {
 
     applyExplosion(cx: number, cy: number, radius: number) {
         this.playerBodies.forEach((p, id) => {
-            playerReactToExplosion(p, cx, cy, radius);
+            playerReactToExplosion(p, cx, cy, radius, EXPLOSION_CONST.BASE_PUSH);
 
             if (isPlayerInRadius(p, cx, cy, radius)) {
                 this.playerBodies.get(id)?.applyDamage(false);

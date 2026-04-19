@@ -1,4 +1,4 @@
-import { EXPLOSION_SPRITE_SIZE } from "@shared/const";
+import { EXPLOSION_CONST } from "@shared/const";
 import { Cursor } from "@shared/enums/Cursor.enum";
 import tinycolor from "tinycolor2";
 
@@ -13,7 +13,7 @@ export function darkenHexColor(hex: number, coef: number = 7.5) {
 }
 
 export function getExplosionSpriteScale(explosionRadius: number) {
-    return (explosionRadius / EXPLOSION_SPRITE_SIZE) * 1.75;
+    return (explosionRadius / EXPLOSION_CONST.SPRITE_SIZE) * 1.75;
 }
 
 export function setCursor(

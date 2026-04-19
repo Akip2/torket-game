@@ -156,3 +156,5 @@ export type MapPreviewData = {
     primitive: PrimitiveMap;
     playerPositions: Position[];
 }
+
+export type ParameterChangeCoef = -3 | -2 | -1 | 1 | 2 | 3;

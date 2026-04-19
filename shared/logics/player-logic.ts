@@ -50,29 +50,29 @@ export function isPlayerInRadius(player: IPlayer, cx: number, cy: number, radius
     return getPlayerDistanceFromPoint(player, cx, cy) <= radius * 0.9;
 }
 
-export function playerReactToExplosion(player: IPlayer, cx: number, cy: number, radius: number) {
+export function playerReactToExplosion(player: IPlayer, cx: number, cy: number, radius: number, pushCoef: number) {
     if (isPlayerInRadius(player, cx, cy, radius)) {
-        pushPlayer(player, cx, cy, radius);
+        pushPlayer(player, cx, cy, radius, pushCoef);
     }
 }
 
 export function getPlayerDistanceFromPoint(player: IPlayer, cx: number, cy: number) {
     const playerPosition = player.getPosition();
 
-    const closestX = Math.max(playerPosition.x - PLAYER_CONST.WIDTH / 2, Math.min(cx, playerPosition.x + PLAYER_CONST.WIDTH / 2));
-    const closestY = Math.max(playerPosition.y - PLAYER_CONST.WIDTH / 2, Math.min(cy, playerPosition.y + PLAYER_CONST.WIDTH / 2));
+    const closestX = Math.max(playerPosition.x - PLAYER_CONST.BASE_WIDTH / 2, Math.min(cx, playerPosition.x + PLAYER_CONST.BASE_WIDTH / 2));
+    const closestY = Math.max(playerPosition.y - PLAYER_CONST.BASE_WIDTH / 2, Math.min(cy, playerPosition.y + PLAYER_CONST.BASE_WIDTH / 2));
     const distVect = new Vector(closestX - cx, closestY - cy);
 
     return distVect.getNorm();
 }
 
-export function pushPlayer(player: IPlayer, cx: number, cy: number, radius: number) {
+export function pushPlayer(player: IPlayer, cx: number, cy: number, radius: number, pushCoef: number) {
     const dist = getPlayerDistanceFromPoint(player, cx, cy);
 
     if (dist < radius) {
         const playerPosition = player.getPosition();
         const normalizedPushVector = new Vector(playerPosition.x - cx, playerPosition.y - cy).getNormalizedVector();
-        const force = (1 - dist / radius) * 10;
+        const force = (1 - dist / radius) * pushCoef;
 
         player.setVelocity(normalizedPushVector.x * force, normalizedPushVector.y * force);
     }

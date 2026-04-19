@@ -15,7 +15,7 @@ export class Player extends Schema {
   @type("number") mouseY: number = 0;
 
   @type("boolean") isAlive: boolean = true;
-  @type("number") hp: number = PLAYER_CONST.MAX_HP;
+  @type("number") hp: number = PLAYER_CONST.BASE_MAX_HP;
 
   @type("number") movementLeft: number = PLAYER_CONST.BASE_MAX_MOVEMENT;
   

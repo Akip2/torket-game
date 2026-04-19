@@ -23,27 +23,22 @@ export const EDITION_TILE_SIZE = 8;
 export const GROUND_TYPE = "stone";
 export const TEXTURE_SIZE = 128;
 
-export const EXPLOSION_SPRITE_SIZE = 32;
-export const EXPLOSION_RADIUS = 50;
-
 export const TIME_STEP = 1000 / 60;
 
 export const HEALTH_TRANSITION_DURATION = 400;
 
 export const PLAYER_CONST = {
-    WIDTH: 32,
+    BASE_WIDTH: 32,
     SPEED: 4.5,
     JUMP: -18,
-    MAX_HP: 100,
+    BASE_MAX_HP: 100,
 
     SELF_COLOR: 0x3498db,
     ENNEMY_COLOR: 0xdb3445,
 
     BASE_MAX_MOVEMENT: 250,
 
-    BASE_MASS: 1.024,
-    PUSH_MASS: 500,
-    EXPLODED_MASS: 0.5,
+    BASE_MASS: 500,
 
     BASE_FRICTION: {
         FRICTION: 0,
@@ -71,8 +66,14 @@ export const BULLET_CONST = {
     GRAVITY_SCALE: 1,
 }
 
+export const EXPLOSION_CONST = {
+    SPRITE_SIZE: 32,
+    BASE_RADIUS: 50,
+    BASE_PUSH: 15,
+}
+
 export const SHOT_CONST = {
-    DAMAGE_BASE: 8, 
+    BASE_DAMAGE: 8,
     BASE_MAX_SHOT_FORCE: 20,
     MIN_SHOT_FORCE: 2,
 }

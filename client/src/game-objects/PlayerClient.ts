@@ -18,7 +18,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     isMoving: boolean;
     isOnGround: boolean;
 
-    hp: number = PLAYER_CONST.MAX_HP;
+    hp: number = PLAYER_CONST.BASE_MAX_HP;
     isAlive: boolean = true;
 
     gun: Gun;
@@ -100,7 +100,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     }
 
     updateUI() {
-        this.healthBar.updateGraphics(this.x, this.y, this.hp / PLAYER_CONST.MAX_HP);
+        this.healthBar.updateGraphics(this.x, this.y, this.hp / PLAYER_CONST.BASE_MAX_HP);
         this.movementBar.updateGraphics(this.x, this.y, this.movementLeft / PLAYER_CONST.BASE_MAX_MOVEMENT);
         this.nameTag.updatePlacement(this.x, this.y);
     }

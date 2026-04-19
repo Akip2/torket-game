@@ -15,7 +15,7 @@ export function shoot(bullet: IBasicBody, x: number, y: number, force: number) {
     bullet.setVelocity(normalizedBulletVector.x * (force), normalizedBulletVector.y * force);
 }
 
-export function generateBulletOriginPosition(playerX: number, playerY: number, targetX: number, targetY: number, playerSize: number = PLAYER_CONST.WIDTH) {
+export function generateBulletOriginPosition(playerX: number, playerY: number, targetX: number, targetY: number, playerSize: number = PLAYER_CONST.BASE_WIDTH) {
     const bulletVector = new Vector(
         targetX - playerX,
         targetY - playerY

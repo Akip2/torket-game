@@ -1,6 +1,6 @@
 import { Room, Client } from "@colyseus/core";
 import { MyRoomState, Player } from "./schema/MyRoomState";
-import { BULLET_CONST, DEFAULT_MAP_ID, EXPLOSION_RADIUS, PLAYER_CONST, TILE_SIZE, TIME_STEP } from "@shared/const";
+import { BULLET_CONST, DEFAULT_MAP_ID, EXPLOSION_CONST, PLAYER_CONST, TILE_SIZE, TIME_STEP } from "@shared/const";
 import Matter from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { InputPayload, GameMap, PlayerStartingPosition, ShootInfo, RoomJoinOptions, RoomCreationOptions } from "@shared/types";
@@ -81,10 +81,10 @@ export class MyRoom extends Room<MyRoomState> {
         startingPosition.playerId = client.sessionId;
 
         player.pseudo = cleanPlayerName(options.playerData.name);
-        player.x = startingPosition.x + PLAYER_CONST.WIDTH / 2;
+        player.x = startingPosition.x + PLAYER_CONST.BASE_WIDTH / 2;
         player.y = startingPosition.y;
         player.timeStamp = 0;
-        player.hp = PLAYER_CONST.MAX_HP;
+        player.hp = PLAYER_CONST.BASE_MAX_HP;
 
         this.playerManager.addPlayer(client.sessionId, player, (hp: number) => this.onPlayerDamage(client.sessionId, hp), this.physicsManager)
         this.state.players.set(client.sessionId, player);
@@ -199,7 +199,7 @@ export class MyRoom extends Room<MyRoomState> {
                     bullet.hasAlreadyExplosed = true;
 
                     if (bullet) {
-                        this.explode(bullet.position.x, bullet.position.y, EXPLOSION_RADIUS);
+                        this.explode(bullet.position.x, bullet.position.y, EXPLOSION_CONST.BASE_RADIUS);
                         this.physicsManager.removeBrut(bullet);
                         this.bullets = this.bullets.filter(b => b.body !== bullet); // remove bulllet from array
 
@@ -257,7 +257,7 @@ export class MyRoom extends Room<MyRoomState> {
 
     explode(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
         this.playerManager.applyExplosion(cx, cy, radius);
-        this.terrainManager.explodeTerrain(cx, cy, EXPLOSION_RADIUS);
+        this.terrainManager.explodeTerrain(cx, cy, EXPLOSION_CONST.BASE_RADIUS);
 
         this.phaseManager.next(500);
     }
