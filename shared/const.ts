@@ -1,5 +1,6 @@
 import { Border } from "./enums/Border.enum";
-import type { Rectangle } from "./types";
+import { Parameter } from "./enums/Parameter.enum";
+import type { ParameterChangeCoef, Rectangle } from "./types";
 
 export const DEBUG = false;
 export const FREE_ROAM = false;
@@ -114,6 +115,19 @@ export const BORDERS_CONST = {
         height: GAME_HEIGHT + TOP_OFFSET
     },
 } as Record<Border, Rectangle>;
+
+export const PARAM_COEF_TABLE = { [-3]: -0.5, [-2]: -0.25, [-1]: -0.10, [1]: 0.10, [2]: 0.25, [3]: 0.5, } as Record<ParameterChangeCoef, number>;
+
+export const PARAM_BASE_VALUE_MAP = new Map<Parameter, number>([
+    [Parameter.Damage, SHOT_CONST.BASE_DAMAGE],
+    [Parameter.ExpSize, EXPLOSION_CONST.BASE_RADIUS],
+    [Parameter.ExpPush, EXPLOSION_CONST.BASE_PUSH],
+    [Parameter.Hp, PLAYER_CONST.BASE_MAX_HP],
+    [Parameter.Movement, PLAYER_CONST.BASE_MAX_MOVEMENT],
+    [Parameter.Size, PLAYER_CONST.BASE_WIDTH],
+    [Parameter.Range, SHOT_CONST.BASE_MAX_SHOT_FORCE],
+    [Parameter.Weight, PLAYER_CONST.BASE_MASS],
+]);
 
 export const MAP_PREVIEW_WIDTH = 300;
 export const MAP_PREVIEW_HEIGHT = 150;
