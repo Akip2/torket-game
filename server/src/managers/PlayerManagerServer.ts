@@ -8,6 +8,7 @@ import SoloActionPhase from "@shared/data/phases/SoloActionPhase";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
 import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
 import { EXPLOSION_CONST } from "@shared/const";
+import { Body } from "matter-js";
 
 export default class PlayerManagerServer {
     playerBodies: Map<string, PlayerServer>;
@@ -38,11 +39,11 @@ export default class PlayerManagerServer {
                 case PhaseTypes.Shooting:
                     concernedPlayerState = PlayerState.Shooting
                     break;
-                
+
                 case PhaseTypes.Moving:
                     concernedPlayerState = PlayerState.Moving
                     break;
-                
+
                 default:
                     concernedPlayerState = PlayerState.Inactive;
             }
@@ -79,7 +80,17 @@ export default class PlayerManagerServer {
 
     immobilizeInactivePlayers() {
         this.playerBodies.forEach((playerBody) => {
-            if(playerBody.getState() === PlayerState.Inactive) immobilizePlayer(playerBody);
+            /*
+            if (playerBody.getState() === PlayerState.Inactive) {
+                //immobilizePlayer(playerBody);
+                if (playerBody.getVelocity().x > 0) {
+                    Body.setVelocity(playerBody.body, {
+                        x: -playerBody.getVelocity().x,
+                        y: playerBody.body.velocity.y
+                    });
+                }
+            }
+            */
         })
     }
 

@@ -158,3 +158,8 @@ export type MapPreviewData = {
 }
 
 export type ParameterChangeCoef = -3 | -2 | -1 | 1 | 2 | 3;
+
+export type PowerUpdateData = {
+    id?: string;
+    powerName: string;
+}

@@ -31,7 +31,7 @@ addPower(new Power(
     "Tank",
     [
         new ParameterChange(Parameter.Hp, 3),
-        new ParameterChange(Parameter.Hp, 3),
+        new ParameterChange(Parameter.Weight, 1),
     ],
     [
         new ParameterChange(Parameter.Size, 2),

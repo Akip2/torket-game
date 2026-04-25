@@ -3,7 +3,7 @@ import { MyRoomState, Player } from "./schema/MyRoomState";
 import { BULLET_CONST, DEFAULT_MAP_ID, EXPLOSION_CONST, PLAYER_CONST, TILE_SIZE, TIME_STEP } from "@shared/const";
 import Matter from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
-import { InputPayload, GameMap, PlayerStartingPosition, ShootInfo, RoomJoinOptions, RoomCreationOptions } from "@shared/types";
+import { InputPayload, GameMap, PlayerStartingPosition, ShootInfo, RoomJoinOptions, RoomCreationOptions, PowerUpdateData } from "@shared/types";
 import QuadBlock from "@shared/data/QuadBlock";
 import BullerServer from "../bodies/BulletServer";
 import { generateBulletOriginPosition, shoot } from "@shared/logics/bullet-logic";
@@ -77,7 +77,7 @@ export class MyRoom extends Room<MyRoomState> {
 
         const startingPosition = this.playerStartingPositions.find((p) => p.playerId == null)
         if (!startingPosition) return;
-        
+
         startingPosition.playerId = client.sessionId;
 
         player.pseudo = cleanPlayerName(options.playerData.name);
@@ -102,7 +102,7 @@ export class MyRoom extends Room<MyRoomState> {
         } else if (this.phaseManager.currentPhase instanceof StartingPhase || this.phaseManager.currentPhase instanceof WaitingPhase) {
             this.phaseManager.reset();
             const playerStartingPosition = this.playerStartingPositions.find((p) => p.playerId === client.sessionId);
-            if(playerStartingPosition) playerStartingPosition.playerId = null
+            if (playerStartingPosition) playerStartingPosition.playerId = null
         } else {
             this.handleDisconnection(client);
         }
@@ -166,6 +166,15 @@ export class MyRoom extends Room<MyRoomState> {
 
         this.onMessage(RequestTypes.SelectAction, (client, data: { action: Action }) => {
             this.phaseManager.actionChoice(client.sessionId, data.action);
+        });
+
+        this.onMessage(RequestTypes.PowerUpdate, (client, powerUpdateData: PowerUpdateData) => {
+            const player = this.playerManager.getPlayer(client.sessionId);
+            player?.addPower(powerUpdateData.powerName);
+            this.broadcast(RequestTypes.PowerUpdate, {
+                id: client.sessionId,
+                powerName: powerUpdateData.powerName
+            }, { except: client });
         });
     }
 

@@ -14,6 +14,7 @@ export default class ParameterChange {
         } else {
             this.text = "+".repeat(value);
         }
+        this.text += " " + parameter;
 
         const baseValue = PARAM_BASE_VALUE_MAP.get(parameter)!;
         this.value = baseValue * PARAM_COEF_TABLE[value];

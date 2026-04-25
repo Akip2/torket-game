@@ -10,7 +10,7 @@ import ShotManager from "../managers/ShotManager";
 import PlayerManagerClient from "../managers/PlayerManagerClient";
 import EffectsManager from "../managers/EffectsManager";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
-import type { FullSynchroInfo, InitData, PlayerData, Position } from "@shared/types";
+import type { FullSynchroInfo, InitData, PlayerData, Position, PowerUpdateData } from "@shared/types";
 import { Depths } from "@shared/enums/Depths.enum.ts";
 import PhaseManagerClient from "../managers/PhaseManagerClient";
 import PhaseDisplayer from "../ui/PhaseDisplayer";
@@ -205,6 +205,12 @@ export default class GameScene extends Phaser.Scene {
 
             this.gameEndScreen.appear(this);
         });
+
+        this.room.onMessage(RequestTypes.PowerUpdate, (powerUpdateData: PowerUpdateData) => {
+            if (!powerUpdateData.id) return;
+            const player = this.playerManager.getPlayer(powerUpdateData.id);
+            player.addPower(powerUpdateData.powerName);
+        })
 
         this.room.onLeave(() => {
             if (!this.isOver) {

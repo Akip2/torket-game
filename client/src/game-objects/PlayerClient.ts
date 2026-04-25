@@ -11,6 +11,8 @@ import { PlayerState } from "@shared/enums/PlayerState.enum";
 import SoundManager from "../managers/SoundManager";
 import HealthBar from "../ui/bars/HealthBar";
 import Bar from "../ui/bars/Bar";
+import PowerManager from "@shared/data/power/PowerManager";
+import { Parameter } from "@shared/enums/Parameter.enum";
 
 export default class PlayerClient extends Phaser.Physics.Matter.Sprite implements IPlayer {
     state: PlayerState = PlayerState.Inactive;
@@ -18,15 +20,19 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     isMoving: boolean;
     isOnGround: boolean;
 
-    hp: number = PLAYER_CONST.BASE_MAX_HP;
-    isAlive: boolean = true;
+    maxHp: number;
+    hp: number;
+    isAlive: boolean;
 
     gun: Gun;
     healthBar: HealthBar;
     movementBar: Bar;
     nameTag: NameTag;
 
-    movementLeft: number = PLAYER_CONST.BASE_MAX_MOVEMENT;
+    maxMovement: number;
+    movementLeft: number;
+
+    powerManager: PowerManager;
 
     generateDeathParticles: (x: number, y: number) => void;
 
@@ -48,8 +54,17 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
             (this.body as MatterJS.BodyType).isSensor = true;
         }
 
+        this.powerManager = new PowerManager();
+
         this.isMoving = false;
         this.isOnGround = false;
+        this.isAlive = true;
+
+        this.maxHp = PLAYER_CONST.BASE_MAX_HP;
+        this.hp = this.maxHp;
+
+        this.maxMovement = PLAYER_CONST.BASE_MAX_MOVEMENT;
+        this.movementLeft = this.maxMovement;
 
         this.gun = new Gun(scene, x, y);
         this.gun.setVisible(false);
@@ -72,6 +87,30 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
 
             emmiter.explode(50);
         }
+    }
+
+    addPower(powerName: string) {
+        this.powerManager.addPowerFromName(powerName);
+        this.updateFromNewParameters();
+    }
+
+    updateFromNewParameters(): void {
+        // UPDATING HP
+        const newMaxHp = this.powerManager.getParameterValue(Parameter.Hp);
+        this.hp *= newMaxHp / this.maxHp;
+        this.maxHp = newMaxHp;
+
+        // UPDATING MOVEMENT
+        const newMaxMovement = this.powerManager.getParameterValue(Parameter.Movement);
+        this.movementLeft *= newMaxMovement / this.maxMovement;
+        this.maxMovement = newMaxMovement;
+
+        // UPDATING SIZE
+        const spriteScale = this.powerManager.getParameterValue(Parameter.Size) / PLAYER_CONST.BASE_WIDTH;
+        this.setScale(spriteScale);
+
+        // UPDATING WEIGHT
+        this.setMass(this.powerManager.getParameterValue(Parameter.Weight));
     }
 
     getState(): PlayerState {
@@ -100,8 +139,8 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     }
 
     updateUI() {
-        this.healthBar.updateGraphics(this.x, this.y, this.hp / PLAYER_CONST.BASE_MAX_HP);
-        this.movementBar.updateGraphics(this.x, this.y, this.movementLeft / PLAYER_CONST.BASE_MAX_MOVEMENT);
+        this.healthBar.updateGraphics(this.x, this.y, this.hp / this.maxHp);
+        this.movementBar.updateGraphics(this.x, this.y, this.movementLeft / this.maxMovement);
         this.nameTag.updatePlacement(this.x, this.y);
     }
 
@@ -183,8 +222,8 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
 
     setPlayerState(state: PlayerState) {
         this.state = state;
-        
-        if(state === PlayerState.Shooting) SoundManager.play(RessourceKeys.Reloading);
+
+        if (state === PlayerState.Shooting) SoundManager.play(RessourceKeys.Reloading);
     }
 
     hasMovementLeft(): boolean {
@@ -192,9 +231,9 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     }
 
     decreaseMovementLeft(amount: number): void {
-       this.movementLeft -= amount;
+        this.movementLeft -= amount;
     }
-    
+
     fillMovementLeft() {
         this.movementLeft = PLAYER_CONST.BASE_MAX_MOVEMENT;
     }
