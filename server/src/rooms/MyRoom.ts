@@ -1,7 +1,7 @@
 import { Room, Client } from "@colyseus/core";
 import { MyRoomState, Player } from "./schema/MyRoomState";
 import { BULLET_CONST, DEFAULT_MAP_ID, EXPLOSION_CONST, PLAYER_CONST, TILE_SIZE, TIME_STEP } from "@shared/const";
-import Matter from "matter-js";
+import Matter, { Body } from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { InputPayload, GameMap, PlayerStartingPosition, ShootInfo, RoomJoinOptions, RoomCreationOptions, PowerUpdateData } from "@shared/types";
 import QuadBlock from "@shared/data/QuadBlock";
@@ -41,6 +41,8 @@ export class MyRoom extends Room<MyRoomState> {
     playerManager: PlayerManagerServer = new PlayerManagerServer();
 
     bullets: BullerServer[] = [];
+
+    pendingExplosions: { cx: number, cy: number, radius: number }[] = [];
 
     async onCreate(options: RoomCreationOptions) {
         this.patchRate = TIME_STEP;
@@ -208,6 +210,7 @@ export class MyRoom extends Room<MyRoomState> {
                     bullet.hasAlreadyExplosed = true;
 
                     if (bullet) {
+                        this.pendingExplosions.push({ cx: bullet.position.x, cy: bullet.position.y, radius: EXPLOSION_CONST.BASE_RADIUS });
                         this.explode(bullet.position.x, bullet.position.y, EXPLOSION_CONST.BASE_RADIUS);
                         this.physicsManager.removeBrut(bullet);
                         this.bullets = this.bullets.filter(b => b.body !== bullet); // remove bulllet from array
@@ -242,7 +245,35 @@ export class MyRoom extends Room<MyRoomState> {
                 }
             }
         });
+        /*
+                Matter.Events.on(this.physicsManager.engine, "collisionActive", (event) => {
+                    for (const pair of event.pairs) {
+                        const { bodyA, bodyB } = pair;
+        
+                        const playerLabelA = bodyA.label.startsWith(`${RessourceKeys.Player}:`) ? bodyA.label : null;
+                        const playerLabelB = bodyB.label.startsWith(`${RessourceKeys.Player}:`) ? bodyB.label : null;
+        
+                        if (!playerLabelA || !playerLabelB) continue;
+        
+                        const playerA = this.playerManager.getPlayer(parsePlayerLabel(playerLabelA).sessionId);
+                        const playerB = this.playerManager.getPlayer(parsePlayerLabel(playerLabelB).sessionId);
+        
+                        if (!playerA || !playerB) continue;
+        
+                        const pusher = playerA.isMoving ? playerA : playerB.isMoving ? playerB : null;
+                        const pushed = pusher === playerA ? playerB : playerA;
+        
+                        if (!pusher) continue;
+        
+                        const pushVelocity = -pusher.getVelocity().x * 5;
+                        Body.setVelocity(pushed.body, {
+                            x: pushVelocity,
+                            y: pushed.body.velocity.y
+                        });
+                    }
+                });*/
     }
+
 
     fixedTick(deltaTime: number) {
         this.playerManager.applyInputs();
@@ -252,6 +283,11 @@ export class MyRoom extends Room<MyRoomState> {
         });
 
         this.physicsManager.update(deltaTime);
+
+        this.pendingExplosions.forEach(({ cx, cy, radius }) => {
+            this.playerManager.applyExplosion(cx, cy, radius);
+        });
+        this.pendingExplosions = [];
 
         this.playerManager.updateRefsPosition();
 
@@ -265,7 +301,7 @@ export class MyRoom extends Room<MyRoomState> {
     }
 
     explode(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
-        this.playerManager.applyExplosion(cx, cy, radius);
+        //this.playerManager.applyExplosion(cx, cy, radius);
         this.terrainManager.explodeTerrain(cx, cy, EXPLOSION_CONST.BASE_RADIUS);
 
         this.phaseManager.next(500);

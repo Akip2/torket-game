@@ -74,6 +74,6 @@ export function pushPlayer(player: IPlayer, cx: number, cy: number, radius: numb
         const normalizedPushVector = new Vector(playerPosition.x - cx, playerPosition.y - cy).getNormalizedVector();
         const force = (1 - dist / radius) * pushCoef;
 
-        player.setVelocity(normalizedPushVector.x * force, normalizedPushVector.y * force);
+        player.addForce(normalizedPushVector.x * force, normalizedPushVector.y * force);
     }
 }

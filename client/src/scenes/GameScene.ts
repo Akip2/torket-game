@@ -133,6 +133,8 @@ export default class GameScene extends Phaser.Scene {
         this.playerManager = new PlayerManagerClient(this.room);
         this.playerManager.setupPlayerListeners(this);
         this.setupRoomMessages();
+
+        this.input.keyboard!.on("keydown-ONE", () => { this.debugFunction() });
     }
 
     async setupRoomEvents() {
@@ -436,5 +438,11 @@ export default class GameScene extends Phaser.Scene {
             this.worldContainer.add(particles);
             return particles;
         };
+    }
+
+    debugFunction() {
+        const self = this.playerManager.getPlayer(this.room.sessionId);
+        self.addPower("Fatso");
+        this.room.send(RequestTypes.PowerUpdate, {powerName: "Fatso"})
     }
 }

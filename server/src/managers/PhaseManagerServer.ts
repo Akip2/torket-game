@@ -165,12 +165,15 @@ export default class PhaseManagerServer {
         if (!concernedPlayer) return;
 
         concernedPlayer.fillMovementLeft();
+        concernedPlayer.disableMass();
 
         const loop = setInterval(() => {
             if (this.currentPhase.type !== PhaseTypes.Moving) {
                 clearInterval(loop);
+                concernedPlayer.enableMass();
             } else if (!concernedPlayer.hasMovementLeft()) {
                 clearInterval(loop);
+                concernedPlayer.enableMass();
                 this.next(500);
             }
         }, 500)

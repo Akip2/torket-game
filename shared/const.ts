@@ -37,9 +37,9 @@ export const PLAYER_CONST = {
     SELF_COLOR: 0x3498db,
     ENNEMY_COLOR: 0xdb3445,
 
-    BASE_MAX_MOVEMENT: 250,
+    BASE_MAX_MOVEMENT: 100,
 
-    BASE_MASS: 500,
+    BASE_MASS: 20,
 
     BASE_FRICTION: {
         FRICTION: 0,
@@ -70,7 +70,7 @@ export const BULLET_CONST = {
 export const EXPLOSION_CONST = {
     SPRITE_SIZE: 32,
     BASE_RADIUS: 50,
-    BASE_PUSH: 15,
+    BASE_PUSH: 1.25,
 }
 
 export const SHOT_CONST = {
@@ -116,7 +116,7 @@ export const BORDERS_CONST = {
     },
 } as Record<Border, Rectangle>;
 
-export const PARAM_COEF_TABLE = { [-3]: -0.5, [-2]: -0.25, [-1]: -0.10, [1]: 0.10, [2]: 0.25, [3]: 0.5, } as Record<ParameterChangeCoef, number>;
+export const PARAM_COEF_TABLE = { [-3]: -0.75, [-2]: -0.45, [-1]: -0.2, [1]: 0.2, [2]: 0.45, [3]: 0.75, } as Record<ParameterChangeCoef, number>;
 
 export const PARAM_BASE_VALUE_MAP = new Map<Parameter, number>([
     [Parameter.Damage, SHOT_CONST.BASE_DAMAGE],

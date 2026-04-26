@@ -11,6 +11,7 @@ import { setCursor } from "../client-utils";
 import { Cursor } from "@shared/enums/Cursor.enum";
 import SoundManager from "./SoundManager";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
+import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 
 export default class PlayerManagerClient {
     room: Room;
@@ -73,6 +74,11 @@ export default class PlayerManagerClient {
             scene.worldContainer.add(this.remoteRef);
 
             this.setupLocalPlayer(player, playerObject, scene.shotManager);
+
+            if (player.pseudo === "Big") {
+                playerObject.addPower("Fatso");
+                this.room.send(RequestTypes.PowerUpdate, { powerName: "Fatso"})
+            }
         } else {
             this.setupRemotePlayer(player, playerObject);
         }

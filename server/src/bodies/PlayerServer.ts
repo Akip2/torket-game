@@ -46,6 +46,18 @@ export default class PlayerServer extends GameBody implements IPlayer {
         this.currentScale = 1;
     }
 
+    addForce(x: number, y: number): void {
+        Body.applyForce(this.body, this.getPosition(), { x: x, y: y });
+    }
+
+    addForceX(x: number): void {
+        Body.applyForce(this.body, this.getPosition(), { x: x, y: 0 });
+    }
+
+    addForceY(y: number): void {
+        Body.applyForce(this.body, this.getPosition(), { x: 0, y: y });
+    }
+
     hasMovementLeft(): boolean {
         return this.playerRef.movementLeft > 0;
     }
@@ -64,7 +76,20 @@ export default class PlayerServer extends GameBody implements IPlayer {
     }
 
     moveHorizontally(speed: number): void {
-        this.setVelocityX(speed);
+        if (Math.abs(this.body.velocity.x) < Math.abs(speed)) {
+            Body.applyForce(this.body, this.body.position, {
+                x: speed/1200 * this.body.mass,
+                y: 0
+            });
+        }
+    }
+
+    enableMass() {
+        Body.setMass(this.body, this.powerManager.getParameterValue(Parameter.Weight));
+    }
+
+    disableMass() {
+        Body.setMass(this.body, 1);
     }
 
     applyDamage(directHit: boolean) {

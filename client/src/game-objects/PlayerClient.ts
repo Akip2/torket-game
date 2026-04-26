@@ -89,6 +89,18 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         }
     }
 
+    addForceX(x: number): void {
+        this.applyForce(new Phaser.Math.Vector2(x, 0));
+    }
+
+    addForceY(y: number): void {
+        this.applyForce(new Phaser.Math.Vector2(0, y));
+    }
+
+    addForce(x: number, y: number): void {
+        this.applyForce(new Phaser.Math.Vector2(x=x, y=y));
+    }
+
     addPower(powerName: string) {
         this.powerManager.addPowerFromName(powerName);
         this.updateFromNewParameters();
