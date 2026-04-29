@@ -28,6 +28,7 @@ export default class PlayerServer extends GameBody implements IPlayer {
             friction: 0,
             frictionAir: 0.05,
             frictionStatic: 0,
+            slop: 0,
             label: `${RessourceKeys.Player}:${sessionId}`,
         });
         Body.setMass(body, PLAYER_CONST.BASE_MASS);
