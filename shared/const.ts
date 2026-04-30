@@ -39,7 +39,7 @@ export const PLAYER_CONST = {
 
     BASE_MAX_MOVEMENT: 100,
 
-    BASE_MASS: 20,
+    BASE_MASS: 15,
 
     BASE_FRICTION: {
         FRICTION: 0,
@@ -70,7 +70,7 @@ export const BULLET_CONST = {
 export const EXPLOSION_CONST = {
     SPRITE_SIZE: 32,
     BASE_RADIUS: 50,
-    BASE_PUSH: 1.25,
+    BASE_PUSH: 0.8,
 }
 
 export const SHOT_CONST = {

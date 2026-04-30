@@ -1,5 +1,5 @@
 import { PlayerState } from "../enums/PlayerState.enum";
-import { PLAYER_CONST } from "../const";
+import { EXPLOSION_CONST, PLAYER_CONST } from "../const";
 import Vector from "../data/Vector";
 import type { IPlayer } from "../interfaces/Player.interface";
 import type { InputPayload, PendingExplosion } from "../types";
@@ -75,7 +75,7 @@ export function pushPlayer(player: IPlayer, cx: number, cy: number, radius: numb
     if (dist < radius) {
         const playerPosition = player.getPosition();
         const normalizedPushVector = new Vector(playerPosition.x - cx, playerPosition.y - cy).getNormalizedVector();
-        const force = (1 - dist / radius) * pushCoef;
+        const force = (1 - dist / radius) * (pushCoef + Math.min(radius * 0.005, EXPLOSION_CONST.BASE_PUSH / 2));
 
         player.addForce(normalizedPushVector.x * force, normalizedPushVector.y * force);
     }
