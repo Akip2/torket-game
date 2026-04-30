@@ -247,6 +247,6 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     }
 
     fillMovementLeft() {
-        this.movementLeft = PLAYER_CONST.BASE_MAX_MOVEMENT;
+        this.movementLeft = this.maxMovement;
     }
 }

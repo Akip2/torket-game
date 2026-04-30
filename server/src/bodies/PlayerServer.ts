@@ -47,18 +47,6 @@ export default class PlayerServer extends GameBody implements IPlayer {
         this.currentScale = 1;
     }
 
-    addForce(x: number, y: number): void {
-        Body.applyForce(this.body, this.getPosition(), { x: x, y: y });
-    }
-
-    addForceX(x: number): void {
-        Body.applyForce(this.body, this.getPosition(), { x: x, y: 0 });
-    }
-
-    addForceY(y: number): void {
-        Body.applyForce(this.body, this.getPosition(), { x: 0, y: y });
-    }
-
     hasMovementLeft(): boolean {
         return this.playerRef.movementLeft > 0;
     }
@@ -73,7 +61,7 @@ export default class PlayerServer extends GameBody implements IPlayer {
     }
 
     fillMovementLeft() {
-        this.playerRef.movementLeft = PLAYER_CONST.BASE_MAX_MOVEMENT;
+        this.playerRef.movementLeft = this.maxMovement;
     }
 
     moveHorizontally(speed: number): void {

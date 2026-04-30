@@ -10,7 +10,7 @@ import ShotManager from "../managers/ShotManager";
 import PlayerManagerClient from "../managers/PlayerManagerClient";
 import EffectsManager from "../managers/EffectsManager";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
-import type { FullSynchroInfo, InitData, PlayerData, Position, PowerUpdateData } from "@shared/types";
+import type { ExplosionInfo, FullSynchroInfo, InitData, PlayerData, Position, PowerUpdateData, ShootInfo } from "@shared/types";
 import { Depths } from "@shared/enums/Depths.enum.ts";
 import PhaseManagerClient from "../managers/PhaseManagerClient";
 import PhaseDisplayer from "../ui/PhaseDisplayer";
@@ -116,7 +116,10 @@ export default class GameScene extends Phaser.Scene {
         this.terrainManager.drawTerrain();
         this.terrainManager.createTerrainColliders();
 
-        this.shotManager = new ShotManager(this);
+        this.playerManager = new PlayerManagerClient(this.room);
+        this.playerManager.setupPlayerListeners(this);
+
+        this.shotManager = new ShotManager(this, this.playerManager.getPlayer(this.room.sessionId));
         this.effectsManager = new EffectsManager(this);
         this.phaseManager = new PhaseManagerClient();
 
@@ -130,8 +133,6 @@ export default class GameScene extends Phaser.Scene {
         this.setupUi();
         this.setupBorders();
 
-        this.playerManager = new PlayerManagerClient(this.room);
-        this.playerManager.setupPlayerListeners(this);
         this.setupRoomMessages();
 
         this.input.keyboard!.on("keydown-ONE", () => { this.debugFunction() });
@@ -179,8 +180,8 @@ export default class GameScene extends Phaser.Scene {
             this.phaseManager.setCurrentPhase(synchroInfo.phase);
         });
 
-        this.room.onMessage(RequestTypes.Shoot, (shootInfo) => {
-            if (this.active) this.shotManager.shootBulletFromInfo(shootInfo);
+        this.room.onMessage(RequestTypes.Shoot, (data: { shootInfo: ShootInfo, explosionInfo: ExplosionInfo }) => {
+            if (this.active) this.shotManager.shootBulletFromInfo(data.shootInfo, data.explosionInfo);
         });
 
         this.room.onMessage(RequestTypes.HealthUpdate, (healthUpdateInfo) => {
@@ -320,7 +321,7 @@ export default class GameScene extends Phaser.Scene {
                     const bullet = (bodyA.label === RessourceKeys.Bullet) ? bodyA.gameObject as BulletClient : bodyB.gameObject as BulletClient;
 
                     if (bullet) {
-                        this.explode(bullet.x, bullet.y, EXPLOSION_CONST.BASE_RADIUS);
+                        this.explode(bullet);
                         bullet.destroy();
                     }
                 }
@@ -336,14 +337,17 @@ export default class GameScene extends Phaser.Scene {
         });
     }
 
-    explode(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
+    explode(bullet: BulletClient, minSize: number = TILE_SIZE) {
+        const { x, y } = bullet;
+        const explosionSize = bullet.getExplosionInfo().explosionSize;
+
         //Explosion particles
-        const scale = getExplosionSpriteScale(radius);
+        const scale = getExplosionSpriteScale(explosionSize);
         const speedCoef = Math.max(scale * 0.5, 1);
 
         SoundManager.play(RessourceKeys.Explosion);
 
-        const emitter = this.add.particles(cx, cy, RessourceKeys.ExplosionParticle, {
+        const emitter = this.add.particles(x, y, RessourceKeys.ExplosionParticle, {
             lifespan: 500,
             speed: {
                 min: 100 * speedCoef,
@@ -357,14 +361,15 @@ export default class GameScene extends Phaser.Scene {
 
         emitter.explode(10 + Math.random() * 5);
 
-        this.terrainManager.explodeTerrain(cx, cy, radius, minSize);
+        this.terrainManager.explodeTerrain(x, y, explosionSize, minSize);
 
         // JUICE: Enhanced effects
-        this.effectsManager.screenshake(12, 200);
-        this.effectsManager.flash(0xffa500, 200, 0.2);
-        this.effectsManager.burstParticles(cx, cy, 12, 0xff8800);
+        const ratio = explosionSize / EXPLOSION_CONST.BASE_RADIUS;
+        this.effectsManager.screenshake(12 + ratio * 10, 200);
+        this.effectsManager.flash(0xffa500, ratio * 200, ratio * 0.2);
+        this.effectsManager.burstParticles(x, y, 12, 0xff8800);
 
-        this.playerManager.reactToExplosion(cx, cy, radius, EXPLOSION_CONST.BASE_PUSH);
+        this.playerManager.reactToExplosion(bullet);
     }
 
     pointerDownEvent(pointer: Phaser.Input.Pointer) {
@@ -442,7 +447,9 @@ export default class GameScene extends Phaser.Scene {
 
     debugFunction() {
         const self = this.playerManager.getPlayer(this.room.sessionId);
-        self.addPower("Fatso");
-        this.room.send(RequestTypes.PowerUpdate, {powerName: "Fatso"})
+        const powerName = "Kaboom";
+
+        self.addPower(powerName);
+        this.room.send(RequestTypes.PowerUpdate, { powerName: powerName })
     }
 }

@@ -3,9 +3,8 @@ import { MyRoomState, Player } from "./schema/MyRoomState";
 import { BULLET_CONST, DEFAULT_MAP_ID, EXPLOSION_CONST, PLAYER_CONST, TILE_SIZE, TIME_STEP } from "@shared/const";
 import Matter, { Body } from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
-import { InputPayload, GameMap, PlayerStartingPosition, ShootInfo, RoomJoinOptions, RoomCreationOptions, PowerUpdateData } from "@shared/types";
+import { InputPayload, GameMap, PlayerStartingPosition, ShootInfo, RoomJoinOptions, RoomCreationOptions, PowerUpdateData, ExplosionInfo, PendingExplosion } from "@shared/types";
 import QuadBlock from "@shared/data/QuadBlock";
-import BullerServer from "../bodies/BulletServer";
 import { generateBulletOriginPosition, shoot } from "@shared/logics/bullet-logic";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import TerrainManagerServer from "../managers/TerrainManagerServer";
@@ -25,6 +24,8 @@ import { cleanPlayerName, generateDefaultRoomName } from "@shared/utils";
 import { ServerErrorCode } from "@shared/enums/ServerErrorCode.enum";
 import WaitingPhase from "@shared/data/phases/WaitingPhase";
 import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
+import BulletServer from "../bodies/BulletServer";
+import { Parameter } from "@shared/enums/Parameter.enum";
 
 dotenv.config();
 
@@ -40,9 +41,9 @@ export class MyRoom extends Room<MyRoomState> {
     physicsManager: PhysicsManager = new PhysicsManager();
     playerManager: PlayerManagerServer = new PlayerManagerServer();
 
-    bullets: BullerServer[] = [];
+    bullets: BulletServer[] = [];
 
-    pendingExplosions: { cx: number, cy: number, radius: number }[] = [];
+    pendingExplosions: PendingExplosion[] = [];
 
     async onCreate(options: RoomCreationOptions) {
         this.patchRate = TIME_STEP;
@@ -147,7 +148,18 @@ export class MyRoom extends Room<MyRoomState> {
 
             const originPosition = generateBulletOriginPosition(playerBody.getX(), playerBody.getY(), shootInfo.targetX, shootInfo.targetY);
 
-            const bullet = new BullerServer(originPosition.x, originPosition.y, BULLET_CONST.RADIUS);
+            const explosionInfo: ExplosionInfo = {
+                explosionPushCoef: playerBody.powerManager.getParameterValue(Parameter.ExpPush),
+                explosionSize: playerBody.powerManager.getParameterValue(Parameter.ExpSize),
+            };
+
+            const bullet = new BulletServer(
+                originPosition.x,
+                originPosition.y,
+                BULLET_CONST.RADIUS,
+                explosionInfo
+            );
+
             this.bullets.push(bullet);
             this.physicsManager.add(bullet);
 
@@ -210,10 +222,19 @@ export class MyRoom extends Room<MyRoomState> {
                     bullet.hasAlreadyExplosed = true;
 
                     if (bullet) {
-                        this.pendingExplosions.push({ cx: bullet.position.x, cy: bullet.position.y, radius: EXPLOSION_CONST.BASE_RADIUS });
-                        this.explode(bullet.position.x, bullet.position.y, EXPLOSION_CONST.BASE_RADIUS);
-                        this.physicsManager.removeBrut(bullet);
-                        this.bullets = this.bullets.filter(b => b.body !== bullet); // remove bulllet from array
+                        const idx = this.bullets.findIndex(b => b.body === bullet);
+                        if (idx !== -1) {
+                            const [bulletObject] = this.bullets.splice(idx, 1);
+
+                            this.pendingExplosions.push({
+                                cx: bulletObject.getX(),
+                                cy: bulletObject.getY(),
+                                radius: bulletObject.getExplosionInfo().explosionSize,
+                                pushCoef: bulletObject.getExplosionInfo().explosionPushCoef
+                            });
+                            this.explode(bulletObject);
+                            bulletObject.removeFromWorld();
+                        }
 
                         if (playerLabel) {
                             const sessionId = parsePlayerLabel(playerLabel).sessionId;
@@ -284,8 +305,8 @@ export class MyRoom extends Room<MyRoomState> {
 
         this.physicsManager.update(deltaTime);
 
-        this.pendingExplosions.forEach(({ cx, cy, radius }) => {
-            this.playerManager.applyExplosion(cx, cy, radius);
+        this.pendingExplosions.forEach((pendingExplosion) => {
+            this.playerManager.applyExplosion(pendingExplosion);
         });
         this.pendingExplosions = [];
 
@@ -300,9 +321,8 @@ export class MyRoom extends Room<MyRoomState> {
         }
     }
 
-    explode(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
-        //this.playerManager.applyExplosion(cx, cy, radius);
-        this.terrainManager.explodeTerrain(cx, cy, EXPLOSION_CONST.BASE_RADIUS);
+    explode(bullet: BulletServer, minSize: number = TILE_SIZE) {
+        this.terrainManager.explodeTerrain(bullet);
 
         this.phaseManager.next(500);
     }

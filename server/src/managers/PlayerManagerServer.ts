@@ -1,5 +1,5 @@
 import { immobilizePlayer, isPlayerInRadius, movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
-import { InputPayload } from "@shared/types";
+import { InputPayload, PendingExplosion } from "@shared/types";
 import PlayerServer from "../bodies/PlayerServer";
 import { Player } from "../rooms/schema/MyRoomState";
 import PhysicsManager from "./PhysicsManager";
@@ -94,11 +94,11 @@ export default class PlayerManagerServer {
         })
     }
 
-    applyExplosion(cx: number, cy: number, radius: number) {
+    applyExplosion(pendingExplosion: PendingExplosion) {
         this.playerBodies.forEach((p, id) => {
-            playerReactToExplosion(p, cx, cy, radius, EXPLOSION_CONST.BASE_PUSH);
+            playerReactToExplosion(p, pendingExplosion);
 
-            if (isPlayerInRadius(p, cx, cy, radius)) {
+            if (isPlayerInRadius(p, pendingExplosion.cx, pendingExplosion.cy, pendingExplosion.radius)) {
                 this.playerBodies.get(id)?.applyDamage(false);
             }
         });

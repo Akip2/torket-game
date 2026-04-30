@@ -12,6 +12,7 @@ import { Cursor } from "@shared/enums/Cursor.enum";
 import SoundManager from "./SoundManager";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
+import type BulletClient from "../game-objects/BulletClient";
 
 export default class PlayerManagerClient {
     room: Room;
@@ -190,10 +191,17 @@ export default class PlayerManagerClient {
         }
     }
 
-    reactToExplosion(cx: number, cy: number, radius: number, pushCoef: number) {
+    reactToExplosion(bullet: BulletClient) {
+        const pendingExplosion = {
+            cx: bullet.getPosition().x,
+            cy: bullet.getPosition().y,
+            radius: bullet.getExplosionInfo().explosionSize,
+            pushCoef: bullet.getExplosionInfo().explosionPushCoef
+        };
+
         for (const sessionId in this.playerObjects) {
             const playerObject = this.playerObjects[sessionId];
-            playerReactToExplosion(playerObject, cx, cy, radius, pushCoef);
+            playerReactToExplosion(playerObject, pendingExplosion);
         }
     }
 

@@ -2,7 +2,7 @@ import { PlayerState } from "../enums/PlayerState.enum";
 import { PLAYER_CONST } from "../const";
 import Vector from "../data/Vector";
 import type { IPlayer } from "../interfaces/Player.interface";
-import type { InputPayload } from "../types";
+import type { InputPayload, PendingExplosion } from "../types";
 
 export function movePlayerFromInputs(player: IPlayer, inputPayload: InputPayload, instantly: boolean = false) {
     if (!canPlayerMove(player)) return;
@@ -50,7 +50,10 @@ export function isPlayerInRadius(player: IPlayer, cx: number, cy: number, radius
     return getPlayerDistanceFromPoint(player, cx, cy) <= radius * 0.9;
 }
 
-export function playerReactToExplosion(player: IPlayer, cx: number, cy: number, radius: number, pushCoef: number) {
+export function playerReactToExplosion(player: IPlayer, pendingExplosion: PendingExplosion) {
+    const { radius, pushCoef } = pendingExplosion;
+    const { cx, cy } = pendingExplosion;
+
     if (isPlayerInRadius(player, cx, cy, radius)) {
         pushPlayer(player, cx, cy, radius, pushCoef);
     }

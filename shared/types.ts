@@ -24,6 +24,18 @@ export type ShootInfo = {
     targetY: number
 }
 
+export type ExplosionInfo = {
+    explosionSize: number;
+    explosionPushCoef: number;
+}
+
+export type PendingExplosion = {
+    cx: number;
+    cy: number;
+    radius: number;
+    pushCoef: number;
+}
+
 export type FullSynchroInfo = {
     terrain: QuadBlockType,
     phase: Phase

@@ -40,6 +40,18 @@ export default abstract class GameBody implements IBasicBody {
         this.setVelocity(x, this.body.velocity.y);
     }
 
+    addForce(x: number, y: number): void {
+        Body.applyForce(this.body, this.getPosition(), { x: x, y: y });
+    }
+
+    addForceX(x: number): void {
+        Body.applyForce(this.body, this.getPosition(), { x: x, y: 0 });
+    }
+
+    addForceY(y: number): void {
+        Body.applyForce(this.body, this.getPosition(), { x: 0, y: y });
+    }
+
     addToWorld(world: World) {
         World.add(world, this.body);
 

@@ -50,7 +50,7 @@ export default class MapEditionScene extends Phaser.Scene {
 
         this.input.keyboard!.on("keydown-P", () => {
             this.playerPlacementMode = !this.playerPlacementMode;
-            this.brushSize = Math.floor(PLAYER_CONST.WIDTH / this.currentMap.minTileSize);
+            this.brushSize = Math.floor(PLAYER_CONST.BASE_WIDTH / this.currentMap.minTileSize);
         });
 
         this.input.keyboard!.on("keydown-A", () => {
@@ -148,8 +148,8 @@ export default class MapEditionScene extends Phaser.Scene {
         const sprite = this.add.tileSprite(
             x,
             y,
-            PLAYER_CONST.WIDTH,
-            PLAYER_CONST.WIDTH,
+            PLAYER_CONST.BASE_WIDTH,
+            PLAYER_CONST.BASE_WIDTH,
             RessourceKeys.Player
         ).setOrigin(0);
 
