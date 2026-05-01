@@ -447,7 +447,7 @@ export default class GameScene extends Phaser.Scene {
 
     debugFunction() {
         const self = this.playerManager.getPlayer(this.room.sessionId);
-        const powerName = "Kaboom";
+        const powerName = "Fatso";
 
         self.addPower(powerName);
         this.room.send(RequestTypes.PowerUpdate, { powerName: powerName })

@@ -120,9 +120,17 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         // UPDATING SIZE
         const spriteScale = this.powerManager.getParameterValue(Parameter.Size) / PLAYER_CONST.BASE_WIDTH;
         this.setScale(spriteScale);
+        this.updateUiMargins();
 
         // UPDATING WEIGHT
         this.setMass(this.powerManager.getParameterValue(Parameter.Weight));
+    }
+
+    private updateUiMargins() {
+        const marginOffsetY = (PLAYER_CONST.BASE_WIDTH - this.powerManager.getParameterValue(Parameter.Size)) / 2;
+        this.healthBar.setMarginOffsetY(marginOffsetY);
+        this.movementBar.setMarginOffsetY(marginOffsetY);
+        this.nameTag.setMarginOffsetY(marginOffsetY);
     }
 
     getState(): PlayerState {
