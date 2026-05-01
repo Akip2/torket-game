@@ -27,6 +27,7 @@ export type ShootInfo = {
 export type ExplosionInfo = {
     explosionSize: number;
     explosionPushCoef: number;
+    damage?: number;
 }
 
 export type PendingExplosion = {
@@ -34,6 +35,7 @@ export type PendingExplosion = {
     cy: number;
     radius: number;
     pushCoef: number;
+    damage: number;
 }
 
 export type FullSynchroInfo = {

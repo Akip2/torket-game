@@ -74,7 +74,7 @@ export const EXPLOSION_CONST = {
 }
 
 export const SHOT_CONST = {
-    BASE_DAMAGE: 8,
+    BASE_DAMAGE: 10,
     BASE_MAX_SHOT_FORCE: 20,
     MIN_SHOT_FORCE: 2,
 }
@@ -116,7 +116,7 @@ export const BORDERS_CONST = {
     },
 } as Record<Border, Rectangle>;
 
-export const PARAM_COEF_TABLE = { [-3]: -0.75, [-2]: -0.45, [-1]: -0.2, [1]: 0.2, [2]: 0.45, [3]: 0.75, } as Record<ParameterChangeCoef, number>;
+export const PARAM_COEF_TABLE = { [-3]: -0.6, [-2]: -0.4, [-1]: -0.2, [1]: 0.2, [2]: 0.4, [3]: 0.6, } as Record<ParameterChangeCoef, number>;
 
 export const PARAM_BASE_VALUE_MAP = new Map<Parameter, number>([
     [Parameter.Damage, SHOT_CONST.BASE_DAMAGE],

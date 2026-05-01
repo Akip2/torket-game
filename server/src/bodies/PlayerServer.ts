@@ -81,10 +81,10 @@ export default class PlayerServer extends GameBody implements IPlayer {
         Body.setMass(this.body, 1);
     }
 
-    applyDamage(directHit: boolean) {
-        const damage = Math.round((SHOT_CONST.BASE_DAMAGE) * (directHit ? 2 : 1) + (Math.random() * 15));
+    applyDamage(damage: number, directHit: boolean) {
+        const actualDamage = Math.round(damage * (directHit ? 1.5 : 1) + (Math.random() * 5));
 
-        this.playerRef.hp -= damage;
+        this.playerRef.hp -= actualDamage;
 
         if (this.playerRef.hp <= 0) {
             this.die();

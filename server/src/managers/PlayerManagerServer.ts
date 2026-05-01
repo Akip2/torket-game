@@ -78,28 +78,12 @@ export default class PlayerManagerServer {
         });
     }
 
-    immobilizeInactivePlayers() {
-        this.playerBodies.forEach((playerBody) => {
-            /*
-            if (playerBody.getState() === PlayerState.Inactive) {
-                //immobilizePlayer(playerBody);
-                if (playerBody.getVelocity().x > 0) {
-                    Body.setVelocity(playerBody.body, {
-                        x: -playerBody.getVelocity().x,
-                        y: playerBody.body.velocity.y
-                    });
-                }
-            }
-            */
-        })
-    }
-
     applyExplosion(pendingExplosion: PendingExplosion) {
         this.playerBodies.forEach((p, id) => {
             playerReactToExplosion(p, pendingExplosion);
 
             if (isPlayerInRadius(p, pendingExplosion.cx, pendingExplosion.cy, pendingExplosion.radius)) {
-                this.playerBodies.get(id)?.applyDamage(false);
+                this.playerBodies.get(id)?.applyDamage(pendingExplosion.damage, true);
             }
         });
     }

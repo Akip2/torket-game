@@ -151,6 +151,7 @@ export class MyRoom extends Room<MyRoomState> {
             const explosionInfo: ExplosionInfo = {
                 explosionPushCoef: playerBody.powerManager.getParameterValue(Parameter.ExpPush),
                 explosionSize: playerBody.powerManager.getParameterValue(Parameter.ExpSize),
+                damage: playerBody.powerManager.getParameterValue(Parameter.Damage),
             };
 
             const bullet = new BulletServer(
@@ -225,20 +226,22 @@ export class MyRoom extends Room<MyRoomState> {
                         const idx = this.bullets.findIndex(b => b.body === bullet);
                         if (idx !== -1) {
                             const [bulletObject] = this.bullets.splice(idx, 1);
+                            const { explosionSize, explosionPushCoef, damage } = bulletObject.getExplosionInfo();
 
                             this.pendingExplosions.push({
                                 cx: bulletObject.getX(),
                                 cy: bulletObject.getY(),
-                                radius: bulletObject.getExplosionInfo().explosionSize,
-                                pushCoef: bulletObject.getExplosionInfo().explosionPushCoef
+                                radius: explosionSize,
+                                pushCoef: explosionPushCoef,
+                                damage: damage!,
                             });
                             this.explode(bulletObject);
                             bulletObject.removeFromWorld();
-                        }
 
-                        if (playerLabel) {
-                            const sessionId = parsePlayerLabel(playerLabel).sessionId;
-                            this.playerManager.getPlayer(sessionId)?.applyDamage(true);
+                            if (playerLabel) {
+                                const sessionId = parsePlayerLabel(playerLabel).sessionId;
+                                this.playerManager.getPlayer(sessionId)?.applyDamage(damage!, true);
+                            }
                         }
                     }
                 }
@@ -315,14 +318,10 @@ export class MyRoom extends Room<MyRoomState> {
         this.bullets.forEach((bullet) => {
             bullet.applyCustomGravity();
         });
-
-        if (this.phaseManager.currentPhase.type === PhaseTypes.Moving) { // prevent inactive player from gaining 
-            this.playerManager.immobilizeInactivePlayers();
-        }
     }
 
     explode(bullet: BulletServer, minSize: number = TILE_SIZE) {
-        this.terrainManager.explodeTerrain(bullet);
+        this.terrainManager.explodeTerrain(bullet, minSize);
 
         this.phaseManager.next(500);
     }
