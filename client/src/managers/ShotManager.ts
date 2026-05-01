@@ -134,7 +134,7 @@ export default class ShotManager {
     }
 
     generateShotInfo() {
-        const originPosition = generateBulletOriginPosition(this.startingPosition.x, this.startingPosition.y, this.targetPosition.x, this.targetPosition?.y);
+        const originPosition = generateBulletOriginPosition(this.startingPosition.x, this.startingPosition.y, this.targetPosition.x, this.targetPosition.y, this.owner.powerManager.getParameterValue(Parameter.Size));
 
         return {
             targetX: this.targetPosition.x,

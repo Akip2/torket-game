@@ -120,6 +120,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         // UPDATING SIZE
         const spriteScale = this.powerManager.getParameterValue(Parameter.Size) / PLAYER_CONST.BASE_WIDTH;
         this.setScale(spriteScale);
+        this.gun.setScale(spriteScale);
         this.updateUiMargins();
 
         // UPDATING WEIGHT
@@ -149,9 +150,9 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         const angle = Math.atan2(dy, dx) * 180 / Math.PI;
 
         if (Math.abs(angle) > 90) {
-            this.gun.setScale(1, -1);
+            this.gun.setScale(Math.abs(this.gun.scaleX), -Math.abs(this.gun.scaleY));
         } else {
-            this.gun.setScale(1, 1);
+            this.gun.setScale(Math.abs(this.gun.scaleX), Math.abs(this.gun.scaleY));
         }
 
         this.gun.setPosition(this.x, this.y);

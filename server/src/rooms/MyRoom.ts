@@ -146,7 +146,7 @@ export class MyRoom extends Room<MyRoomState> {
                 return;
             }
 
-            const originPosition = generateBulletOriginPosition(playerBody.getX(), playerBody.getY(), shootInfo.targetX, shootInfo.targetY);
+            const originPosition = generateBulletOriginPosition(playerBody.getX(), playerBody.getY(), shootInfo.targetX, shootInfo.targetY, playerBody.powerManager.getParameterValue(Parameter.Size));
 
             const explosionInfo: ExplosionInfo = {
                 explosionPushCoef: playerBody.powerManager.getParameterValue(Parameter.ExpPush),
@@ -272,33 +272,6 @@ export class MyRoom extends Room<MyRoomState> {
                 }
             }
         });
-        /*
-                Matter.Events.on(this.physicsManager.engine, "collisionActive", (event) => {
-                    for (const pair of event.pairs) {
-                        const { bodyA, bodyB } = pair;
-        
-                        const playerLabelA = bodyA.label.startsWith(`${RessourceKeys.Player}:`) ? bodyA.label : null;
-                        const playerLabelB = bodyB.label.startsWith(`${RessourceKeys.Player}:`) ? bodyB.label : null;
-        
-                        if (!playerLabelA || !playerLabelB) continue;
-        
-                        const playerA = this.playerManager.getPlayer(parsePlayerLabel(playerLabelA).sessionId);
-                        const playerB = this.playerManager.getPlayer(parsePlayerLabel(playerLabelB).sessionId);
-        
-                        if (!playerA || !playerB) continue;
-        
-                        const pusher = playerA.isMoving ? playerA : playerB.isMoving ? playerB : null;
-                        const pushed = pusher === playerA ? playerB : playerA;
-        
-                        if (!pusher) continue;
-        
-                        const pushVelocity = -pusher.getVelocity().x * 5;
-                        Body.setVelocity(pushed.body, {
-                            x: pushVelocity,
-                            y: pushed.body.velocity.y
-                        });
-                    }
-                });*/
     }
 
 
