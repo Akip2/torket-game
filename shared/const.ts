@@ -2,7 +2,7 @@ import { Border } from "./enums/Border.enum";
 import { Parameter } from "./enums/Parameter.enum";
 import type { ParameterChangeCoef, Rectangle } from "./types";
 
-export const DEBUG = false;
+export const DEBUG = true;
 export const FREE_ROAM = false;
 export const CLIENT_PREDICTION = true;
 
@@ -37,7 +37,7 @@ export const PLAYER_CONST = {
     SELF_COLOR: 0x3498db,
     ENNEMY_COLOR: 0xdb3445,
 
-    BASE_MAX_MOVEMENT: 100,
+    BASE_MAX_MOVEMENT: 10000,
 
     BASE_MASS: 15,
 
