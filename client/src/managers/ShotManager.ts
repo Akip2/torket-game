@@ -50,12 +50,14 @@ export default class ShotManager {
         let sign = 1;
         this.force = SHOT_CONST.MIN_SHOT_FORCE;
 
+        const MAX_FORCE = this.owner.powerManager.getParameterValue(Parameter.Range);
+
         while (this.isCharging) {
-            this.force += 0.33 * sign;
+            this.force += (MAX_FORCE / 60) * sign;
             this.drawTrajectory(this.generateShotInfo());
 
             await wait(TIME_STEP);
-            if (this.force <= SHOT_CONST.MIN_SHOT_FORCE || this.force >= SHOT_CONST.BASE_MAX_SHOT_FORCE) {
+            if (this.force <= SHOT_CONST.MIN_SHOT_FORCE || this.force >= MAX_FORCE) {
                 sign *= -1;
                 await wait(TIME_STEP);
             }

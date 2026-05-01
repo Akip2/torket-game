@@ -168,7 +168,10 @@ export class MyRoom extends Room<MyRoomState> {
 
             shootInfo.originX = originPosition.x;
             shootInfo.originY = originPosition.y;
-            this.broadcast(RequestTypes.Shoot, shootInfo, { except: client });
+            this.broadcast(RequestTypes.Shoot, {
+                shootInfo: shootInfo,
+                explosionInfo: explosionInfo
+            }, { except: client });
         });
 
         this.onMessage(RequestTypes.TerrainSynchro, (client) => {

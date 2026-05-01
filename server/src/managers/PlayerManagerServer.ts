@@ -83,7 +83,7 @@ export default class PlayerManagerServer {
             playerReactToExplosion(p, pendingExplosion);
 
             if (isPlayerInRadius(p, pendingExplosion.cx, pendingExplosion.cy, pendingExplosion.radius)) {
-                this.playerBodies.get(id)?.applyDamage(pendingExplosion.damage, true);
+                this.playerBodies.get(id)?.applyDamage(pendingExplosion.damage!, true);
             }
         });
     }

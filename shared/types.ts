@@ -35,7 +35,7 @@ export type PendingExplosion = {
     cy: number;
     radius: number;
     pushCoef: number;
-    damage: number;
+    damage?: number;
 }
 
 export type FullSynchroInfo = {
