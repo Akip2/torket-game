@@ -70,7 +70,14 @@ export class MyRoom extends Room<MyRoomState> {
         this.setupMessages();
         this.setupCollisionEvents();
         this.phaseManager = new PhaseManagerServer(this.playerManager, () => this.lock(), (phase) => this.broadcastPhase(phase));
-        await this.setupTerrain(options.mapId);
+
+        const mapId = options.mapId ?? this.getRandomMapId();
+        await this.setupTerrain(mapId);
+    }
+
+    getRandomMapId() {
+        const maps = ["mirrorhold", "floating_isles", "squares", "cave", "depths"];
+        return maps[Math.floor(Math.random() * maps.length)];
     }
 
     onJoin(client: Client, options: RoomJoinOptions) {

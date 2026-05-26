@@ -2,7 +2,7 @@ import { Border } from "./enums/Border.enum";
 import { Parameter } from "./enums/Parameter.enum";
 import type { ParameterChangeCoef, Rectangle } from "./types";
 
-export const DEBUG = true;
+export const DEBUG = false;
 export const FREE_ROAM = false;
 export const CLIENT_PREDICTION = true;
 

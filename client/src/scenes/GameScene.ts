@@ -1,4 +1,4 @@
-import { EXPLOSION_CONST, GAME_HEIGHT, GAME_WIDTH, GROUND_TYPE, TEXTURE_SIZE, TILE_SIZE, TIME_STEP } from "@shared/const";
+import { DEBUG, EXPLOSION_CONST, GAME_HEIGHT, GAME_WIDTH, GROUND_TYPE, TEXTURE_SIZE, TILE_SIZE, TIME_STEP } from "@shared/const";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import BulletClient from "../game-objects/BulletClient";
 import PlayerClient from "../game-objects/PlayerClient";
@@ -446,6 +446,8 @@ export default class GameScene extends Phaser.Scene {
     }
 
     debugFunction() {
+        if (!DEBUG) return;
+        
         const self = this.playerManager.getPlayer(this.room.sessionId);
         const powerName = "Fatso";
 
