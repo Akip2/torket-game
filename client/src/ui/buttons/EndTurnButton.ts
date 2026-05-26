@@ -3,8 +3,6 @@ import UiButton from "./UiButton";
 import { ButtonStyle } from "../ui-styles";
 
 export default class EndTurnButton extends UiButton {
-    private isEnabled: boolean = true;
-
     constructor(scene: GameScene, x: number, y: number, onClick: () => void) {
         super(
             scene,
@@ -21,15 +19,13 @@ export default class EndTurnButton extends UiButton {
     }
 
     public disable() {
-        this.isEnabled = false;
+        super.disable();
         this.setAlpha(0.25);
-        (this as any).bg.disableInteractive();
     }
 
     public enable() {
-        this.isEnabled = true;
+        super.enable();
         this.setAlpha(0.7);
-        (this as any).bg.setInteractive({ useHandCursor: true });
     }
 
     public hide() {

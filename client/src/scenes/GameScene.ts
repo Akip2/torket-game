@@ -18,7 +18,6 @@ import { TextStyle } from "../ui/ui-styles";
 import UiText from "../ui/UiText";
 import { canPlayerShoot } from "@shared/logics/player-logic";
 import ActionChoicePanel from "../ui/containers/ActionChoicePanel";
-import EndTurnButton from "../ui/buttons/EndTurnButton";
 import UiButton from "../ui/buttons/UiButton";
 import type Phase from "@shared/data/phases/Phase";
 import ActionPhase from "@shared/data/phases/ActionPhase";
@@ -29,6 +28,7 @@ import GameEndScreen from "../ui/containers/GameEndScreen";
 import SoundManager from "../managers/SoundManager";
 import { setCookie } from "typescript-cookie";
 import RoomManager from "../managers/RoomManager";
+import EndTurnButton from "../ui/buttons/EndTurnButton";
 
 export default class GameScene extends Phaser.Scene {
     active: boolean = true;

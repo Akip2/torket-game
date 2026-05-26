@@ -4,7 +4,7 @@ import roomCreationHtml from "../dom-ui/room-creation.html?raw";
 import roomListHtml from "../dom-ui/room-list.html?raw";
 import passwordFormHtml from "../dom-ui/password-form.html?raw";
 import mapSelectionHtml from "../dom-ui/map-selection.html?raw";
-import { clearDomUi, clearSecondaryUiRoot, getCloseButton, getPrimaryUiRoot, getSecondaryUiRoot, getServerUrl, mountWithTransition, showToast } from "../client-utils";
+import { clearDomUi, clearSecondaryUiRoot, getCloseButton, getPrimaryUiRoot, getSecondaryUiRoot, getServerUrl, mountWithTransition, setButtonLoading, showToast } from "../client-utils";
 import { generateDefaultRoomName } from "@shared/utils";
 import { generateMapCard, generateRoomComponent, setupMapCard } from "../dom-ui/component-generator";
 import type { AvailableRoomData, MapPreviewData, RoomJoiningData } from "@shared/types";
@@ -30,6 +30,9 @@ export default class TitleScreenScene extends Phaser.Scene {
     private async quickPlay() {
         this.playerName = this.getPlayerName();
 
+        const quickPlayButton = document.getElementById("quick-play") as HTMLButtonElement | null;
+        if (quickPlayButton) setButtonLoading(quickPlayButton, true);
+
         try {
             const messageBuffer = await RoomManager.quickPlay(this.playerName);
 
@@ -40,6 +43,8 @@ export default class TitleScreenScene extends Phaser.Scene {
         } catch (e: any) {
             const serverError = e as ServerError;
             showToast(serverError.message || "Failed to join a room.");
+        } finally {
+            if (quickPlayButton) setButtonLoading(quickPlayButton, false);
         }
     }
 
@@ -47,6 +52,8 @@ export default class TitleScreenScene extends Phaser.Scene {
         const gameName = (document.getElementById("game-name") as HTMLInputElement).value.trim() || generateDefaultRoomName(this.playerName);
         const password = (document.getElementById("password") as HTMLInputElement).value.trim();
         const mapId = (document.getElementsByClassName("map-id")[0] as HTMLInputElement).value;
+        const createButton = document.querySelector("form button[type='submit']") as HTMLButtonElement | null;
+        if (createButton) setButtonLoading(createButton, true);
 
         try {
             const messageBuffer = await RoomManager.createGame(this.playerName, gameName, password, mapId);
@@ -58,11 +65,15 @@ export default class TitleScreenScene extends Phaser.Scene {
         } catch (e: any) {
             const serverError = e as ServerError;
             showToast(serverError.message || "Failed to create room.");
+        } finally {
+            if (createButton) setButtonLoading(createButton, false);
         }
     }
 
-    private async joinGame() {
+    private async joinGame(button?: HTMLButtonElement | null) {
         if (!this.currentRoomSelected) return;
+        const joinButton = button ?? document.getElementById("join-btn") as HTMLButtonElement | null;
+        if (joinButton) setButtonLoading(joinButton, true);
 
         try {
             const messageBuffer = await RoomManager.joinGame(this.playerName, this.currentRoomSelected);
@@ -74,6 +85,8 @@ export default class TitleScreenScene extends Phaser.Scene {
         } catch (e: unknown) {
             const serverError = e as ServerError;
             showToast(serverError.message || "Failed to join room.");
+        } finally {
+            if (joinButton) setButtonLoading(joinButton, false);
         }
     }
 
@@ -86,7 +99,8 @@ export default class TitleScreenScene extends Phaser.Scene {
             event.preventDefault();
             const password = (document.getElementById("password") as HTMLInputElement).value;
             this.currentRoomSelected!.password = password;
-            this.joinGame();
+            const joinButton = document.getElementById("join-btn") as HTMLButtonElement | null;
+            this.joinGame(joinButton);
         });
 
         const closeButton = getCloseButton(1);
@@ -108,13 +122,13 @@ export default class TitleScreenScene extends Phaser.Scene {
 
         await this.displayCurrentAvailableRooms();
 
-        const joinButton = document.getElementById("join-btn")!;
+        const joinButton: HTMLButtonElement = document.getElementById("join-btn")! as HTMLButtonElement;
         joinButton.addEventListener("click", () => {
             if (this.currentRoomSelected) {
                 if (this.currentRoomSelected.password) {
                     this.showPasswordForm();
                 } else {
-                    this.joinGame();
+                    this.joinGame(joinButton);
                 }
             }
         });
@@ -174,12 +188,25 @@ export default class TitleScreenScene extends Phaser.Scene {
             this.createGame();
         });
 
-        const defaultMap = (await this.client.http.get("maps/default")).data;
-        const mapCard = document.getElementsByClassName("map-card")[0]!;
-
-        setupMapCard(mapCard, defaultMap);
-
         const mapPreviewWrapper = document.getElementById("map-preview-wrapper")!;
+        const mapLoadingOverlay = document.createElement("div");
+        mapLoadingOverlay.className = "map-loading-overlay";
+        mapLoadingOverlay.textContent = "Loading map...";
+        mapPreviewWrapper.appendChild(mapLoadingOverlay);
+        mapPreviewWrapper.classList.add("loading");
+
+        try {
+            const defaultMap = (await this.client.http.get("maps/default")).data;
+            const mapCard = document.getElementsByClassName("map-card")[0]!;
+            setupMapCard(mapCard, defaultMap);
+        } catch (e: any) {
+            const serverError = e as ServerError;
+            showToast(serverError.message || "Failed to load default map.");
+        } finally {
+            mapPreviewWrapper.classList.remove("loading");
+            mapLoadingOverlay.remove();
+        }
+
         mapPreviewWrapper.addEventListener("click", () => { this.showMapSelection() });
 
         const closeButton = getCloseButton();
@@ -196,11 +223,24 @@ export default class TitleScreenScene extends Phaser.Scene {
         const currentMapCard = document.getElementsByClassName("map-card")[0]!;
 
         const mapContainer = document.getElementById("map-container");
+        const mapLoadingOverlay = document.createElement("div");
+        mapLoadingOverlay.className = "map-selection-loading";
+        mapLoadingOverlay.textContent = "Loading maps...";
+        mapContainer?.appendChild(mapLoadingOverlay);
+        mapContainer?.classList.add("loading");
 
-        const maps: MapPreviewData[] = (await this.client.http.get("/maps")).data;
-        maps.forEach(map => {
-            mapContainer?.appendChild(generateMapCard(map));
-        });
+        try {
+            const maps: MapPreviewData[] = (await this.client.http.get("/maps")).data;
+            maps.forEach(map => {
+                mapContainer?.appendChild(generateMapCard(map));
+            });
+        } catch (e: any) {
+            const serverError = e as ServerError;
+            showToast(serverError.message || "Failed to load maps.");
+        } finally {
+            mapContainer?.classList.remove("loading");
+            mapLoadingOverlay.remove();
+        }
 
         mapContainer?.addEventListener("click", (e) => { this.selectMap(e as PointerEvent, currentMapCard) });
 

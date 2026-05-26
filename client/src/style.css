@@ -125,6 +125,33 @@ button {
   min-width: 100px;
 }
 
+button:disabled,
+button.loading {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+button.loading::after {
+  content: "";
+  display: inline-block;
+  margin-left: 0.5em;
+  width: 0.9em;
+  height: 0.9em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: button-spinner 0.8s linear infinite;
+}
+
+@keyframes button-spinner {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 button:hover {
   background-color: rgb(141, 110, 99);
 }
@@ -225,6 +252,32 @@ canvas {
 
 #map-preview-wrapper:hover::after {
   opacity: 1;
+}
+
+#map-preview-wrapper.loading {
+  cursor: wait;
+}
+
+.map-loading-overlay,
+.map-selection-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.75);
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: bold;
+  z-index: 2;
+}
+
+#map-preview-wrapper.loading::after {
+  opacity: 0;
+}
+
+#map-container.loading {
+  position: relative;
 }
 
 @media (prefers-color-scheme: light) {

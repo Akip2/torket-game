@@ -77,6 +77,22 @@ export function showToast(message: string) {
     }, 1000);
 }
 
+export function setButtonLoading(button: HTMLButtonElement, loading: boolean, loadingText: string = "Loading") {
+    if (loading) {
+        button.dataset.originalText = button.textContent || "";
+        button.textContent = loadingText;
+        button.disabled = true;
+        button.classList.add("loading");
+        button.setAttribute("aria-busy", "true");
+        return;
+    }
+
+    button.disabled = false;
+    button.classList.remove("loading");
+    button.removeAttribute("aria-busy");
+    button.textContent = button.dataset.originalText || button.textContent;
+}
+
 export function mountWithTransition(root: HTMLElement, html: string) {
     root.innerHTML = html;
     const popup = root.querySelector(".central-container");
