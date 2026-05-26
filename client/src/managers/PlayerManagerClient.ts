@@ -11,7 +11,6 @@ import { setCursor } from "../client-utils";
 import { Cursor } from "@shared/enums/Cursor.enum";
 import SoundManager from "./SoundManager";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
-import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import type BulletClient from "../game-objects/BulletClient";
 
 export default class PlayerManagerClient {
