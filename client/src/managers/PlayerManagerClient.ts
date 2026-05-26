@@ -72,6 +72,7 @@ export default class PlayerManagerClient {
                 .setVisible(DEBUG);
 
             scene.worldContainer.add(this.remoteRef);
+            scene.shotManager.setOwner(playerObject);
 
             this.setupLocalPlayer(player, playerObject, scene.shotManager);
         } else {

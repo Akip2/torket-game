@@ -15,7 +15,7 @@ import { Parameter } from "@shared/enums/Parameter.enum";
 export default class ShotManager {
     scene: GameScene;
 
-    owner: PlayerClient;
+    owner!: PlayerClient;
 
     force: number = 0;
     isCharging: boolean = false;
@@ -25,9 +25,12 @@ export default class ShotManager {
 
     trajectoryDrawer?: Phaser.GameObjects.Graphics;
 
-    constructor(scene: GameScene, owner: PlayerClient) {
+    constructor(scene: GameScene) {
         this.scene = scene;
-        this.owner = owner;
+    }
+
+    setOwner(player: PlayerClient) {
+        this.owner = player;
     }
 
     setTargetPosition(x: number, y: number) {
@@ -45,6 +48,8 @@ export default class ShotManager {
     }
 
     async chargeShot() {
+        if (!this.owner) throw new Error("ShotManager: owner not set");
+        
         this.isCharging = true;
 
         let sign = 1;

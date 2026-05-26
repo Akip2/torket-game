@@ -116,12 +116,12 @@ export default class GameScene extends Phaser.Scene {
         this.terrainManager.drawTerrain();
         this.terrainManager.createTerrainColliders();
 
-        this.playerManager = new PlayerManagerClient(this.room);
-        this.playerManager.setupPlayerListeners(this);
-
-        this.shotManager = new ShotManager(this, this.playerManager.getPlayer(this.room.sessionId));
+        this.shotManager = new ShotManager(this);
         this.effectsManager = new EffectsManager(this);
         this.phaseManager = new PhaseManagerClient();
+
+        this.playerManager = new PlayerManagerClient(this.room);
+        this.playerManager.setupPlayerListeners(this);
 
         this.gameEndScreen = new GameEndScreen(this);
 
@@ -136,14 +136,6 @@ export default class GameScene extends Phaser.Scene {
         this.setupRoomMessages();
 
         this.input.keyboard!.on("keydown-ONE", () => { this.debugFunction() });
-    }
-
-    async setupRoomEvents() {
-        this.room = await this.client.joinOrCreate("my_room", { playerData: this.playerData });
-
-        this.playerManager = new PlayerManagerClient(this.room);
-        this.playerManager.setupPlayerListeners(this);
-        this.setupRoomMessages();
     }
 
     async setupRoomMessages() {
@@ -447,7 +439,7 @@ export default class GameScene extends Phaser.Scene {
 
     debugFunction() {
         if (!DEBUG) return;
-        
+
         const self = this.playerManager.getPlayer(this.room.sessionId);
         const powerName = "Fatso";
 
