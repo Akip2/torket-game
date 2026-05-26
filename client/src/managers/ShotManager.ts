@@ -1,4 +1,4 @@
-import type { Position, ShootInfo } from "@shared/types";
+import type { ExplosionInfo, Position, ShootInfo } from "@shared/types";
 import BulletClient from "../game-objects/BulletClient";
 import { generateBulletOriginPosition, shoot } from "@shared/logics/bullet-logic";
 import type GameScene from "../scenes/GameScene";
@@ -9,9 +9,13 @@ import Vector from "@shared/data/Vector";
 import { Depths } from "@shared/enums/Depths.enum.ts";
 import SoundManager from "./SoundManager";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
+import type PlayerClient from "../game-objects/PlayerClient";
+import { Parameter } from "@shared/enums/Parameter.enum";
 
 export default class ShotManager {
     scene: GameScene;
+
+    owner: PlayerClient;
 
     force: number = 0;
     isCharging: boolean = false;
@@ -21,8 +25,9 @@ export default class ShotManager {
 
     trajectoryDrawer?: Phaser.GameObjects.Graphics;
 
-    constructor(scene: GameScene) {
+    constructor(scene: GameScene, owner: PlayerClient) {
         this.scene = scene;
+        this.owner = owner;
     }
 
     setTargetPosition(x: number, y: number) {
@@ -45,12 +50,14 @@ export default class ShotManager {
         let sign = 1;
         this.force = SHOT_CONST.MIN_SHOT_FORCE;
 
+        const MAX_FORCE = this.owner.powerManager.getParameterValue(Parameter.Range);
+
         while (this.isCharging) {
-            this.force += 0.33 * sign;
+            this.force += (MAX_FORCE / 60) * sign;
             this.drawTrajectory(this.generateShotInfo());
 
             await wait(TIME_STEP);
-            if (this.force <= SHOT_CONST.MIN_SHOT_FORCE || this.force >= SHOT_CONST.BASE_MAX_SHOT_FORCE) {
+            if (this.force <= SHOT_CONST.MIN_SHOT_FORCE || this.force >= MAX_FORCE) {
                 sign *= -1;
                 await wait(TIME_STEP);
             }
@@ -72,15 +79,16 @@ export default class ShotManager {
         this.trajectoryDrawer?.clear();
     }
 
-    shootBulletFromInfo(shotInfo: ShootInfo) {
-        const bullet = new BulletClient(this.scene, shotInfo.originX, shotInfo.originY);
+    shootBulletFromInfo(shotInfo: ShootInfo, explosionInfo: ExplosionInfo) {
+        const bullet = new BulletClient(this.scene, shotInfo.originX, shotInfo.originY, explosionInfo);
         shoot(bullet, shotInfo.targetX, shotInfo.targetY, shotInfo.force);
     }
 
     shootBullet() {
         const shotInfo = this.generateShotInfo();
+        const explosionInfo = this.generateExplosionInfo();
 
-        this.shootBulletFromInfo(shotInfo);
+        this.shootBulletFromInfo(shotInfo, explosionInfo);
         this.scene.room?.send(RequestTypes.Shoot, shotInfo);
         this.trajectoryDrawer?.clear();
 
@@ -126,7 +134,7 @@ export default class ShotManager {
     }
 
     generateShotInfo() {
-        const originPosition = generateBulletOriginPosition(this.startingPosition.x, this.startingPosition.y, this.targetPosition.x, this.targetPosition?.y);
+        const originPosition = generateBulletOriginPosition(this.startingPosition.x, this.startingPosition.y, this.targetPosition.x, this.targetPosition.y, this.owner.powerManager.getParameterValue(Parameter.Size));
 
         return {
             targetX: this.targetPosition.x,
@@ -134,6 +142,13 @@ export default class ShotManager {
             force: this.force,
             originX: originPosition.x,
             originY: originPosition.y
+        }
+    }
+
+    generateExplosionInfo(): ExplosionInfo {
+        return {
+            explosionSize: this.owner.powerManager.getParameterValue(Parameter.ExpSize),
+            explosionPushCoef: this.owner.powerManager.getParameterValue(Parameter.ExpPush),
         }
     }
 }

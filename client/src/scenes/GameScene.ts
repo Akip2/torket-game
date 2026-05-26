@@ -1,4 +1,4 @@
-import { EXPLOSION_RADIUS, GAME_HEIGHT, GAME_WIDTH, GROUND_TYPE, TEXTURE_SIZE, TILE_SIZE, TIME_STEP } from "@shared/const";
+import { DEBUG, EXPLOSION_CONST, GAME_HEIGHT, GAME_WIDTH, GROUND_TYPE, TEXTURE_SIZE, TILE_SIZE, TIME_STEP } from "@shared/const";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import BulletClient from "../game-objects/BulletClient";
 import PlayerClient from "../game-objects/PlayerClient";
@@ -10,7 +10,7 @@ import ShotManager from "../managers/ShotManager";
 import PlayerManagerClient from "../managers/PlayerManagerClient";
 import EffectsManager from "../managers/EffectsManager";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
-import type { FullSynchroInfo, InitData, PlayerData, Position } from "@shared/types";
+import type { ExplosionInfo, FullSynchroInfo, InitData, PlayerData, Position, PowerUpdateData, ShootInfo } from "@shared/types";
 import { Depths } from "@shared/enums/Depths.enum.ts";
 import PhaseManagerClient from "../managers/PhaseManagerClient";
 import PhaseDisplayer from "../ui/PhaseDisplayer";
@@ -28,12 +28,13 @@ import { getExplosionSpriteScale, getServerUrl, showToast } from "../client-util
 import GameEndScreen from "../ui/containers/GameEndScreen";
 import SoundManager from "../managers/SoundManager";
 import { setCookie } from "typescript-cookie";
+import RoomManager from "../managers/RoomManager";
 
 export default class GameScene extends Phaser.Scene {
     active: boolean = true;
     isOver: boolean = false;
     client = new Client(getServerUrl());
-    room?: Room;
+    room!: Room;
     messageBuffer: { type: RequestTypes, data: any }[] = [];
 
     debugGraphics: Phaser.GameObjects.Graphics[] = [];
@@ -46,7 +47,7 @@ export default class GameScene extends Phaser.Scene {
 
     terrainManager!: TerrainManagerClient;
     shotManager!: ShotManager;
-    phaseManager: PhaseManagerClient = new PhaseManagerClient();
+    phaseManager!: PhaseManagerClient;
     effectsManager!: EffectsManager;
 
     worldContainer!: Phaser.GameObjects.Container;
@@ -60,15 +61,18 @@ export default class GameScene extends Phaser.Scene {
     phaseDisplayer!: PhaseDisplayer;
     actionChoicePanel!: ActionChoicePanel;
     endTurnButton!: EndTurnButton;
-    gameEndScreen: GameEndScreen | null = null;
+    gameEndScreen!: GameEndScreen;
 
     constructor() {
         super(SceneNames.Game);
     }
 
     init(data: InitData) {
+        this.active = true;
+        this.isOver = false;
+
+        this.room = RoomManager.getRoom();
         this.playerData = data.playerData;
-        this.room = data.room;
         this.messageBuffer = data.messageBuffer ?? [];
         setCookie("playerName", this.playerData.name, { expires: 7 });
     }
@@ -112,8 +116,14 @@ export default class GameScene extends Phaser.Scene {
         this.terrainManager.drawTerrain();
         this.terrainManager.createTerrainColliders();
 
-        this.shotManager = new ShotManager(this);
+        this.playerManager = new PlayerManagerClient(this.room);
+        this.playerManager.setupPlayerListeners(this);
+
+        this.shotManager = new ShotManager(this, this.playerManager.getPlayer(this.room.sessionId));
         this.effectsManager = new EffectsManager(this);
+        this.phaseManager = new PhaseManagerClient();
+
+        this.gameEndScreen = new GameEndScreen(this);
 
         this.matter.world.autoUpdate = false;
 
@@ -123,16 +133,13 @@ export default class GameScene extends Phaser.Scene {
         this.setupUi();
         this.setupBorders();
 
-        if (this.room) {
-            this.playerManager = new PlayerManagerClient(this.room);
-            this.playerManager.setupPlayerListeners(this);
-            this.setupRoomMessages();
-        }
+        this.setupRoomMessages();
+
+        this.input.keyboard!.on("keydown-ONE", () => { this.debugFunction() });
     }
 
     async setupRoomEvents() {
         this.room = await this.client.joinOrCreate("my_room", { playerData: this.playerData });
-        if (!this.room) return;
 
         this.playerManager = new PlayerManagerClient(this.room);
         this.playerManager.setupPlayerListeners(this);
@@ -140,8 +147,6 @@ export default class GameScene extends Phaser.Scene {
     }
 
     async setupRoomMessages() {
-        if (!this.room) return;
-
         this.room.onMessage(RequestTypes.TerrainSynchro, (quadBlock) => {
             this.terrainManager.constructQuadBlock(quadBlock);
             this.terrainManager.redrawTerrain();
@@ -156,7 +161,7 @@ export default class GameScene extends Phaser.Scene {
                 return;
             }
 
-            const isConcerned = this.phaseManager.isConcerned(this.room!.sessionId);
+            const isConcerned = this.phaseManager.isConcerned(this.room.sessionId);
 
             if (this.phaseManager.isActionChoicePhase()) {
                 this.endTurnButton.hide();
@@ -175,8 +180,8 @@ export default class GameScene extends Phaser.Scene {
             this.phaseManager.setCurrentPhase(synchroInfo.phase);
         });
 
-        this.room.onMessage(RequestTypes.Shoot, (shootInfo) => {
-            if (this.active) this.shotManager.shootBulletFromInfo(shootInfo);
+        this.room.onMessage(RequestTypes.Shoot, (data: { shootInfo: ShootInfo, explosionInfo: ExplosionInfo }) => {
+            if (this.active) this.shotManager.shootBulletFromInfo(data.shootInfo, data.explosionInfo);
         });
 
         this.room.onMessage(RequestTypes.HealthUpdate, (healthUpdateInfo) => {
@@ -189,20 +194,26 @@ export default class GameScene extends Phaser.Scene {
         });
 
         this.room.onMessage(RequestTypes.GameEnd, (gameEndInfo) => {
+            if (this.isOver) return;
             this.isOver = true;
-            if (this.gameEndScreen) {
-                return;
-            }
 
             const winnerId = gameEndInfo.winnerId;
             const winner = this.playerManager.getPlayer(winnerId);
-            const isPlayerWinner = winnerId === this.room!.sessionId;
+            const isPlayerWinner = winnerId === this.room.sessionId;
 
-            this.gameEndScreen = new GameEndScreen(this, {
+            this.gameEndScreen.setConfig({
                 isWin: isPlayerWinner,
                 winnerName: winner.getName()
             });
+
+            this.gameEndScreen.appear(this);
         });
+
+        this.room.onMessage(RequestTypes.PowerUpdate, (powerUpdateData: PowerUpdateData) => {
+            if (!powerUpdateData.id) return;
+            const player = this.playerManager.getPlayer(powerUpdateData.id);
+            player.addPower(powerUpdateData.powerName);
+        })
 
         this.room.onLeave(() => {
             if (!this.isOver) {
@@ -241,7 +252,7 @@ export default class GameScene extends Phaser.Scene {
                 this.active = false;
             } else {
                 this.active = true;
-                this.room!.send(RequestTypes.TerrainSynchro);
+                this.room.send(RequestTypes.TerrainSynchro);
             }
         });
     }
@@ -260,7 +271,7 @@ export default class GameScene extends Phaser.Scene {
             this,
             GAME_WIDTH / 2,
             GAME_HEIGHT - 20,
-            () => { this.room!.send(RequestTypes.EndTurn) }
+            () => { this.room.send(RequestTypes.EndTurn) }
         );
     }
 
@@ -272,8 +283,6 @@ export default class GameScene extends Phaser.Scene {
     }
 
     fixedTick() {
-        if (!this.room) { return; }
-
         const inputPayload = this.getMovementInput();
         this.playerManager.localInputBuffer.push(inputPayload);
 
@@ -312,7 +321,7 @@ export default class GameScene extends Phaser.Scene {
                     const bullet = (bodyA.label === RessourceKeys.Bullet) ? bodyA.gameObject as BulletClient : bodyB.gameObject as BulletClient;
 
                     if (bullet) {
-                        this.explode(bullet.x, bullet.y, EXPLOSION_RADIUS);
+                        this.explode(bullet);
                         bullet.destroy();
                     }
                 }
@@ -328,14 +337,17 @@ export default class GameScene extends Phaser.Scene {
         });
     }
 
-    explode(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
+    explode(bullet: BulletClient, minSize: number = TILE_SIZE) {
+        const { x, y } = bullet;
+        const explosionSize = bullet.getExplosionInfo().explosionSize;
+
         //Explosion particles
-        const scale = getExplosionSpriteScale(radius);
+        const scale = getExplosionSpriteScale(explosionSize);
         const speedCoef = Math.max(scale * 0.5, 1);
 
         SoundManager.play(RessourceKeys.Explosion);
 
-        const emitter = this.add.particles(cx, cy, RessourceKeys.ExplosionParticle, {
+        const emitter = this.add.particles(x, y, RessourceKeys.ExplosionParticle, {
             lifespan: 500,
             speed: {
                 min: 100 * speedCoef,
@@ -349,14 +361,15 @@ export default class GameScene extends Phaser.Scene {
 
         emitter.explode(10 + Math.random() * 5);
 
-        this.terrainManager.explodeTerrain(cx, cy, radius, minSize);
+        this.terrainManager.explodeTerrain(x, y, explosionSize, minSize);
 
         // JUICE: Enhanced effects
-        this.effectsManager.screenshake(12, 200);
-        this.effectsManager.flash(0xffa500, 200, 0.2);
-        this.effectsManager.burstParticles(cx, cy, 12, 0xff8800);
+        const ratio = explosionSize / EXPLOSION_CONST.BASE_RADIUS;
+        this.effectsManager.screenshake(12 + ratio * 10, 200);
+        this.effectsManager.flash(0xffa500, ratio * 200, ratio * 0.2);
+        this.effectsManager.burstParticles(x, y, 12, 0xff8800);
 
-        this.playerManager.reactToExplosion(cx, cy, radius);
+        this.playerManager.reactToExplosion(bullet);
     }
 
     pointerDownEvent(pointer: Phaser.Input.Pointer) {
@@ -430,5 +443,15 @@ export default class GameScene extends Phaser.Scene {
             this.worldContainer.add(particles);
             return particles;
         };
+    }
+
+    debugFunction() {
+        if (!DEBUG) return;
+        
+        const self = this.playerManager.getPlayer(this.room.sessionId);
+        const powerName = "Fatso";
+
+        self.addPower(powerName);
+        this.room.send(RequestTypes.PowerUpdate, { powerName: powerName })
     }
 }

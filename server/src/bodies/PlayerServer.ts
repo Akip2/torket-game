@@ -1,11 +1,13 @@
 import { PLAYER_CONST, SHOT_CONST } from "@shared/const";
-import Matter, { Bodies } from "matter-js";
+import { Bodies, Body } from "matter-js";
 import GameBody from "./GameBody";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { IPlayer } from "@shared/interfaces/Player.interface";
 import { Player } from "../rooms/schema/MyRoomState";
 import { Position } from "@shared/types";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
+import PowerManager from "@shared/data/power/PowerManager";
+import { Parameter } from "@shared/enums/Parameter.enum";
 
 export default class PlayerServer extends GameBody implements IPlayer {
     isMoving: boolean = false;
@@ -14,21 +16,35 @@ export default class PlayerServer extends GameBody implements IPlayer {
     sessionId: string;
     onDamage: (hp: number) => void;
     lastProcessedTimeStamp: number = 0;
+    powerManager: PowerManager;
 
-    constructor(playerRef: Player, sessionId: string, onDamage: (hp: number) => void, size: number = PLAYER_CONST.WIDTH) {
+    maxHp: number;
+    maxMovement: number;
+
+    currentScale: number;
+
+    constructor(playerRef: Player, sessionId: string, onDamage: (hp: number) => void, size: number = PLAYER_CONST.BASE_WIDTH) {
         const body = Bodies.rectangle(playerRef.x, playerRef.y, size, size, {
             friction: 0,
             frictionAir: 0.05,
             frictionStatic: 0,
+            slop: 0,
             label: `${RessourceKeys.Player}:${sessionId}`,
         });
-        Matter.Body.setInertia(body, Infinity);
+        Body.setMass(body, PLAYER_CONST.BASE_MASS);
+        Body.setInertia(body, Infinity);
 
         super(body);
 
         this.playerRef = playerRef;
         this.onDamage = onDamage;
         this.sessionId = sessionId;
+        this.powerManager = new PowerManager();
+
+        this.maxHp = PLAYER_CONST.BASE_MAX_HP;
+        this.maxMovement = PLAYER_CONST.BASE_MAX_MOVEMENT;
+
+        this.currentScale = 1;
     }
 
     hasMovementLeft(): boolean {
@@ -39,23 +55,36 @@ export default class PlayerServer extends GameBody implements IPlayer {
         this.playerRef.movementLeft -= amount;
 
         if (!this.hasMovementLeft()) {
-            this.setVelocityX(0);
+            //this.setVelocityX(0);
             this.isMoving = false;
         }
     }
 
     fillMovementLeft() {
-        this.playerRef.movementLeft = PLAYER_CONST.BASE_MAX_MOVEMENT;
+        this.playerRef.movementLeft = this.maxMovement;
     }
 
     moveHorizontally(speed: number): void {
-        this.setVelocityX(speed);
+        if (Math.abs(this.body.velocity.x) < Math.abs(speed)) {
+            Body.applyForce(this.body, this.body.position, {
+                x: speed/1200 * this.body.mass,
+                y: 0
+            });
+        }
     }
 
-    applyDamage(directHit: boolean) {
-        const damage = Math.round((SHOT_CONST.DAMAGE_BASE) * (directHit ? 2 : 1) + (Math.random() * 15));
+    enableMass() {
+        Body.setMass(this.body, this.powerManager.getParameterValue(Parameter.Weight));
+    }
 
-        this.playerRef.hp -= damage;
+    disableMass() {
+        Body.setMass(this.body, 1);
+    }
+
+    applyDamage(damage: number, directHit: boolean) {
+        const actualDamage = Math.round(damage * (directHit ? 1.5 : 1) + (Math.random() * 5));
+
+        this.playerRef.hp -= actualDamage;
 
         if (this.playerRef.hp <= 0) {
             this.die();
@@ -101,5 +130,31 @@ export default class PlayerServer extends GameBody implements IPlayer {
 
     isAlive() {
         return this.playerRef.isAlive;
+    }
+
+    addPower(powerName: string): void {
+        this.powerManager.addPowerFromName(powerName);
+        this.updateFromNewParameters();
+    }
+
+    updateFromNewParameters(): void {
+        // UPDATING HP
+        const newMaxHp = this.powerManager.getParameterValue(Parameter.Hp);
+        this.playerRef.hp *= newMaxHp / this.maxHp;
+        this.maxHp = newMaxHp;
+
+        // UPDATING MOVEMENT
+        const newMaxMovement = this.powerManager.getParameterValue(Parameter.Movement);
+        this.maxMovement = newMaxMovement;
+
+        // UPDATING SIZE
+        const targetScale = this.powerManager.getParameterValue(Parameter.Size) / PLAYER_CONST.BASE_WIDTH;
+        const relativeScale = targetScale / this.currentScale;
+        Body.scale(this.body, relativeScale, relativeScale);
+        this.currentScale = targetScale;
+        Body.setInertia(this.body, Infinity);
+
+        // UPDATING WEIGHT
+        Body.setMass(this.body, this.powerManager.getParameterValue(Parameter.Weight));
     }
 }

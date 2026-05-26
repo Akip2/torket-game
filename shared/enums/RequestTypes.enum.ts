@@ -7,5 +7,6 @@ export enum RequestTypes {
     HealthUpdate = "health-update",
     SelectAction = "select-action",
     EndTurn = "end-turn",
-    GameEnd = "game-end"
+    GameEnd = "game-end",
+    PowerUpdate = "power-update",
 }

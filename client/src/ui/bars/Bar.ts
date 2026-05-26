@@ -13,6 +13,8 @@ export default class Bar extends Phaser.GameObjects.Graphics {
 
     style: BarStyleType;
 
+    private marginOffsetY: number;
+
     constructor(
         scene: GameScene,
         x: number = 0,
@@ -33,6 +35,11 @@ export default class Bar extends Phaser.GameObjects.Graphics {
         this.setAlpha(this.style.opacity ?? 1);
 
         this.transitionDuration = transitionDuration;
+        this.marginOffsetY = 1;
+    }
+
+    setMarginOffsetY(offset: number) {
+        this.marginOffsetY = offset;
     }
 
     updateGraphics(x: number, y: number, value: number) {
@@ -75,7 +82,7 @@ export default class Bar extends Phaser.GameObjects.Graphics {
         this.clear();
 
         const adjustedX = x + this.style.marginX - this.style.width / 2;
-        const adjustedY = y + this.style.marginY - this.style.height / 2;
+        const adjustedY = y + (this.style.marginY + this.marginOffsetY) - (this.style.height / 2) ;
         const borderRadius = 3;
 
         this.fillStyle(this.style.backgroundColor, 0.9);

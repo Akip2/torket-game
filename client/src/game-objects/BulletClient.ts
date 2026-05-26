@@ -1,17 +1,19 @@
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
-import type { IBasicBody } from "@shared/interfaces/BasicBody.interface";
 import type GameScene from "../scenes/GameScene";
-import type { Position } from "@shared/types";
+import type { ExplosionInfo, Position } from "@shared/types";
 import { Depths } from "@shared/enums/Depths.enum.ts";
 import { BULLET_CONST, GRAVITY } from "@shared/const";
+import type { IBulletInterface } from "@shared/interfaces/Bullet.interface";
 
-export default class BulletClient extends Phaser.Physics.Matter.Sprite implements IBasicBody {
+export default class BulletClient extends Phaser.Physics.Matter.Sprite implements IBulletInterface {
     private lastTrailX: number = 0;
     private lastTrailY: number = 0;
     private eventsActive: boolean = true;
     private gravityScale: number;
 
-    constructor(scene: GameScene, x: number, y: number, gravityScale: number = BULLET_CONST.GRAVITY_SCALE) {
+    private explosionInfo: ExplosionInfo;
+
+    constructor(scene: GameScene, x: number, y: number, explosionInfo: ExplosionInfo, gravityScale: number = BULLET_CONST.GRAVITY_SCALE) {
         super(scene.matter.world, x, y, RessourceKeys.Bullet);
 
         scene.add.existing(this);
@@ -25,6 +27,11 @@ export default class BulletClient extends Phaser.Physics.Matter.Sprite implement
         this.scene.events.on('fixed-tick', this.updateCallback, this);
 
         this.setIgnoreGravity(true);
+        this.explosionInfo = explosionInfo;
+    }
+
+    getExplosionInfo() {
+        return this.explosionInfo;
     }
 
     private updateCallback() {
@@ -79,7 +86,7 @@ export default class BulletClient extends Phaser.Physics.Matter.Sprite implement
             GRAVITY *
             0.001 *
             this.gravityScale;
-        
+
         this.applyForce(new Phaser.Math.Vector2(0, gravityForce));
     }
 }

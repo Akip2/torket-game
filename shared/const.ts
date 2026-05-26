@@ -1,5 +1,6 @@
 import { Border } from "./enums/Border.enum";
-import type { Rectangle } from "./types";
+import { Parameter } from "./enums/Parameter.enum";
+import type { ParameterChangeCoef, Rectangle } from "./types";
 
 export const DEBUG = false;
 export const FREE_ROAM = false;
@@ -23,23 +24,40 @@ export const EDITION_TILE_SIZE = 8;
 export const GROUND_TYPE = "stone";
 export const TEXTURE_SIZE = 128;
 
-export const EXPLOSION_SPRITE_SIZE = 32;
-export const EXPLOSION_RADIUS = 50;
-
 export const TIME_STEP = 1000 / 60;
 
 export const HEALTH_TRANSITION_DURATION = 400;
 
 export const PLAYER_CONST = {
-    WIDTH: 32,
+    BASE_WIDTH: 32,
     SPEED: 4.5,
     JUMP: -18,
-    MAX_HP: 100,
+    BASE_MAX_HP: 100,
 
     SELF_COLOR: 0x3498db,
     ENNEMY_COLOR: 0xdb3445,
 
-    BASE_MAX_MOVEMENT: 250,
+    BASE_MAX_MOVEMENT: 10000,
+
+    BASE_MASS: 15,
+
+    BASE_FRICTION: {
+        FRICTION: 0,
+        FRICTION_STATIC: 0,
+        FRICTION_AIR: 0.05,
+    },
+
+    PUSH_FRICTION: {
+        FRICTION: 1,
+        FRICTION_STATIC: 0,
+        FRICTION_AIR: 0.5,
+    },
+
+    EXPLODED_FRICTION: {
+        FRICTION: 0,
+        FRICTION_STATIC: 0,
+        FRICTION_AIR: 0.05,
+    },
 }
 
 export const BULLET_CONST = {
@@ -49,17 +67,25 @@ export const BULLET_CONST = {
     GRAVITY_SCALE: 1,
 }
 
+export const EXPLOSION_CONST = {
+    SPRITE_SIZE: 32,
+    BASE_RADIUS: 50,
+    BASE_PUSH: 0.8,
+}
+
 export const SHOT_CONST = {
-    DAMAGE_BASE: 8, 
+    BASE_DAMAGE: 10,
     BASE_MAX_SHOT_FORCE: 20,
     MIN_SHOT_FORCE: 2,
 }
 
 const BORDER_SAFE_MARGIN = 200; // increased size to make sure bullet collision detections work
+const TOP_OFFSET = 150;
+
 export const BORDERS_CONST = {
     [Border.Top]: {
         x: GAME_WIDTH / 2,
-        y: -BORDER_SAFE_MARGIN / 2,
+        y: -BORDER_SAFE_MARGIN / 2 - TOP_OFFSET,
 
         width: GAME_WIDTH,
         height: BORDER_SAFE_MARGIN
@@ -75,20 +101,33 @@ export const BORDERS_CONST = {
 
     [Border.Right]: {
         x: GAME_WIDTH + BORDER_SAFE_MARGIN / 2,
-        y: GAME_HEIGHT / 2,
+        y: (GAME_HEIGHT - TOP_OFFSET) / 2,
 
         width: BORDER_SAFE_MARGIN,
-        height: GAME_HEIGHT
+        height: GAME_HEIGHT + TOP_OFFSET
     },
 
     [Border.Left]: {
-        x: - BORDER_SAFE_MARGIN / 2,
-        y: GAME_HEIGHT / 2,
+        x: -BORDER_SAFE_MARGIN / 2,
+        y: (GAME_HEIGHT - TOP_OFFSET) / 2,
 
         width: BORDER_SAFE_MARGIN,
-        height: GAME_HEIGHT
+        height: GAME_HEIGHT + TOP_OFFSET
     },
-} as Record<Border, Rectangle>
+} as Record<Border, Rectangle>;
+
+export const PARAM_COEF_TABLE = { [-3]: -0.6, [-2]: -0.4, [-1]: -0.2, [1]: 0.2, [2]: 0.4, [3]: 0.6, } as Record<ParameterChangeCoef, number>;
+
+export const PARAM_BASE_VALUE_MAP = new Map<Parameter, number>([
+    [Parameter.Damage, SHOT_CONST.BASE_DAMAGE],
+    [Parameter.ExpSize, EXPLOSION_CONST.BASE_RADIUS],
+    [Parameter.ExpPush, EXPLOSION_CONST.BASE_PUSH],
+    [Parameter.Hp, PLAYER_CONST.BASE_MAX_HP],
+    [Parameter.Movement, PLAYER_CONST.BASE_MAX_MOVEMENT],
+    [Parameter.Size, PLAYER_CONST.BASE_WIDTH],
+    [Parameter.Range, SHOT_CONST.BASE_MAX_SHOT_FORCE],
+    [Parameter.Weight, PLAYER_CONST.BASE_MASS],
+]);
 
 export const MAP_PREVIEW_WIDTH = 300;
 export const MAP_PREVIEW_HEIGHT = 150;

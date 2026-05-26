@@ -1,5 +1,5 @@
-import { isPlayerInRadius, movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
-import { InputPayload } from "@shared/types";
+import { immobilizePlayer, isPlayerInRadius, movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
+import { InputPayload, PendingExplosion } from "@shared/types";
 import PlayerServer from "../bodies/PlayerServer";
 import { Player } from "../rooms/schema/MyRoomState";
 import PhysicsManager from "./PhysicsManager";
@@ -7,6 +7,8 @@ import Phase from "@shared/data/phases/Phase";
 import SoloActionPhase from "@shared/data/phases/SoloActionPhase";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
 import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
+import { EXPLOSION_CONST } from "@shared/const";
+import { Body } from "matter-js";
 
 export default class PlayerManagerServer {
     playerBodies: Map<string, PlayerServer>;
@@ -37,11 +39,11 @@ export default class PlayerManagerServer {
                 case PhaseTypes.Shooting:
                     concernedPlayerState = PlayerState.Shooting
                     break;
-                
+
                 case PhaseTypes.Moving:
                     concernedPlayerState = PlayerState.Moving
                     break;
-                
+
                 default:
                     concernedPlayerState = PlayerState.Inactive;
             }
@@ -76,12 +78,12 @@ export default class PlayerManagerServer {
         });
     }
 
-    applyExplosion(cx: number, cy: number, radius: number) {
+    applyExplosion(pendingExplosion: PendingExplosion) {
         this.playerBodies.forEach((p, id) => {
-            playerReactToExplosion(p, cx, cy, radius);
+            playerReactToExplosion(p, pendingExplosion);
 
-            if (isPlayerInRadius(p, cx, cy, radius)) {
-                this.playerBodies.get(id)?.applyDamage(false);
+            if (isPlayerInRadius(p, pendingExplosion.cx, pendingExplosion.cy, pendingExplosion.radius)) {
+                this.playerBodies.get(id)?.applyDamage(pendingExplosion.damage!, true);
             }
         });
     }

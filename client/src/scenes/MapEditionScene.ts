@@ -1,4 +1,4 @@
-import { EDITION_TILE_SIZE, GAME_HEIGHT, GAME_WIDTH, PLAYER_CONST } from "@shared/const";
+import { EDITION_TILE_SIZE, GAME_HEIGHT, GAME_WIDTH, GROUND_TYPE, PLAYER_CONST, TEXTURE_SIZE } from "@shared/const";
 import PrimitiveMap from "@shared/data/PrimitiveMap";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
@@ -25,7 +25,7 @@ export default class MapEditionScene extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image(RessourceKeys.Ground, `assets/ground/ground_16.png`);
+        this.load.image(RessourceKeys.Ground, `assets/ground/${GROUND_TYPE}_${TEXTURE_SIZE}.png`);
     }
 
     create() {
@@ -38,10 +38,10 @@ export default class MapEditionScene extends Phaser.Scene {
         });
         this.input.mouse?.disableContextMenu();
 
-        this.input.keyboard!.on("keydown-ONE", () => (this.brushSize = 1));
-        this.input.keyboard!.on("keydown-TWO", () => (this.brushSize = 2));
-        this.input.keyboard!.on("keydown-THREE", () => (this.brushSize = 3));
-        this.input.keyboard!.on("keydown-FOUR", () => (this.brushSize = 4));
+        const SCALES = ["ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE"];
+        for (let i = 1; i < SCALES.length + 1; i++) {
+            this.input.keyboard!.on(`keydown-${SCALES[i - 1]}`, () => (this.brushSize = i));
+        }
         this.input.keyboard!.on("keydown-B", () => (this.brushSize = 15));
 
         this.input.keyboard!.on("keydown-M", () => {
@@ -50,7 +50,7 @@ export default class MapEditionScene extends Phaser.Scene {
 
         this.input.keyboard!.on("keydown-P", () => {
             this.playerPlacementMode = !this.playerPlacementMode;
-            this.brushSize = Math.floor(PLAYER_CONST.WIDTH / this.currentMap.minTileSize);
+            this.brushSize = Math.floor(PLAYER_CONST.BASE_WIDTH / this.currentMap.minTileSize);
         });
 
         this.input.keyboard!.on("keydown-A", () => {
@@ -148,8 +148,8 @@ export default class MapEditionScene extends Phaser.Scene {
         const sprite = this.add.tileSprite(
             x,
             y,
-            PLAYER_CONST.WIDTH,
-            PLAYER_CONST.WIDTH,
+            PLAYER_CONST.BASE_WIDTH,
+            PLAYER_CONST.BASE_WIDTH,
             RessourceKeys.Player
         ).setOrigin(0);
 

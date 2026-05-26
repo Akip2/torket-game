@@ -24,6 +24,20 @@ export type ShootInfo = {
     targetY: number
 }
 
+export type ExplosionInfo = {
+    explosionSize: number;
+    explosionPushCoef: number;
+    damage?: number;
+}
+
+export type PendingExplosion = {
+    cx: number;
+    cy: number;
+    radius: number;
+    pushCoef: number;
+    damage?: number;
+}
+
 export type FullSynchroInfo = {
     terrain: QuadBlockType,
     phase: Phase
@@ -99,7 +113,6 @@ export type Rectangle = {
 
 export type InitData = {
     playerData: PlayerData;
-    room?: any;
     messageBuffer?: { type: RequestTypes, data: any }[];
 }
 
@@ -142,7 +155,8 @@ export type AvailableRoomData = {
     maxClients: number;
 
     metadata: {
-        gameName: "Player's game"
+        gameName: string;
+        mapId: string;
     };
 
     private: boolean;
@@ -155,4 +169,11 @@ export type MapPreviewData = {
     maxPlayers: number;
     primitive: PrimitiveMap;
     playerPositions: Position[];
+}
+
+export type ParameterChangeCoef = -3 | -2 | -1 | 1 | 2 | 3;
+
+export type PowerUpdateData = {
+    id?: string;
+    powerName: string;
 }

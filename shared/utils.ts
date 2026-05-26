@@ -22,3 +22,10 @@ export function generateDefaultRoomName(playerName?: string) {
 export function cleanPlayerName(playerName?: string) {
   return playerName?.trim().substring(0, 8) || "Player";
 }
+
+export function convertMapIdToName(mapId: string) {
+  let parsedName = mapId.replaceAll("_", " ");
+  parsedName = String(parsedName).charAt(0).toUpperCase() + String(parsedName).slice(1);
+
+  return parsedName;
+}

@@ -2,6 +2,7 @@ import { TILE_SIZE } from "@shared/const";
 import QuadBlock from "@shared/data/QuadBlock";
 import TerrainBlock from "../bodies/TerrainBlock";
 import PhysicsManager from "./PhysicsManager";
+import BulletServer from "../bodies/BulletServer";
 
 export default class TerrainManagerServer {
     physicsManager: PhysicsManager;
@@ -37,8 +38,11 @@ export default class TerrainManagerServer {
         this.createTerrain();
     }
 
-    explodeTerrain(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
-        this.root.destroy(cx, cy, radius, minSize);
+    explodeTerrain(bullet: BulletServer, minSize: number = TILE_SIZE) {
+        const { x, y } = bullet.getPosition();
+        const explosionSize = bullet.getExplosionInfo().explosionSize;
+
+        this.root.destroy(x, y, explosionSize, minSize);
         this.recreateTerrain();
     }
 }

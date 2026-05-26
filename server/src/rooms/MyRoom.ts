@@ -1,11 +1,10 @@
 import { Room, Client } from "@colyseus/core";
 import { MyRoomState, Player } from "./schema/MyRoomState";
-import { BULLET_CONST, DEFAULT_MAP_ID, EXPLOSION_RADIUS, PLAYER_CONST, TILE_SIZE, TIME_STEP } from "@shared/const";
-import Matter from "matter-js";
+import { BULLET_CONST, DEFAULT_MAP_ID, EXPLOSION_CONST, PLAYER_CONST, TILE_SIZE, TIME_STEP } from "@shared/const";
+import Matter, { Body } from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
-import { InputPayload, GameMap, PlayerStartingPosition, ShootInfo, RoomJoinOptions, RoomCreationOptions } from "@shared/types";
+import { InputPayload, GameMap, PlayerStartingPosition, ShootInfo, RoomJoinOptions, RoomCreationOptions, PowerUpdateData, ExplosionInfo, PendingExplosion } from "@shared/types";
 import QuadBlock from "@shared/data/QuadBlock";
-import BullerServer from "../bodies/BulletServer";
 import { generateBulletOriginPosition, shoot } from "@shared/logics/bullet-logic";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import TerrainManagerServer from "../managers/TerrainManagerServer";
@@ -24,6 +23,9 @@ import { Border } from "@shared/enums/Border.enum";
 import { cleanPlayerName, generateDefaultRoomName } from "@shared/utils";
 import { ServerErrorCode } from "@shared/enums/ServerErrorCode.enum";
 import WaitingPhase from "@shared/data/phases/WaitingPhase";
+import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
+import BulletServer from "../bodies/BulletServer";
+import { Parameter } from "@shared/enums/Parameter.enum";
 
 dotenv.config();
 
@@ -39,7 +41,9 @@ export class MyRoom extends Room<MyRoomState> {
     physicsManager: PhysicsManager = new PhysicsManager();
     playerManager: PlayerManagerServer = new PlayerManagerServer();
 
-    bullets: BullerServer[] = [];
+    bullets: BulletServer[] = [];
+
+    pendingExplosions: PendingExplosion[] = [];
 
     async onCreate(options: RoomCreationOptions) {
         this.patchRate = TIME_STEP;
@@ -66,7 +70,14 @@ export class MyRoom extends Room<MyRoomState> {
         this.setupMessages();
         this.setupCollisionEvents();
         this.phaseManager = new PhaseManagerServer(this.playerManager, () => this.lock(), (phase) => this.broadcastPhase(phase));
-        await this.setupTerrain(options.mapId);
+
+        const mapId = options.mapId ?? this.getRandomMapId();
+        await this.setupTerrain(mapId);
+    }
+
+    getRandomMapId() {
+        const maps = ["mirrorhold", "floating_isles", "squares", "cave", "depths"];
+        return maps[Math.floor(Math.random() * maps.length)];
     }
 
     onJoin(client: Client, options: RoomJoinOptions) {
@@ -76,14 +87,14 @@ export class MyRoom extends Room<MyRoomState> {
 
         const startingPosition = this.playerStartingPositions.find((p) => p.playerId == null)
         if (!startingPosition) return;
-        
+
         startingPosition.playerId = client.sessionId;
 
         player.pseudo = cleanPlayerName(options.playerData.name);
-        player.x = startingPosition.x + PLAYER_CONST.WIDTH / 2;
+        player.x = startingPosition.x + PLAYER_CONST.BASE_WIDTH / 2;
         player.y = startingPosition.y;
         player.timeStamp = 0;
-        player.hp = PLAYER_CONST.MAX_HP;
+        player.hp = PLAYER_CONST.BASE_MAX_HP;
 
         this.playerManager.addPlayer(client.sessionId, player, (hp: number) => this.onPlayerDamage(client.sessionId, hp), this.physicsManager)
         this.state.players.set(client.sessionId, player);
@@ -101,7 +112,7 @@ export class MyRoom extends Room<MyRoomState> {
         } else if (this.phaseManager.currentPhase instanceof StartingPhase || this.phaseManager.currentPhase instanceof WaitingPhase) {
             this.phaseManager.reset();
             const playerStartingPosition = this.playerStartingPositions.find((p) => p.playerId === client.sessionId);
-            if(playerStartingPosition) playerStartingPosition.playerId = null
+            if (playerStartingPosition) playerStartingPosition.playerId = null
         } else {
             this.handleDisconnection(client);
         }
@@ -142,9 +153,21 @@ export class MyRoom extends Room<MyRoomState> {
                 return;
             }
 
-            const originPosition = generateBulletOriginPosition(playerBody.getX(), playerBody.getY(), shootInfo.targetX, shootInfo.targetY);
+            const originPosition = generateBulletOriginPosition(playerBody.getX(), playerBody.getY(), shootInfo.targetX, shootInfo.targetY, playerBody.powerManager.getParameterValue(Parameter.Size));
 
-            const bullet = new BullerServer(originPosition.x, originPosition.y, BULLET_CONST.RADIUS);
+            const explosionInfo: ExplosionInfo = {
+                explosionPushCoef: playerBody.powerManager.getParameterValue(Parameter.ExpPush),
+                explosionSize: playerBody.powerManager.getParameterValue(Parameter.ExpSize),
+                damage: playerBody.powerManager.getParameterValue(Parameter.Damage),
+            };
+
+            const bullet = new BulletServer(
+                originPosition.x,
+                originPosition.y,
+                BULLET_CONST.RADIUS,
+                explosionInfo
+            );
+
             this.bullets.push(bullet);
             this.physicsManager.add(bullet);
 
@@ -152,7 +175,10 @@ export class MyRoom extends Room<MyRoomState> {
 
             shootInfo.originX = originPosition.x;
             shootInfo.originY = originPosition.y;
-            this.broadcast(RequestTypes.Shoot, shootInfo, { except: client });
+            this.broadcast(RequestTypes.Shoot, {
+                shootInfo: shootInfo,
+                explosionInfo: explosionInfo
+            }, { except: client });
         });
 
         this.onMessage(RequestTypes.TerrainSynchro, (client) => {
@@ -165,6 +191,15 @@ export class MyRoom extends Room<MyRoomState> {
 
         this.onMessage(RequestTypes.SelectAction, (client, data: { action: Action }) => {
             this.phaseManager.actionChoice(client.sessionId, data.action);
+        });
+
+        this.onMessage(RequestTypes.PowerUpdate, (client, powerUpdateData: PowerUpdateData) => {
+            const player = this.playerManager.getPlayer(client.sessionId);
+            player?.addPower(powerUpdateData.powerName);
+            this.broadcast(RequestTypes.PowerUpdate, {
+                id: client.sessionId,
+                powerName: powerUpdateData.powerName
+            }, { except: client });
         });
     }
 
@@ -198,13 +233,25 @@ export class MyRoom extends Room<MyRoomState> {
                     bullet.hasAlreadyExplosed = true;
 
                     if (bullet) {
-                        this.explode(bullet.position.x, bullet.position.y, EXPLOSION_RADIUS);
-                        this.physicsManager.removeBrut(bullet);
-                        this.bullets = this.bullets.filter(b => b.body !== bullet); // remove bulllet from array
+                        const idx = this.bullets.findIndex(b => b.body === bullet);
+                        if (idx !== -1) {
+                            const [bulletObject] = this.bullets.splice(idx, 1);
+                            const { explosionSize, explosionPushCoef, damage } = bulletObject.getExplosionInfo();
 
-                        if (playerLabel) {
-                            const sessionId = parsePlayerLabel(playerLabel).sessionId;
-                            this.playerManager.getPlayer(sessionId)?.applyDamage(true);
+                            this.pendingExplosions.push({
+                                cx: bulletObject.getX(),
+                                cy: bulletObject.getY(),
+                                radius: explosionSize,
+                                pushCoef: explosionPushCoef,
+                                damage: damage!,
+                            });
+                            this.explode(bulletObject);
+                            bulletObject.removeFromWorld();
+
+                            if (playerLabel) {
+                                const sessionId = parsePlayerLabel(playerLabel).sessionId;
+                                this.playerManager.getPlayer(sessionId)?.applyDamage(damage!, true);
+                            }
                         }
                     }
                 }
@@ -234,6 +281,7 @@ export class MyRoom extends Room<MyRoomState> {
         });
     }
 
+
     fixedTick(deltaTime: number) {
         this.playerManager.applyInputs();
 
@@ -243,6 +291,11 @@ export class MyRoom extends Room<MyRoomState> {
 
         this.physicsManager.update(deltaTime);
 
+        this.pendingExplosions.forEach((pendingExplosion) => {
+            this.playerManager.applyExplosion(pendingExplosion);
+        });
+        this.pendingExplosions = [];
+
         this.playerManager.updateRefsPosition();
 
         this.bullets.forEach((bullet) => {
@@ -250,9 +303,8 @@ export class MyRoom extends Room<MyRoomState> {
         });
     }
 
-    explode(cx: number, cy: number, radius: number, minSize: number = TILE_SIZE) {
-        this.terrainManager.explodeTerrain(cx, cy, EXPLOSION_RADIUS);
-        this.playerManager.applyExplosion(cx, cy, radius);
+    explode(bullet: BulletServer, minSize: number = TILE_SIZE) {
+        this.terrainManager.explodeTerrain(bullet, minSize);
 
         this.phaseManager.next(500);
     }

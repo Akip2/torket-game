@@ -8,9 +8,9 @@ import { clearDomUi, clearSecondaryUiRoot, getCloseButton, getPrimaryUiRoot, get
 import { generateDefaultRoomName } from "@shared/utils";
 import { generateMapCard, generateRoomComponent, setupMapCard } from "../dom-ui/component-generator";
 import type { AvailableRoomData, MapPreviewData, RoomJoiningData } from "@shared/types";
-import { Client, Room, ServerError } from "colyseus.js";
-import { RequestTypes } from "@shared/enums/RequestTypes.enum";
+import { Client, ServerError } from "colyseus.js";
 import { getCookie } from 'typescript-cookie'
+import RoomManager from "../managers/RoomManager";
 
 export default class TitleScreenScene extends Phaser.Scene {
     private currentRoomSelected: RoomJoiningData | null = null;
@@ -31,15 +31,10 @@ export default class TitleScreenScene extends Phaser.Scene {
         this.playerName = this.getPlayerName();
 
         try {
-            const room = await this.client.joinOrCreate("my_room", {
-                playerData: { name: this.playerName }
-            });
-
-            const messageBuffer = this.bufferCriticalMessages(room);
+            const messageBuffer = await RoomManager.quickPlay(this.playerName);
 
             this.scene.start(SceneNames.Game, {
                 playerData: { name: this.playerName },
-                room,
                 messageBuffer
             });
         } catch (e: any) {
@@ -49,23 +44,15 @@ export default class TitleScreenScene extends Phaser.Scene {
     }
 
     private async createGame() {
-        const gameName = (document.getElementById("game-name") as HTMLInputElement).value;
-        const password = (document.getElementById("password") as HTMLInputElement).value;
+        const gameName = (document.getElementById("game-name") as HTMLInputElement).value.trim() || generateDefaultRoomName(this.playerName);
+        const password = (document.getElementById("password") as HTMLInputElement).value.trim();
         const mapId = (document.getElementsByClassName("map-id")[0] as HTMLInputElement).value;
 
         try {
-            const room = await this.client.create("my_room", {
-                playerData: { name: this.playerName },
-                gameName,
-                password,
-                mapId
-            });
-
-            const messageBuffer = this.bufferCriticalMessages(room);
+            const messageBuffer = await RoomManager.createGame(this.playerName, gameName, password, mapId);
 
             this.scene.start(SceneNames.Game, {
                 playerData: { name: this.playerName },
-                room,
                 messageBuffer
             });
         } catch (e: any) {
@@ -75,42 +62,19 @@ export default class TitleScreenScene extends Phaser.Scene {
     }
 
     private async joinGame() {
-        try {
-            const room = await this.client.joinById(
-                this.currentRoomSelected!.gameId,
-                {
-                    playerData: { name: this.playerName },
-                    password: this.currentRoomSelected?.password
-                }
-            );
+        if (!this.currentRoomSelected) return;
 
-            const messageBuffer = this.bufferCriticalMessages(room);
+        try {
+            const messageBuffer = await RoomManager.joinGame(this.playerName, this.currentRoomSelected);
 
             this.scene.start(SceneNames.Game, {
                 playerData: { name: this.playerName },
-                room,
                 messageBuffer
             });
         } catch (e: unknown) {
             const serverError = e as ServerError;
             showToast(serverError.message || "Failed to join room.");
         }
-    }
-
-    private bufferCriticalMessages(room: Room): { type: RequestTypes, data: any }[] {
-        const messageBuffer: { type: RequestTypes, data: any }[] = [];
-
-        room.onMessage(RequestTypes.FullSynchro, (data) => {
-            messageBuffer.push({ type: RequestTypes.FullSynchro, data });
-        });
-        room.onMessage(RequestTypes.TerrainSynchro, (data) => {
-            messageBuffer.push({ type: RequestTypes.TerrainSynchro, data });
-        });
-        room.onMessage(RequestTypes.PhaseSynchro, (data) => {
-            messageBuffer.push({ type: RequestTypes.PhaseSynchro, data });
-        });
-
-        return messageBuffer;
     }
 
     private showPasswordForm() {
@@ -201,7 +165,8 @@ export default class TitleScreenScene extends Phaser.Scene {
         mountWithTransition(uiRoot, roomCreationHtml);
 
         const gameName = document.getElementById("game-name")! as HTMLInputElement;
-        gameName.value = generateDefaultRoomName(this.playerName);
+        const placeholder = generateDefaultRoomName(this.playerName);
+        gameName.placeholder = placeholder;
 
         const form = document.querySelector("form")!;
         form.addEventListener("submit", (event) => {
