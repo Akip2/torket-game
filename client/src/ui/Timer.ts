@@ -34,9 +34,12 @@ export default class Timer extends UiText {
         const seconds = Math.ceil(timeLeft / 1000);
         this.setText(`${seconds}`);
 
-        const padding = 10;
+        const fixedWidth = 35;
         const height = 26;
-        this.background.setSize(this.width + padding, height);
+        this.background.setSize(fixedWidth, height);
+
+        // center the text on the background
+        this.setPosition(this.background.x, this.y);
         this.background.setPosition(this.x, this.y - 3);
     }
 }
