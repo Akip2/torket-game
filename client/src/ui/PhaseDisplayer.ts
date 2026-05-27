@@ -23,17 +23,17 @@ export default class PhaseDisplayer extends UiText {
         phaseManager: PhaseManagerClient,
         style: Phaser.Types.GameObjects.Text.TextStyle
     ) {
-        const background = scene.add.rectangle(GAME_WIDTH / 2, 15, 0, 0, 0x1a1a1a, 0.7);
+        const background = scene.add.rectangle(GAME_WIDTH / 2, 15, 0, 0, 0x071623, 0.85);
         scene.uiContainer.add(background);
 
         const phaseName = phaseManager.currentPhase.name
         super(scene, phaseName, GAME_WIDTH / 2, 15, style);
         this.phaseManager = phaseManager;
-        this.setOrigin(0, 0);
+        this.setOrigin(0.5, 0);
 
         this.background = background
         this.background.setDepth(Depths.First - 1);
-        this.background.setStrokeStyle(2, 0x44aa44);
+        this.background.setStrokeStyle(2, 0x4dd0ff);
         this.background.setOrigin(0.5, 0);
 
         this.setDepth(Depths.First);
@@ -53,15 +53,18 @@ export default class PhaseDisplayer extends UiText {
                 this.setText(currentPhase.name);
             }
             
-            this.x = (GAME_WIDTH / 2) - this.width / 2;
+            this.x = GAME_WIDTH / 2;
 
-            const padding = 20;
-            const height = 40;
+            const padding = 12;
+            const height = 28;
             this.background.setSize(this.width + padding, height);
             this.background.x = GAME_WIDTH / 2;
 
             if (currentPhase.isTimed) {
                 const timeLeft = (currentPhase as TimedPhase).getTimeLeft();
+                const timerSpacing = 6;
+                const timerY = 15 + height + timerSpacing;
+                this.timer.setPosition(this.background.x, timerY);
                 this.timer.update(timeLeft);
             } else {
                 this.timer.disable();

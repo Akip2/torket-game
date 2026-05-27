@@ -37,7 +37,7 @@ export const PLAYER_CONST = {
     SELF_COLOR: 0x3498db,
     ENNEMY_COLOR: 0xdb3445,
 
-    BASE_MAX_MOVEMENT: 100,
+    BASE_MAX_MOVEMENT: 150,
 
     BASE_MASS: 15,
 

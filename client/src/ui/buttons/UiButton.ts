@@ -4,13 +4,18 @@ import { lightenHexColor, darkenHexColor } from "../../client-utils";
 
 export default class UiButton extends Phaser.GameObjects.Container {
     private bg: Phaser.GameObjects.Rectangle;
+    private glowBg?: Phaser.GameObjects.Rectangle;
+    private shadowBg?: Phaser.GameObjects.Rectangle;
     private label: Phaser.GameObjects.Text;
     private baseColor: number;
+    private borderColor: number;
     private originalText: string;
     private loadingSpinner?: Phaser.GameObjects.Arc;
     private loadingTween?: Phaser.Tweens.Tween;
     private wasEnabledBeforeLoading: boolean = true;
     protected isEnabled: boolean = true;
+    private glowTween?: Phaser.Tweens.Tween;
+    private isPointerOver: boolean = false;
 
     constructor(
         scene: GameScene,
@@ -23,7 +28,31 @@ export default class UiButton extends Phaser.GameObjects.Container {
         super(scene, x, y);
 
         this.baseColor = style.backgroundColor;
+        this.borderColor = style.borderColor || 0xffffff;
 
+        this.shadowBg = scene.add.rectangle(
+            3,
+            3,
+            style.width,
+            style.height,
+            0x000000,
+            0.4
+        );
+        this.add(this.shadowBg);
+
+        // Create glow background (for hover effect)
+        this.glowBg = scene.add.rectangle(
+            0,
+            0,
+            style.width + 10,
+            style.height + 10,
+            this.borderColor,
+            0
+        );
+        this.glowBg.setDepth(-1);
+        this.add(this.glowBg);
+
+        // Main background
         this.bg = scene.add.rectangle(
             0,
             0,
@@ -43,34 +72,69 @@ export default class UiButton extends Phaser.GameObjects.Container {
         this.originalText = text;
         this.createLoadingSpinner(scene, style.width);
 
-        this.add([this.bg, this.label]);
+        this.add([this.glowBg, this.bg, this.label]);
 
+        // Setup hover effects with glow
         this.bg.on('pointerover', () => {
             if (!this.isEnabled) return;
+            
+            this.isPointerOver = true;
+
+            console.log(this.baseColor);
             this.bg.setFillStyle(lightenHexColor(this.baseColor));
-            // Scale up on hover
+            
+            // Glow animation
+            if (this.glowTween) this.glowTween.stop();
+            this.glowTween = (this.scene as GameScene).tweens.add({
+                targets: this.glowBg,
+                alpha: 0.6,
+                duration: 200,
+                ease: 'Quad.easeOut'
+            });
+
+            // Scale up smoothly
             (this.scene as GameScene).tweens.add({
                 targets: this,
-                scale: 1.1,
-                duration: 150,
+                scale: 1.12,
+                duration: 200,
                 ease: 'Quad.easeOut'
             });
         });
 
         this.bg.on('pointerout', () => {
             if (!this.isEnabled) return;
+            
+            this.isPointerOver = false;
             this.bg.setFillStyle(this.baseColor);
-            // Scale back down
+            
+            // Fade glow
+            if (this.glowTween) this.glowTween.stop();
+            this.glowTween = (this.scene as GameScene).tweens.add({
+                targets: this.glowBg,
+                alpha: 0,
+                duration: 300,
+                ease: 'Quad.easeIn'
+            });
+
+            // Scale back
             (this.scene as GameScene).tweens.add({
                 targets: this,
                 scale: 1,
-                duration: 150,
+                duration: 200,
                 ease: 'Quad.easeOut'
             });
         });
 
         this.bg.on('pointerdown', () => {
             if (!this.isEnabled) return;
+
+            // Press effect
+            (this.scene as GameScene).tweens.add({
+                targets: this,
+                scale: 0.96,
+                duration: 80,
+                ease: 'Quad.easeIn'
+            });
 
             this.createClickPulse(scene);
             const possiblePromise = onClick();
@@ -80,28 +144,53 @@ export default class UiButton extends Phaser.GameObjects.Container {
             }
         });
 
+        this.bg.on('pointerup', () => {
+            if (!this.isEnabled) return;
+            // Return to hover/normal scale
+            (this.scene as GameScene).tweens.add({
+                targets: this,
+                scale: this.isPointerOver ? 1.12 : 1,
+                duration: 150,
+                ease: 'Quad.easeOut'
+            });
+        });
+
         scene.add.existing(this);
+        
+        // Subtle idle pulse animation
+        this.createIdlePulse(scene);
+    }
+
+    private createIdlePulse(scene: GameScene) {
+        scene.tweens.add({
+            targets: this.glowBg,
+            alpha: 0.1,
+            yoyo: true,
+            repeat: -1,
+            duration: 2500,
+            ease: 'Sine.easeInOut'
+        });
     }
 
     private createLoadingSpinner(scene: GameScene, width: number) {
         this.loadingSpinner = scene.add.arc(
             -width / 4,
             0,
-            8,
+            10,
             0,
             270,
             false,
             0xffffff,
             0
         );
-        this.loadingSpinner.setStrokeStyle(2, 0xffffff, 0.9);
+        this.loadingSpinner.setStrokeStyle(3, 0xffffff, 0.95);
         this.loadingSpinner.setVisible(false);
         this.add(this.loadingSpinner);
 
         this.loadingTween = scene.tweens.add({
             targets: this.loadingSpinner,
             angle: 360,
-            duration: 700,
+            duration: 600,
             repeat: -1,
             ease: 'Linear',
             paused: true
@@ -110,9 +199,11 @@ export default class UiButton extends Phaser.GameObjects.Container {
 
     public disable() {
         this.isEnabled = false;
-        this.setAlpha(0.5);
+        this.setAlpha(0.4);
         this.bg.disableInteractive();
         this.bg.setFillStyle(darkenHexColor(this.baseColor));
+        if (this.glowTween) this.glowTween.stop();
+        if (this.glowBg) this.glowBg.setAlpha(0);
     }
 
     public enable() {
@@ -126,7 +217,7 @@ export default class UiButton extends Phaser.GameObjects.Container {
         if (loading) {
             this.wasEnabledBeforeLoading = this.isEnabled;
             this.disable();
-            this.label.setText("Loading");
+            this.label.setText("...");
             if (this.loadingSpinner) {
                 this.loadingSpinner.setVisible(true);
                 this.loadingTween?.play();
@@ -146,23 +237,27 @@ export default class UiButton extends Phaser.GameObjects.Container {
     }
 
     private createClickPulse(scene: GameScene) {
-        // Create a small pulse/glow on click
-        const pulse = scene.add.circle(
-            this.x,
-            this.y,
-            30,
-            0xffffff,
-            0.3
-        );
-        pulse.setDepth(this.depth - 1);
+        // Create multiple ripple effects
+        for (let i = 0; i < 2; i++) {
+            setTimeout(() => {
+                const pulse = scene.add.circle(
+                    this.x,
+                    this.y,
+                    15,
+                    this.borderColor,
+                    0.5
+                );
+                pulse.setDepth(this.depth - 1);
 
-        scene.tweens.add({
-            targets: pulse,
-            radius: 60,
-            alpha: 0,
-            duration: 300,
-            ease: 'Quad.easeOut',
-            onComplete: () => pulse.destroy()
-        });
+                scene.tweens.add({
+                    targets: pulse,
+                    radius: 80,
+                    alpha: 0,
+                    duration: 500,
+                    ease: 'Quad.easeOut',
+                    onComplete: () => pulse.destroy()
+                });
+            }, i * 100);
+        }
     }
 }

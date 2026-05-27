@@ -16,7 +16,8 @@ const config = {
     resolution: window.devicePixelRatio,
 
     scale: {
-        mode: Phaser.Scale.NONE,
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
         resolution: window.devicePixelRatio,
     },
 

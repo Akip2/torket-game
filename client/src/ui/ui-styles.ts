@@ -37,17 +37,17 @@ export const TextStyle = {
 
     PhaseDisplayer: {
         fontFamily: "Arial",
-        color: "#44ff44",
-        fontSize: 32,
+        color: "#e3f6fd",
+        fontSize: 20,
         fontStyle: "bold",
-        stroke: "#000000",
+        stroke: "#091e2b",
         strokeThickness: 2
     },
 
     Timer: {
         fontFamily: "Arial",
-        fontSize: 27,
-        color: "#ffaa44",
+        fontSize: 18,
+        color: "#ffe9b5",
         align: "center",
         fontStyle: "bold"
     }
@@ -55,34 +55,34 @@ export const TextStyle = {
 
 export const ButtonStyle = {
     MoveButton: {
-        width: 220,
-        height: 70,
-        radius: 6,
+        width: 280,
+        height: 90,
+        radius: 12,
 
-        backgroundColor: 0x2563eb,
-        borderColor: 0xffffff,
-        borderThickness: 3,
+        backgroundColor: 0x0c6bb7,
+        borderColor: 0x00d4ff,
+        borderThickness: 4,
 
         text: {
             fontFamily: "Arial",
-            fontSize: "32px",
+            fontSize: "36px",
             color: "#ffffff",
             fontStyle: "bold"
         }
     },
 
     ShootButton: {
-        width: 220,
-        height: 70,
-        radius: 6,
+        width: 280,
+        height: 90,
+        radius: 12,
 
-        backgroundColor: 0xc01616,
-        borderColor: 0xffffff,
-        borderThickness: 3,
+        backgroundColor: 0xd62828,
+        borderColor: 0xff6b6b,
+        borderThickness: 4,
 
         text: {
             fontFamily: "Arial",
-            fontSize: "32px",
+            fontSize: "36px",
             color: "#ffffff",
             fontStyle: "bold"
         }

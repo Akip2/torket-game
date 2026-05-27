@@ -5,7 +5,14 @@ import tinycolor from "tinycolor2";
 const SERVER_URL: string = import.meta.env.VITE_SERVER_URL || "ws://localhost:2567";
 
 export function lightenHexColor(hex: number, coef: number = 7.5) {
-    return parseInt(tinycolor(hex.toString(16)).lighten(coef).toHexString().replace("#", ""), 16);
+    const hexString = "#" + hex.toString(16).padStart(6, "0");
+
+    return parseInt(
+        tinycolor(hexString)
+            .lighten(coef)
+            .toHex()
+        , 16
+    );
 }
 
 export function darkenHexColor(hex: number, coef: number = 7.5) {

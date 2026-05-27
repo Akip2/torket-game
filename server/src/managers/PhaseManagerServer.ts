@@ -56,7 +56,7 @@ export default class PhaseManagerServer {
         this.currentIndex = -1;
     }
 
-    setCurrentPhase(phase: Phase) {
+    async setCurrentPhase(phase: Phase) {
         clearTimeout(this.timeOut);
 
         if (phase instanceof TimedPhase) {
@@ -66,7 +66,7 @@ export default class PhaseManagerServer {
                     this.next()
                     if(phase instanceof StartingPhase) this.onGameStart();
                 },
-                (phase as TimedPhase).duration * 1000
+                (phase as TimedPhase).duration * 1000 + 1250
             );
         }
 
