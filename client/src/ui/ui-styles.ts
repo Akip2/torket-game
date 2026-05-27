@@ -55,34 +55,34 @@ export const TextStyle = {
 
 export const ButtonStyle = {
     MoveButton: {
-        width: 220,
-        height: 70,
-        radius: 6,
+        width: 280,
+        height: 90,
+        radius: 12,
 
-        backgroundColor: 0x2563eb,
-        borderColor: 0xffffff,
-        borderThickness: 3,
+        backgroundColor: 0x0c6bb7,
+        borderColor: 0x00d4ff,
+        borderThickness: 4,
 
         text: {
             fontFamily: "Arial",
-            fontSize: "32px",
+            fontSize: "36px",
             color: "#ffffff",
             fontStyle: "bold"
         }
     },
 
     ShootButton: {
-        width: 220,
-        height: 70,
-        radius: 6,
+        width: 280,
+        height: 90,
+        radius: 12,
 
-        backgroundColor: 0xc01616,
-        borderColor: 0xffffff,
-        borderThickness: 3,
+        backgroundColor: 0xd62828,
+        borderColor: 0xff6b6b,
+        borderThickness: 4,
 
         text: {
             fontFamily: "Arial",
-            fontSize: "32px",
+            fontSize: "36px",
             color: "#ffffff",
             fontStyle: "bold"
         }
