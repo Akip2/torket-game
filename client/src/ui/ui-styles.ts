@@ -37,17 +37,17 @@ export const TextStyle = {
 
     PhaseDisplayer: {
         fontFamily: "Arial",
-        color: "#44ff44",
-        fontSize: 32,
+        color: "#e3f6fd",
+        fontSize: 20,
         fontStyle: "bold",
-        stroke: "#000000",
+        stroke: "#091e2b",
         strokeThickness: 2
     },
 
     Timer: {
         fontFamily: "Arial",
-        fontSize: 27,
-        color: "#ffaa44",
+        fontSize: 18,
+        color: "#ffe9b5",
         align: "center",
         fontStyle: "bold"
     }
