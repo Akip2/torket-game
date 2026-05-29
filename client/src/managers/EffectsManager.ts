@@ -3,6 +3,7 @@ import { Depths } from "@shared/enums/Depths.enum.ts";
 
 export default class EffectsManager {
     private scene: GameScene;
+    private activeDamageBoxes: Array<{ x: number; y: number; width: number; height: number; ref: Phaser.GameObjects.Text }> = [];
 
     constructor(scene: GameScene) {
         this.scene = scene;
@@ -96,13 +97,54 @@ export default class EffectsManager {
         text.setDepth(Depths.Second);
         this.scene.worldContainer.add(text);
 
+        // Avoid overlapping: stack upwards if nearby damage numbers exist
+        const padding = 6;
+        const horizontalThreshold = 48; // pixels
+        let targetX = x;
+        let targetY = y;
+
+        const textW = text.width;
+        const textH = text.height;
+
+        // Try shifting upwards until there's no overlap with active boxes
+        let attempts = 0;
+        while (attempts < 10) {
+            let overlap = false;
+            for (const box of this.activeDamageBoxes) {
+                const dx = Math.abs(box.x - targetX);
+                if (dx > horizontalThreshold) continue;
+
+                const boxTop = box.y - box.height / 2;
+                const boxBottom = box.y + box.height / 2;
+                const textTop = targetY - textH / 2;
+                const textBottom = targetY + textH / 2;
+
+                if (!(textBottom < boxTop || textTop > boxBottom)) {
+                    overlap = true;
+                    break;
+                }
+            }
+
+            if (!overlap) break;
+            targetY -= (textH + padding);
+            attempts++;
+        }
+
+        // Register active box
+        this.activeDamageBoxes.push({ x: targetX, y: targetY, width: textW, height: textH, ref: text });
+
         this.scene.tweens.add({
             targets: text,
-            y: y - 50,
+            y: targetY - 50,
             alpha: 0,
             duration: 1000,
             ease: 'Quad.easeOut',
-            onComplete: () => text.destroy()
+            onComplete: () => {
+                // remove from active list
+                const idx = this.activeDamageBoxes.findIndex(b => b.ref === text);
+                if (idx !== -1) this.activeDamageBoxes.splice(idx, 1);
+                text.destroy();
+            }
         });
     }
 

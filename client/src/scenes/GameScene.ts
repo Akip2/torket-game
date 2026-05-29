@@ -178,7 +178,22 @@ export default class GameScene extends Phaser.Scene {
 
         this.room.onMessage(RequestTypes.HealthUpdate, (healthUpdateInfo) => {
             const playerObject = this.playerManager.getPlayer(healthUpdateInfo.playerId);
-            playerObject.hp = healthUpdateInfo.hp;
+            if (!playerObject) return;
+            const previousHp = playerObject.hp;
+            const newHp = healthUpdateInfo.hp;
+            const damage = healthUpdateInfo.damage ?? Math.max(0, previousHp - newHp);
+            const directHit = healthUpdateInfo.directHit ?? false;
+            playerObject.hp = newHp;
+
+            if (damage > 0) {
+                const textY = playerObject.y - playerObject.height * 0.75;
+                const isCrit = directHit || damage >= 12;
+                this.effectsManager.damageNumber(playerObject.x, textY, damage, isCrit);
+
+                if (directHit) {
+                    this.effectsManager.hitFlash(playerObject, 0xff4444, 160);
+                }
+            }
 
             if (playerObject.hp <= 0) {
                 playerObject.setDead();

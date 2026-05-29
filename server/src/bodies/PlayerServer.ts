@@ -14,7 +14,7 @@ export default class PlayerServer extends GameBody implements IPlayer {
     isOnGround: boolean = false;
     playerRef: Player;
     sessionId: string;
-    onDamage: (hp: number) => void;
+    onDamage: (hp: number, damage?: number, directHit?: boolean) => void;
     lastProcessedTimeStamp: number = 0;
     powerManager: PowerManager;
 
@@ -23,7 +23,7 @@ export default class PlayerServer extends GameBody implements IPlayer {
 
     currentScale: number;
 
-    constructor(playerRef: Player, sessionId: string, onDamage: (hp: number) => void, size: number = PLAYER_CONST.BASE_WIDTH) {
+    constructor(playerRef: Player, sessionId: string, onDamage: (hp: number, damage?: number, directHit?: boolean) => void, size: number = PLAYER_CONST.BASE_WIDTH) {
         const body = Bodies.rectangle(playerRef.x, playerRef.y, size, size, {
             friction: 0,
             frictionAir: 0.05,
@@ -90,7 +90,7 @@ export default class PlayerServer extends GameBody implements IPlayer {
             this.die();
         }
 
-        this.onDamage(this.playerRef.hp);
+        this.onDamage(this.playerRef.hp, actualDamage, directHit);
     }
 
     instantDeath() {

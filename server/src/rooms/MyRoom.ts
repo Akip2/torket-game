@@ -96,7 +96,7 @@ export class MyRoom extends Room<MyRoomState> {
         player.timeStamp = 0;
         player.hp = PLAYER_CONST.BASE_MAX_HP;
 
-        this.playerManager.addPlayer(client.sessionId, player, (hp: number) => this.onPlayerDamage(client.sessionId, hp), this.physicsManager)
+        this.playerManager.addPlayer(client.sessionId, player, (hp: number, damage?: number, directHit?: boolean) => this.onPlayerDamage(client.sessionId, hp, damage, directHit), this.physicsManager)
         this.state.players.set(client.sessionId, player);
 
         this.synchronizeFully(client);
@@ -309,8 +309,8 @@ export class MyRoom extends Room<MyRoomState> {
         this.phaseManager.next(500);
     }
 
-    broadcastDamage(playerId: string, hp: number) {
-        this.broadcast(RequestTypes.HealthUpdate, { playerId, hp });
+    broadcastDamage(playerId: string, hp: number, damage?: number, directHit?: boolean) {
+        this.broadcast(RequestTypes.HealthUpdate, { playerId, hp, damage, directHit });
     }
 
     broadcastPhase(phase: Phase) {
@@ -339,8 +339,8 @@ export class MyRoom extends Room<MyRoomState> {
         }
     }
 
-    onPlayerDamage(playerId: string, hp: number) {
-        this.broadcastDamage(playerId, hp);
+    onPlayerDamage(playerId: string, hp: number, damage?: number, directHit?: boolean) {
+        this.broadcastDamage(playerId, hp, damage, directHit);
 
         const playersAlive = this.playerManager.getPlayersAlive();
         if (playersAlive.length === 1) {

@@ -17,8 +17,8 @@ export default class PlayerManagerServer {
         this.playerBodies = new Map();
     }
 
-    addPlayer(sessionId: string, player: Player, onDamage: (hp: number) => void, physicsManager: PhysicsManager) {
-        const playerBody = new PlayerServer(player, sessionId, (hp: number) => onDamage(hp));
+    addPlayer(sessionId: string, player: Player, onDamage: (hp: number, damage?: number, directHit?: boolean) => void, physicsManager: PhysicsManager) {
+        const playerBody = new PlayerServer(player, sessionId, (hp: number, damage?: number, directHit?: boolean) => onDamage(hp, damage, directHit));
         this.playerBodies.set(sessionId, playerBody);
         physicsManager.add(playerBody);
     }
@@ -83,7 +83,8 @@ export default class PlayerManagerServer {
             playerReactToExplosion(p, pendingExplosion);
 
             if (isPlayerInRadius(p, pendingExplosion.cx, pendingExplosion.cy, pendingExplosion.radius)) {
-                this.playerBodies.get(id)?.applyDamage(pendingExplosion.damage!, true);
+                // Explosion damage is not a direct hit
+                this.playerBodies.get(id)?.applyDamage(pendingExplosion.damage!, false);
             }
         });
     }
