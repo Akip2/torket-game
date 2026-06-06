@@ -2,7 +2,7 @@ import { Border } from "./enums/Border.enum";
 import { Parameter } from "./enums/Parameter.enum";
 import type { ParameterChangeCoef, Rectangle } from "./types";
 
-export const DEBUG = false;
+export const DEBUG = true;
 export const FREE_ROAM = false;
 export const CLIENT_PREDICTION = true;
 
@@ -65,6 +65,13 @@ export const BULLET_CONST = {
     TRAIL_DISTANCE: 2,
     AIR_FRICTION: 0.01,
     GRAVITY_SCALE: 1,
+}
+
+export const CAPTURE_POINT_CONST = {
+    RADIUS: 19,
+    BASE_COLOR: 0xD3D3D3,
+    SELF_COLOR: 0x3498db,
+    ENNEMY_COLOR: 0xFF7F7F,
 }
 
 export const EXPLOSION_CONST = {

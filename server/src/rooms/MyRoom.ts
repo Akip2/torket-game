@@ -23,9 +23,9 @@ import { Border } from "@shared/enums/Border.enum";
 import { cleanPlayerName, generateDefaultRoomName } from "@shared/utils";
 import { ServerErrorCode } from "@shared/enums/ServerErrorCode.enum";
 import WaitingPhase from "@shared/data/phases/WaitingPhase";
-import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
 import BulletServer from "../bodies/BulletServer";
 import { Parameter } from "@shared/enums/Parameter.enum";
+import { CapturePointManagerServer } from "../managers/CapturePointManagerServer";
 
 dotenv.config();
 
@@ -40,6 +40,7 @@ export class MyRoom extends Room<MyRoomState> {
     phaseManager!: PhaseManagerServer;
     physicsManager: PhysicsManager = new PhysicsManager();
     playerManager: PlayerManagerServer = new PlayerManagerServer();
+    capturePointManager!: CapturePointManagerServer;
 
     bullets: BulletServer[] = [];
 
@@ -215,6 +216,8 @@ export class MyRoom extends Room<MyRoomState> {
 
         this.terrainManager = new TerrainManagerServer(this.physicsManager, quadTree);
         this.terrainManager.createTerrain();
+
+        this.capturePointManager = new CapturePointManagerServer(map.capturePoints);
     }
 
     setupCollisionEvents() {
@@ -329,6 +332,7 @@ export class MyRoom extends Room<MyRoomState> {
     synchronizeFully(client?: Client) {
         const content = {
             terrain: this.terrainManager.root,
+            capturePoints: this.capturePointManager.getSerializedCapturePoints(),
             phase: this.phaseManager.currentPhase
         };
 

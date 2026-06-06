@@ -1,4 +1,4 @@
-import { BULLET_CONST, PLAYER_CONST } from "@shared/const";
+import { BULLET_CONST, CAPTURE_POINT_CONST, PLAYER_CONST } from "@shared/const";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { darkenHexColor } from "../client-utils";
 
@@ -14,6 +14,7 @@ export default class TextureManager {
         this.generatePlayerTexture(false);
         this.generateBulletTexture();
         this.generateGunTexture();
+        this.generateCapturePointTexture();
     }
 
     generatePlayerTexture(self: boolean = true, size = 32) {
@@ -21,7 +22,7 @@ export default class TextureManager {
 
         const baseColor = self ? PLAYER_CONST.SELF_COLOR : PLAYER_CONST.ENNEMY_COLOR;
         const borderColor = darkenHexColor(baseColor, 25);
-        const key = self ? RessourceKeys.Player : RessourceKeys.PlayerEnnemy; 
+        const key = self ? RessourceKeys.Player : RessourceKeys.PlayerEnnemy;
 
         g.fillStyle(baseColor, 1);
         g.fillRect(0, 0, size, size);
@@ -40,6 +41,32 @@ export default class TextureManager {
         g.fillCircle(radius, radius, radius);
 
         g.generateTexture(RessourceKeys.Bullet, radius * 2, radius * 2);
+        g.destroy();
+    }
+
+    generateCapturePointTexture(radius = CAPTURE_POINT_CONST.RADIUS) {
+        const g = this.factory.graphics();
+        const size = radius * 2;
+        const cx = radius;
+        const cy = radius;
+
+        g.fillStyle(0x555555, 1);
+        g.fillCircle(cx, cy, radius);
+
+        // Outer ring
+        g.lineStyle(3, 0xFFFFFF, 0.9);
+        g.strokeCircle(cx, cy, radius - 2);
+
+        // Center dot
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillCircle(cx, cy, 4);
+
+        // Cross lines
+        g.lineStyle(3, 0xFFFFFF, 0.6);
+        g.lineBetween(cx - radius + 4, cy, cx + radius - 4, cy);
+        g.lineBetween(cx, cy - radius + 4, cx, cy + radius - 4);
+
+        g.generateTexture(RessourceKeys.CapturePoint, size, size);
         g.destroy();
     }
 

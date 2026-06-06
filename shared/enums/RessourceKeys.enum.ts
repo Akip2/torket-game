@@ -7,6 +7,7 @@ export enum RessourceKeys {
     Bullet = "bullet",
     Gun = "gun",
     Border = "border",
+    CapturePoint  = "capture-point",
 
     //SOUNDS
     Explosion = "explosion",

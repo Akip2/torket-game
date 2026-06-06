@@ -29,6 +29,8 @@ import SoundManager from "../managers/SoundManager";
 import { setCookie } from "typescript-cookie";
 import RoomManager from "../managers/RoomManager";
 import EndTurnButton from "../ui/buttons/EndTurnButton";
+import CapturePointClient from "../game-objects/CapturePointClient";
+import CapturePointManagerClient from "../managers/CapturePointManagerClient";
 
 export default class GameScene extends Phaser.Scene {
     active: boolean = true;
@@ -49,6 +51,7 @@ export default class GameScene extends Phaser.Scene {
     shotManager!: ShotManager;
     phaseManager!: PhaseManagerClient;
     effectsManager!: EffectsManager;
+    capturePointManager!: CapturePointManagerClient;
 
     worldContainer!: Phaser.GameObjects.Container;
     uiContainer!: Phaser.GameObjects.Container;
@@ -118,6 +121,7 @@ export default class GameScene extends Phaser.Scene {
 
         this.shotManager = new ShotManager(this);
         this.effectsManager = new EffectsManager(this);
+        this.capturePointManager = new CapturePointManagerClient(this);
         this.phaseManager = new PhaseManagerClient();
 
         this.playerManager = new PlayerManagerClient(this.room);
@@ -140,6 +144,8 @@ export default class GameScene extends Phaser.Scene {
 
     async setupRoomMessages() {
         this.room.onMessage(RequestTypes.TerrainSynchro, (quadBlock) => {
+            console.log("TERRAIN SYNC");
+
             this.terrainManager.constructQuadBlock(quadBlock);
             this.terrainManager.redrawTerrain();
         });
@@ -166,8 +172,14 @@ export default class GameScene extends Phaser.Scene {
         });
 
         this.room.onMessage(RequestTypes.FullSynchro, (synchroInfo: FullSynchroInfo) => {
+            console.log("FULL SYNC");
+
             this.terrainManager.constructQuadBlock(synchroInfo.terrain);
             this.terrainManager.redrawTerrain();
+
+            this.capturePointManager.syncCapturePoints(synchroInfo.capturePoints);
+
+            console.log(synchroInfo.capturePoints);
 
             this.phaseManager.setCurrentPhase(synchroInfo.phase);
         });
@@ -234,10 +246,12 @@ export default class GameScene extends Phaser.Scene {
                 this.terrainManager.constructQuadBlock(data.terrain);
                 this.terrainManager.redrawTerrain();
                 this.phaseManager.setCurrentPhase(data.phase);
+                this.capturePointManager.syncCapturePoints(data.capturePoints);
             }
             if (type === RequestTypes.TerrainSynchro) {
                 this.terrainManager.constructQuadBlock(data);
                 this.terrainManager.redrawTerrain();
+
             }
             if (type === RequestTypes.PhaseSynchro) {
                 this.phaseManager.setCurrentPhase(data);
@@ -455,10 +469,14 @@ export default class GameScene extends Phaser.Scene {
     debugFunction() {
         if (!DEBUG) return;
 
+        /*
         const self = this.playerManager.getPlayer(this.room.sessionId);
         const powerName = "Fatso";
 
         self.addPower(powerName);
         this.room.send(RequestTypes.PowerUpdate, { powerName: powerName })
+        */
+
+        new CapturePointClient(this, 400, 400);
     }
 }

@@ -1,5 +1,6 @@
 import type Phase from "./data/phases/Phase";
 import type PrimitiveMap from "./data/PrimitiveMap";
+import type { CaptureStatus } from "./enums/CaptureStatus.enum";
 import type { Depths } from "./enums/Depths.enum";
 import type { RequestTypes } from "./enums/RequestTypes.enum";
 
@@ -38,8 +39,16 @@ export type PendingExplosion = {
     damage?: number;
 }
 
+export type CapturePoint = {
+    x: number;
+    y: number;
+
+    status: CaptureStatus;
+}
+
 export type FullSynchroInfo = {
     terrain: QuadBlockType,
+    capturePoints: CapturePoint[],
     phase: Phase
 }
 
@@ -89,6 +98,7 @@ export type UIButtonStyle = {
 };
 
 export type GameMap = {
+    capturePoints: Position[],
     playerPositions: Position[],
     quadTree: QuadBlockType
 }

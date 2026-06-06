@@ -1,5 +1,6 @@
-import { MapSchema, Schema, type } from "@colyseus/schema";
+import { ArraySchema, MapSchema, Schema, type } from "@colyseus/schema";
 import { FREE_ROAM, PLAYER_CONST } from "@shared/const";
+import { CaptureStatus } from "@shared/enums/CaptureStatus.enum";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
 import { InputPayload } from "@shared/types";
 
