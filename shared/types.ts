@@ -1,8 +1,8 @@
 import type Phase from "./data/phases/Phase";
 import type PrimitiveMap from "./data/PrimitiveMap";
-import type { CaptureStatus } from "./enums/CaptureStatus.enum";
 import type { Depths } from "./enums/Depths.enum";
 import type { RequestTypes } from "./enums/RequestTypes.enum";
+import { Team } from "./enums/Team.enum.ts";
 
 export type InputPayload = {
     up: boolean,
@@ -25,6 +25,11 @@ export type ShootInfo = {
     targetY: number
 }
 
+export type CaptureInfo = {
+    id: number;
+    newOwningTeam: Team;
+}
+
 export type ExplosionInfo = {
     explosionSize: number;
     explosionPushCoef: number;
@@ -43,7 +48,7 @@ export type CapturePoint = {
     x: number;
     y: number;
 
-    status: CaptureStatus;
+    owningTeam: Team | null;
 }
 
 export type FullSynchroInfo = {

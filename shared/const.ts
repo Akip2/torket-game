@@ -2,9 +2,9 @@ import { Border } from "./enums/Border.enum";
 import { Parameter } from "./enums/Parameter.enum";
 import type { ParameterChangeCoef, Rectangle } from "./types";
 
-export const DEBUG = true;
+export const DEBUG = false;
 export const FREE_ROAM = false;
-export const CLIENT_PREDICTION = true;
+export const CLIENT_PREDICTION = false;
 
 export const DEFAULT_MAP_ID = "mirrorhold";
 
@@ -37,7 +37,7 @@ export const PLAYER_CONST = {
     SELF_COLOR: 0x3498db,
     ENNEMY_COLOR: 0xdb3445,
 
-    BASE_MAX_MOVEMENT: 150,
+    BASE_MAX_MOVEMENT: FREE_ROAM ? 1000000 : 150,
 
     BASE_MASS: 15,
 

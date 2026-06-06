@@ -10,7 +10,7 @@ import ShotManager from "../managers/ShotManager";
 import PlayerManagerClient from "../managers/PlayerManagerClient";
 import EffectsManager from "../managers/EffectsManager";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
-import type { ExplosionInfo, FullSynchroInfo, InitData, PlayerData, Position, PowerUpdateData, ShootInfo } from "@shared/types";
+import type { CaptureInfo, ExplosionInfo, FullSynchroInfo, InitData, PlayerData, Position, PowerUpdateData, ShootInfo } from "@shared/types";
 import { Depths } from "@shared/enums/Depths.enum.ts";
 import PhaseManagerClient from "../managers/PhaseManagerClient";
 import PhaseDisplayer from "../ui/PhaseDisplayer";
@@ -236,6 +236,11 @@ export default class GameScene extends Phaser.Scene {
             this.gameEndScreen.appear(this);
         });
 
+        this.room.onMessage(RequestTypes.Capture, (captureInfo: CaptureInfo) => {
+            console.log("CAPTURE")
+            this.capturePointManager.updateCapturePoint(captureInfo.id, captureInfo.newOwningTeam);
+        })
+
         this.room.onMessage(RequestTypes.PowerUpdate, (powerUpdateData: PowerUpdateData) => {
             if (!powerUpdateData.id) return;
             const player = this.playerManager.getPlayer(powerUpdateData.id);
@@ -277,7 +282,7 @@ export default class GameScene extends Phaser.Scene {
                 this.active = false;
             } else {
                 this.active = true;
-                this.room.send(RequestTypes.TerrainSynchro);
+                this.room.send(RequestTypes.FullSynchro);
             }
         });
     }

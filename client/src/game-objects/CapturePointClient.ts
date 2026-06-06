@@ -30,10 +30,10 @@ export default class CapturePointClient extends Phaser.Physics.Matter.Sprite {
             case CaptureStatus.Neutral:
                 this.setTint(CAPTURE_POINT_CONST.BASE_COLOR);
                 break;
-            case CaptureStatus.Self:
+            case CaptureStatus.Captured:
                 this.setTint(CAPTURE_POINT_CONST.SELF_COLOR);
                 break;
-            case CaptureStatus.Ennemy:
+            case CaptureStatus.EnnemyOwned:
                 this.setTint(CAPTURE_POINT_CONST.ENNEMY_COLOR);
                 break;
         }

@@ -9,4 +9,5 @@ export enum RequestTypes {
     EndTurn = "end-turn",
     GameEnd = "game-end",
     PowerUpdate = "power-update",
+    Capture = "capture",
 }

@@ -4,9 +4,10 @@ import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { CAPTURE_POINT_CONST } from "@shared/const";
 import { CaptureStatus } from "@shared/enums/CaptureStatus.enum";
 import { CapturePoint } from "@shared/types";
+import { Team } from "@shared/enums/Team.enum.ts";
 
 export default class CapturePointServer extends GameBody {
-    private status: CaptureStatus;
+    private owningTeam: Team | null;
 
     constructor(x: number, y: number, id: number) {
         const body = Bodies.circle(x, y, CAPTURE_POINT_CONST.RADIUS, {
@@ -18,11 +19,15 @@ export default class CapturePointServer extends GameBody {
 
         super(body);
 
-        this.status = CaptureStatus.Neutral;
+        this.owningTeam = null;
     }
 
-    setStatus(status: CaptureStatus) {
-        this.status = status;
+    setOwningTeam(owningTeam: Team | null) {
+        this.owningTeam = owningTeam;
+    }
+
+    getOwningTeam() {
+        return this.owningTeam;
     }
 
     serialize(): CapturePoint {
@@ -30,7 +35,7 @@ export default class CapturePointServer extends GameBody {
             x: this.getX(),
             y: this.getY(),
 
-            status: this.status
+            owningTeam: this.owningTeam
         }
     }
 }

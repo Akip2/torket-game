@@ -1,28 +1,40 @@
 import { CapturePoint, Position } from "@shared/types";
 import CapturePointServer from "../bodies/CapturePointServer";
-import { CaptureStatus } from "@shared/enums/CaptureStatus.enum";
-import PlayerServer from "../bodies/PlayerServer";
+import { Team } from "@shared/enums/Team.enum.ts";
+import PhysicsManager from "./PhysicsManager";
 
 export class CapturePointManagerServer {
     private capturePoints: CapturePointServer[];
+    private onCapture: (id: number, newOwningTeam: Team | null) => void;
 
-    constructor(capturePointsPositions: Position[]) {
+    constructor(physicsManager: PhysicsManager, capturePointsPositions: Position[], onCapture: (id: number, newOwningTeam: Team | null) => void) {
         if (!capturePointsPositions) {
             this.capturePoints = [];
-            return;
+        } else {
+            this.capturePoints = capturePointsPositions.map((position, id) => {
+                const capturePoint = new CapturePointServer(position.x, position.y, id);
+                physicsManager.add(capturePoint);
+
+                return capturePoint;
+            })
         }
-        
-        this.capturePoints = capturePointsPositions.map((position, id) => {
-            return new CapturePointServer(position.x, position.y, id);
-        })
+
+        this.onCapture = onCapture;
     }
 
-    managePlayerContact(id: number, player: PlayerServer, shot: boolean) {
-        this.setCapturePoint(id, CaptureStatus.Self);
-    }
+    manageContact(id: number, team: Team, shot: boolean) {
+        const capturePoint = this.capturePoints[id];
+        const currentOwner = capturePoint.getOwningTeam();
 
-    setCapturePoint(id: number, status: CaptureStatus) {
-        this.capturePoints[id].setStatus(status);
+        if (currentOwner !== team.toString()) {
+            if (shot || currentOwner === null) {
+                capturePoint.setOwningTeam(team);
+            } else {
+                capturePoint.setOwningTeam(null);
+            }
+
+            this.onCapture(id, capturePoint.getOwningTeam());
+        }
     }
 
     getSerializedCapturePoints(): CapturePoint[] {

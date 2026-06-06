@@ -26,6 +26,7 @@ import WaitingPhase from "@shared/data/phases/WaitingPhase";
 import BulletServer from "../bodies/BulletServer";
 import { Parameter } from "@shared/enums/Parameter.enum";
 import { CapturePointManagerServer } from "../managers/CapturePointManagerServer";
+import { Team } from "@shared/enums/Team.enum.ts";
 
 dotenv.config();
 
@@ -96,6 +97,7 @@ export class MyRoom extends Room<MyRoomState> {
         player.y = startingPosition.y;
         player.timeStamp = 0;
         player.hp = PLAYER_CONST.BASE_MAX_HP;
+        player.team = (this.playerManager.getPlayerNb() % 2 == 0) ? Team.Blue : Team.Red;
 
         this.playerManager.addPlayer(client.sessionId, player, (hp: number, damage?: number, directHit?: boolean) => this.onPlayerDamage(client.sessionId, hp, damage, directHit), this.physicsManager)
         this.state.players.set(client.sessionId, player);
@@ -166,7 +168,8 @@ export class MyRoom extends Room<MyRoomState> {
                 originPosition.x,
                 originPosition.y,
                 BULLET_CONST.RADIUS,
-                explosionInfo
+                explosionInfo,
+                playerBody.getTeam()
             );
 
             this.bullets.push(bullet);
@@ -180,6 +183,10 @@ export class MyRoom extends Room<MyRoomState> {
                 shootInfo: shootInfo,
                 explosionInfo: explosionInfo
             }, { except: client });
+        });
+
+        this.onMessage(RequestTypes.FullSynchro, (client) => {
+            this.synchronizeFully(client);
         });
 
         this.onMessage(RequestTypes.TerrainSynchro, (client) => {
@@ -217,7 +224,7 @@ export class MyRoom extends Room<MyRoomState> {
         this.terrainManager = new TerrainManagerServer(this.physicsManager, quadTree);
         this.terrainManager.createTerrain();
 
-        this.capturePointManager = new CapturePointManagerServer(map.capturePoints);
+        this.capturePointManager = new CapturePointManagerServer(this.physicsManager, map.capturePoints, (id, newOwningTeam) => {this.broadcastCapture(id, newOwningTeam)});
     }
 
     setupCollisionEvents() {
@@ -228,46 +235,47 @@ export class MyRoom extends Room<MyRoomState> {
                 const plugins = [bodyA.plugin, bodyB.plugin];
                 const playerLabel = labels.find(label => label.startsWith(`${RessourceKeys.Player}:`));
 
-                if (labels.includes(RessourceKeys.Bullet) && (labels.includes(RessourceKeys.Ground) || labels.includes(RessourceKeys.Border) || playerLabel)) {
-                    const bullet = (bodyA.label === RessourceKeys.Bullet ? bodyA : bodyB) as any;
+                if (labels.includes(RessourceKeys.Bullet) && (labels.includes(RessourceKeys.Ground) || labels.includes(RessourceKeys.CapturePoint) || labels.includes(RessourceKeys.Border) || playerLabel)) {
+                    const isBulletA = (bodyA.label === RessourceKeys.Bullet);
+                    const bullet = (isBulletA ? bodyA : bodyB) as any;
 
                     if (bullet.hasAlreadyExplosed) continue;
 
                     bullet.hasAlreadyExplosed = true;
 
-                    if (bullet) {
-                        const idx = this.bullets.findIndex(b => b.body === bullet);
-                        if (idx !== -1) {
-                            const [bulletObject] = this.bullets.splice(idx, 1);
-                            const { explosionSize, explosionPushCoef, damage } = bulletObject.getExplosionInfo();
+                    const idx = this.bullets.findIndex(b => b.body === bullet);
+                    if (idx === -1) return;
+                    const [bulletObject] = this.bullets.splice(idx, 1);
+                    const { explosionSize, explosionPushCoef, damage } = bulletObject.getExplosionInfo();
 
-                            this.pendingExplosions.push({
-                                cx: bulletObject.getX(),
-                                cy: bulletObject.getY(),
-                                radius: explosionSize,
-                                pushCoef: explosionPushCoef,
-                                damage: damage!,
-                            });
-                            this.explode(bulletObject);
-                            bulletObject.removeFromWorld();
+                    this.pendingExplosions.push({
+                        cx: bulletObject.getX(),
+                        cy: bulletObject.getY(),
+                        radius: explosionSize,
+                        pushCoef: explosionPushCoef,
+                        damage: damage!,
+                    });
+                    this.explode(bulletObject);
+                    bulletObject.removeFromWorld();
 
-                            if (playerLabel) {
-                                const sessionId = parsePlayerLabel(playerLabel).sessionId;
-                                this.playerManager.getPlayer(sessionId)?.applyDamage(damage!, true);
-                            }
-                        }
+                    if (playerLabel) {
+                        const sessionId = parsePlayerLabel(playerLabel).sessionId;
+                        this.playerManager.getPlayer(sessionId)?.applyDamage(damage!, true);
+                    } else if (labels.includes(RessourceKeys.CapturePoint)) {
+                        const otherBody = isBulletA ? bodyB : bodyA;
+                        this.capturePointManager.manageContact(otherBody.plugin, bulletObject.getOwnerTeam(), true);
                     }
                 }
 
-                if (playerLabel && (labels.includes(RessourceKeys.Ground) || plugins.includes(Border.Bottom))) {
+                if (playerLabel && (labels.includes(RessourceKeys.Ground) || labels.includes(RessourceKeys.CapturePoint) || plugins.includes(Border.Bottom))) {
                     const sessionId = parsePlayerLabel(playerLabel).sessionId;
                     const playerBody = this.playerManager.getPlayer(sessionId);
+                    const isPlayerA = bodyA.label.startsWith(`${RessourceKeys.Player}:`);
+                    const otherBody = isPlayerA ? bodyB : bodyA;
 
                     if (!playerBody) continue;
 
                     if (labels.includes(RessourceKeys.Ground)) { // Ground
-                        const isPlayerA = bodyA.label.startsWith(`${RessourceKeys.Player}:`);
-
                         const normal = isPlayerA ? collision.normal : { x: -collision.normal.x, y: -collision.normal.y };
 
                         const isGroundCollision = normal.y < -0.3;
@@ -276,6 +284,8 @@ export class MyRoom extends Room<MyRoomState> {
                         if (isGroundCollision && isFalling) {
                             playerBody.isOnGround = true;
                         }
+                    } else if (labels.includes(RessourceKeys.CapturePoint)) { // CapturePoint
+                        this.capturePointManager.manageContact(otherBody.plugin, playerBody.getTeam(), false);
                     } else { // Bottom border
                         playerBody.instantDeath();
                     }
@@ -318,6 +328,13 @@ export class MyRoom extends Room<MyRoomState> {
 
     broadcastPhase(phase: Phase) {
         this.broadcast(RequestTypes.PhaseSynchro, phase);
+    }
+
+    broadcastCapture(id: number, newOwningTeam: Team | null) {
+        this.broadcast(RequestTypes.Capture, {
+            id: id,
+            newOwningTeam: newOwningTeam
+        })
     }
 
     synchronizeTerrain(client?: Client) {

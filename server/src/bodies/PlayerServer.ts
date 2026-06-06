@@ -98,6 +98,10 @@ export default class PlayerServer extends GameBody implements IPlayer {
         this.onDamage(this.playerRef.hp);
     }
 
+    getTeam() {
+        return this.playerRef.team;
+    }
+
     getState() {
         return this.playerRef.state;
     }

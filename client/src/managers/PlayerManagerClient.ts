@@ -73,6 +73,7 @@ export default class PlayerManagerClient {
 
             scene.worldContainer.add(this.remoteRef);
             scene.shotManager.setOwner(playerObject);
+            scene.capturePointManager.setPlayerTeam(player.team);
 
             this.setupLocalPlayer(player, playerObject, scene.shotManager);
         } else {
