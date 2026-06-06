@@ -89,6 +89,7 @@ export default class PlayerManagerClient {
         $(player).onChange(() => {
             playerObject.setData("targetX", player.x);
             playerObject.setData("targetY", player.y);
+            playerObject.movementLeft = player.movementLeft;
 
             this.remoteRef.x = player.x;
             this.remoteRef.y = player.y;
