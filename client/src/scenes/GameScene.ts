@@ -31,6 +31,7 @@ import RoomManager from "../managers/RoomManager";
 import EndTurnButton from "../ui/buttons/EndTurnButton";
 import CapturePointClient from "../game-objects/CapturePointClient";
 import CapturePointManagerClient from "../managers/CapturePointManagerClient";
+import type QuadBlock from "@shared/data/QuadBlock";
 
 export default class GameScene extends Phaser.Scene {
     active: boolean = true;
@@ -142,47 +143,54 @@ export default class GameScene extends Phaser.Scene {
         this.input.keyboard!.on("keydown-ONE", () => { this.debugFunction() });
     }
 
+    private terrainSynchro(quadBlock: QuadBlock) {
+        console.log("TERRAIN SYNC");
+
+        this.terrainManager.constructQuadBlock(quadBlock);
+        this.terrainManager.redrawTerrain();
+    }
+
+    private phaseSynchro(phase: Phase) {
+        console.log("PHASE SYNC");
+
+        this.phaseManager.setCurrentPhase(phase);
+
+        if (!ActionPhase.TYPES.includes(phase.type)) {
+            this.endTurnButton.hide();
+            this.actionChoicePanel.hide();
+            return;
+        }
+
+        const isConcerned = this.phaseManager.isConcerned(this.room.sessionId);
+
+        if (this.phaseManager.isActionChoicePhase()) {
+            this.endTurnButton.hide();
+            isConcerned ? this.actionChoicePanel.show() : this.actionChoicePanel.hide();
+        } else {
+            this.actionChoicePanel.hide();
+            this.endTurnButton.show();
+            isConcerned ? this.endTurnButton.enable() : this.endTurnButton.disable();
+        }
+    }
+
+    private fullSynchro(synchroInfo: FullSynchroInfo) {
+        console.log("FULL SYNC");
+
+        this.terrainManager.constructQuadBlock(synchroInfo.terrain);
+        this.terrainManager.redrawTerrain();
+
+        this.capturePointManager.syncCapturePoints(synchroInfo.capturePoints);
+
+        console.log(synchroInfo.capturePoints);
+
+        this.phaseManager.setCurrentPhase(synchroInfo.phase);
+    }
+
     async setupRoomMessages() {
-        this.room.onMessage(RequestTypes.TerrainSynchro, (quadBlock) => {
-            console.log("TERRAIN SYNC");
+        this.room.onMessage(RequestTypes.TerrainSynchro, (quadBlock) => { this.terrainSynchro(quadBlock) });
+        this.room.onMessage(RequestTypes.PhaseSynchro, (phase: Phase) => { this.phaseSynchro(phase) });
 
-            this.terrainManager.constructQuadBlock(quadBlock);
-            this.terrainManager.redrawTerrain();
-        });
-
-        this.room.onMessage(RequestTypes.PhaseSynchro, (phase: Phase) => {
-            this.phaseManager.setCurrentPhase(phase);
-
-            if (!ActionPhase.TYPES.includes(phase.type)) {
-                this.endTurnButton.hide();
-                this.actionChoicePanel.hide();
-                return;
-            }
-
-            const isConcerned = this.phaseManager.isConcerned(this.room.sessionId);
-
-            if (this.phaseManager.isActionChoicePhase()) {
-                this.endTurnButton.hide();
-                isConcerned ? this.actionChoicePanel.show() : this.actionChoicePanel.hide();
-            } else {
-                this.actionChoicePanel.hide();
-                this.endTurnButton.show();
-                isConcerned ? this.endTurnButton.enable() : this.endTurnButton.disable();
-            }
-        });
-
-        this.room.onMessage(RequestTypes.FullSynchro, (synchroInfo: FullSynchroInfo) => {
-            console.log("FULL SYNC");
-
-            this.terrainManager.constructQuadBlock(synchroInfo.terrain);
-            this.terrainManager.redrawTerrain();
-
-            this.capturePointManager.syncCapturePoints(synchroInfo.capturePoints);
-
-            console.log(synchroInfo.capturePoints);
-
-            this.phaseManager.setCurrentPhase(synchroInfo.phase);
-        });
+        this.room.onMessage(RequestTypes.FullSynchro, (synchroInfo: FullSynchroInfo) => { this.fullSynchro(synchroInfo) });
 
         this.room.onMessage(RequestTypes.Shoot, (data: { shootInfo: ShootInfo, explosionInfo: ExplosionInfo }) => {
             if (this.active) this.shotManager.shootBulletFromInfo(data.shootInfo, data.explosionInfo);
@@ -243,18 +251,14 @@ export default class GameScene extends Phaser.Scene {
 
         for (const { type, data } of this.messageBuffer ?? []) {
             if (type === RequestTypes.FullSynchro) {
-                this.terrainManager.constructQuadBlock(data.terrain);
-                this.terrainManager.redrawTerrain();
-                this.phaseManager.setCurrentPhase(data.phase);
-                this.capturePointManager.syncCapturePoints(data.capturePoints);
+                this.fullSynchro(data);
             }
-            if (type === RequestTypes.TerrainSynchro) {
-                this.terrainManager.constructQuadBlock(data);
-                this.terrainManager.redrawTerrain();
+            else if (type === RequestTypes.TerrainSynchro) {
+                this.terrainSynchro(data);
 
             }
-            if (type === RequestTypes.PhaseSynchro) {
-                this.phaseManager.setCurrentPhase(data);
+            else if (type === RequestTypes.PhaseSynchro) {
+                this.phaseSynchro(data);
             }
         }
 
