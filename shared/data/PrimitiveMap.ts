@@ -8,13 +8,22 @@ export default class PrimitiveMap {
     minTileSize: number;
 
     playerPositions: Position[];
+    capturePoints: Position[];
 
-    constructor(grid: Uint8Array, rowSize: number, columnSize: number, minTileSize: number, playerPositions: Position[] = []) {
+    constructor(
+        grid: Uint8Array,
+        rowSize: number,
+        columnSize: number,
+        minTileSize: number,
+        playerPositions: Position[] = [],
+        capturePoints: Position[] = []
+    ) {
         this.grid = new Uint8Array(grid);
         this.rowSize = rowSize;
         this.columnSize = columnSize;
         this.minTileSize = minTileSize;
         this.playerPositions = playerPositions;
+        this.capturePoints = capturePoints;
     }
 
     static createEmptyMap(width: number, height: number, minTileSize: number) {
@@ -27,6 +36,13 @@ export default class PrimitiveMap {
 
     addPlayerPosition(x: number, y :number) {
         this.playerPositions.push({
+            x: x,
+            y: y
+        });
+    }
+
+    addCapturePointPosition(x: number, y: number) {
+        this.capturePoints.push({
             x: x,
             y: y
         });
@@ -45,6 +61,22 @@ export default class PrimitiveMap {
 
         if (found) {
             this.playerPositions.splice(i - 1, 1);
+        }
+    }
+
+    removeCapturePointPosition(x: number, y: number) {
+        let i = 0;
+        let found = false;
+
+        while (i < this.capturePoints.length && !found) {
+            const currentCapturePoint = this.capturePoints[i];
+            found = currentCapturePoint.x === x && currentCapturePoint.y === y;
+
+            i++;
+        }
+
+        if (found) {
+            this.capturePoints.splice(i - 1, 1);
         }
     }
 
@@ -69,6 +101,7 @@ export default class PrimitiveMap {
 
     serialize() {
         const obj = {
+            capturePoints: this.capturePoints,
             playerPositions: this.playerPositions,
             quadTree: this.toQuadBlock(),
 

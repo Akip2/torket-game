@@ -1,4 +1,22 @@
 {
+  "capturePoints": [
+    {
+      "x": 784,
+      "y": 168
+    },
+    {
+      "x": 784,
+      "y": 456
+    },
+    {
+      "x": 1248,
+      "y": 584
+    },
+    {
+      "x": 320,
+      "y": 584
+    }
+  ],
   "playerPositions": [
     {
       "x": 64,
@@ -1708,57 +1726,6 @@
                     "children": [
                       {
                         "x": 248,
-                        "y": 200,
-                        "width": 48,
-                        "height": 48,
-                        "filled": false,
-                        "children": [
-                          {
-                            "x": 248,
-                            "y": 224,
-                            "width": 24,
-                            "height": 24,
-                            "filled": false,
-                            "children": [
-                              {
-                                "x": 256,
-                                "y": 232,
-                                "width": 16,
-                                "height": 16,
-                                "filled": true,
-                                "children": []
-                              }
-                            ]
-                          },
-                          {
-                            "x": 272,
-                            "y": 224,
-                            "width": 24,
-                            "height": 24,
-                            "filled": false,
-                            "children": [
-                              {
-                                "x": 272,
-                                "y": 232,
-                                "width": 8,
-                                "height": 16,
-                                "filled": true,
-                                "children": []
-                              },
-                              {
-                                "x": 280,
-                                "y": 232,
-                                "width": 16,
-                                "height": 16,
-                                "filled": true,
-                                "children": []
-                              }
-                            ]
-                          }
-                        ]
-                      },
-                      {
-                        "x": 248,
                         "y": 248,
                         "width": 48,
                         "height": 48,
@@ -1773,14 +1740,6 @@
                             "children": [
                               {
                                 "x": 256,
-                                "y": 248,
-                                "width": 16,
-                                "height": 8,
-                                "filled": true,
-                                "children": []
-                              },
-                              {
-                                "x": 256,
                                 "y": 256,
                                 "width": 16,
                                 "height": 16,
@@ -1789,6 +1748,14 @@
                                   {
                                     "x": 264,
                                     "y": 256,
+                                    "width": 8,
+                                    "height": 8,
+                                    "filled": true,
+                                    "children": []
+                                  },
+                                  {
+                                    "x": 264,
+                                    "y": 264,
                                     "width": 8,
                                     "height": 8,
                                     "filled": true,
@@ -1807,7 +1774,58 @@
                             "children": [
                               {
                                 "x": 272,
-                                "y": 248,
+                                "y": 256,
+                                "width": 8,
+                                "height": 16,
+                                "filled": true,
+                                "children": []
+                              },
+                              {
+                                "x": 280,
+                                "y": 256,
+                                "width": 16,
+                                "height": 16,
+                                "filled": true,
+                                "children": []
+                              }
+                            ]
+                          },
+                          {
+                            "x": 248,
+                            "y": 272,
+                            "width": 24,
+                            "height": 24,
+                            "filled": false,
+                            "children": [
+                              {
+                                "x": 256,
+                                "y": 272,
+                                "width": 16,
+                                "height": 8,
+                                "filled": false,
+                                "children": [
+                                  {
+                                    "x": 264,
+                                    "y": 272,
+                                    "width": 8,
+                                    "height": 8,
+                                    "filled": true,
+                                    "children": []
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "x": 272,
+                            "y": 272,
+                            "width": 24,
+                            "height": 24,
+                            "filled": false,
+                            "children": [
+                              {
+                                "x": 272,
+                                "y": 272,
                                 "width": 8,
                                 "height": 8,
                                 "filled": true,
@@ -1815,7 +1833,7 @@
                               },
                               {
                                 "x": 280,
-                                "y": 248,
+                                "y": 272,
                                 "width": 16,
                                 "height": 8,
                                 "filled": true,
@@ -1823,14 +1841,14 @@
                               },
                               {
                                 "x": 272,
-                                "y": 256,
+                                "y": 280,
                                 "width": 8,
                                 "height": 16,
                                 "filled": false,
                                 "children": [
                                   {
                                     "x": 272,
-                                    "y": 256,
+                                    "y": 280,
                                     "width": 8,
                                     "height": 8,
                                     "filled": true,
@@ -1840,14 +1858,14 @@
                               },
                               {
                                 "x": 280,
-                                "y": 256,
+                                "y": 280,
                                 "width": 16,
                                 "height": 16,
                                 "filled": false,
                                 "children": [
                                   {
                                     "x": 280,
-                                    "y": 256,
+                                    "y": 280,
                                     "width": 8,
                                     "height": 8,
                                     "filled": true,
@@ -1855,7 +1873,7 @@
                                   },
                                   {
                                     "x": 288,
-                                    "y": 256,
+                                    "y": 280,
                                     "width": 8,
                                     "height": 8,
                                     "filled": true,
@@ -1885,40 +1903,6 @@
                         "children": [
                           {
                             "x": 296,
-                            "y": 200,
-                            "width": 48,
-                            "height": 48,
-                            "filled": false,
-                            "children": [
-                              {
-                                "x": 296,
-                                "y": 224,
-                                "width": 24,
-                                "height": 24,
-                                "filled": false,
-                                "children": [
-                                  {
-                                    "x": 296,
-                                    "y": 232,
-                                    "width": 8,
-                                    "height": 16,
-                                    "filled": true,
-                                    "children": []
-                                  },
-                                  {
-                                    "x": 304,
-                                    "y": 232,
-                                    "width": 16,
-                                    "height": 16,
-                                    "filled": true,
-                                    "children": []
-                                  }
-                                ]
-                              }
-                            ]
-                          },
-                          {
-                            "x": 296,
                             "y": 248,
                             "width": 48,
                             "height": 48,
@@ -1933,7 +1917,49 @@
                                 "children": [
                                   {
                                     "x": 296,
-                                    "y": 248,
+                                    "y": 256,
+                                    "width": 8,
+                                    "height": 16,
+                                    "filled": true,
+                                    "children": []
+                                  },
+                                  {
+                                    "x": 304,
+                                    "y": 256,
+                                    "width": 16,
+                                    "height": 16,
+                                    "filled": true,
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "x": 320,
+                                "y": 248,
+                                "width": 24,
+                                "height": 24,
+                                "filled": false,
+                                "children": [
+                                  {
+                                    "x": 320,
+                                    "y": 256,
+                                    "width": 8,
+                                    "height": 16,
+                                    "filled": true,
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "x": 296,
+                                "y": 272,
+                                "width": 24,
+                                "height": 24,
+                                "filled": false,
+                                "children": [
+                                  {
+                                    "x": 296,
+                                    "y": 272,
                                     "width": 8,
                                     "height": 8,
                                     "filled": true,
@@ -1941,7 +1967,7 @@
                                   },
                                   {
                                     "x": 304,
-                                    "y": 248,
+                                    "y": 272,
                                     "width": 16,
                                     "height": 8,
                                     "filled": true,
@@ -1949,14 +1975,14 @@
                                   },
                                   {
                                     "x": 296,
-                                    "y": 256,
+                                    "y": 280,
                                     "width": 8,
                                     "height": 16,
                                     "filled": false,
                                     "children": [
                                       {
                                         "x": 296,
-                                        "y": 256,
+                                        "y": 280,
                                         "width": 8,
                                         "height": 8,
                                         "filled": true,
@@ -1966,20 +1992,45 @@
                                   },
                                   {
                                     "x": 304,
-                                    "y": 256,
+                                    "y": 280,
                                     "width": 16,
                                     "height": 16,
                                     "filled": false,
                                     "children": [
                                       {
                                         "x": 304,
-                                        "y": 256,
+                                        "y": 280,
+                                        "width": 8,
+                                        "height": 8,
+                                        "filled": true,
+                                        "children": []
+                                      },
+                                      {
+                                        "x": 312,
+                                        "y": 280,
                                         "width": 8,
                                         "height": 8,
                                         "filled": true,
                                         "children": []
                                       }
                                     ]
+                                  }
+                                ]
+                              },
+                              {
+                                "x": 320,
+                                "y": 272,
+                                "width": 24,
+                                "height": 24,
+                                "filled": false,
+                                "children": [
+                                  {
+                                    "x": 320,
+                                    "y": 272,
+                                    "width": 8,
+                                    "height": 8,
+                                    "filled": true,
+                                    "children": []
                                   }
                                 ]
                               }
@@ -18613,14 +18664,10 @@
       0,
       0,
       0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
+      0,
+      0,
+      0,
+      0,
       0,
       0,
       0,
@@ -18756,6 +18803,10 @@
       0,
       0,
       0,
+      0,
+      0,
+      0,
+      0,
       1,
       1,
       1,
@@ -18813,14 +18864,6 @@
       0,
       0,
       0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
       0,
       0,
       0,
@@ -18957,6 +19000,14 @@
       0,
       0,
       0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       1,
       1,
       1,
@@ -19013,14 +19064,14 @@
       0,
       0,
       0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       0,
       0,
       0,
@@ -19220,8 +19271,8 @@
       1,
       1,
       1,
-      0,
-      0,
+      1,
+      1,
       0,
       0,
       0,
@@ -19385,14 +19436,6 @@
       1,
       1,
       1,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
       0,
       0,
       0,
@@ -19422,6 +19465,14 @@
       0,
       0,
       0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       0,
       0,
       0,
@@ -19585,10 +19636,6 @@
       1,
       1,
       1,
-      0,
-      0,
-      0,
-      0,
       0,
       0,
       0,
@@ -19618,10 +19665,14 @@
       0,
       0,
       0,
-      0,
-      0,
-      0,
-      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       0,
       0,
       0,
@@ -19815,12 +19866,12 @@
       0,
       0,
       0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       0,
       0,
       0,

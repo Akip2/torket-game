@@ -68,7 +68,7 @@ export const BULLET_CONST = {
 }
 
 export const CAPTURE_POINT_CONST = {
-    RADIUS: 19,
+    RADIUS: 16,
     BASE_COLOR: 0xD3D3D3,
     SELF_COLOR: 0x3498db,
     ENNEMY_COLOR: 0xFF7F7F,

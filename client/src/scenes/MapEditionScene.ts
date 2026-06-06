@@ -1,4 +1,4 @@
-import { EDITION_TILE_SIZE, GAME_HEIGHT, GAME_WIDTH, GROUND_TYPE, PLAYER_CONST, TEXTURE_SIZE } from "@shared/const";
+import { CAPTURE_POINT_CONST, EDITION_TILE_SIZE, GAME_HEIGHT, GAME_WIDTH, GROUND_TYPE, PLAYER_CONST, TEXTURE_SIZE } from "@shared/const";
 import PrimitiveMap from "@shared/data/PrimitiveMap";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
@@ -9,6 +9,7 @@ export default class MapEditionScene extends Phaser.Scene {
     currentMap: PrimitiveMap;
     tiles: Phaser.GameObjects.TileSprite[] = [];
     playerSprites: Phaser.GameObjects.TileSprite[] = [];
+    capturePointSprites: Phaser.GameObjects.Image[] = [];
 
     gridGraphics!: Phaser.GameObjects.Graphics;
     subdivisionGraphics!: Phaser.GameObjects.Graphics;
@@ -18,6 +19,7 @@ export default class MapEditionScene extends Phaser.Scene {
 
     mirrorMode: boolean = false;
     playerPlacementMode: boolean = false;
+    capturePointPlacementMode: boolean = false;
 
     constructor() {
         super(SceneNames.MapEditor);
@@ -29,7 +31,9 @@ export default class MapEditionScene extends Phaser.Scene {
     }
 
     create() {
-        new TextureManager(this.add).generatePlayerTexture();
+        const textureManager = new TextureManager(this.add);
+        textureManager.generatePlayerTexture();
+        textureManager.generateCapturePointTexture();
 
         this.input.on("pointerdown", (p: Phaser.Input.Pointer) => this.doToolAction(p));
         this.input.on("pointermove", (p: Phaser.Input.Pointer) => {
@@ -50,7 +54,14 @@ export default class MapEditionScene extends Phaser.Scene {
 
         this.input.keyboard!.on("keydown-P", () => {
             this.playerPlacementMode = !this.playerPlacementMode;
+            this.capturePointPlacementMode = false;
             this.brushSize = Math.floor(PLAYER_CONST.BASE_WIDTH / this.currentMap.minTileSize);
+        });
+
+        this.input.keyboard!.on("keydown-C", () => {
+            this.capturePointPlacementMode = !this.capturePointPlacementMode;
+            this.playerPlacementMode = false;
+            this.brushSize = Math.floor(CAPTURE_POINT_CONST.RADIUS * 2 / this.currentMap.minTileSize);
         });
 
         this.input.keyboard!.on("keydown-A", () => {
@@ -121,11 +132,17 @@ export default class MapEditionScene extends Phaser.Scene {
         if (pointer.leftButtonDown()) {
             if (this.playerPlacementMode) {
                 this.addPlayer(x, y);
+            } else if (this.capturePointPlacementMode) {
+                this.addCapturePoint(x, y);
             } else {
                 this.paintTiles(x, y);
             }
-        } else if (pointer.rightButtonDown() && !this.playerPlacementMode) {
-            this.eraseTiles(x, y);
+        } else if (pointer.rightButtonDown()) {
+            if (this.capturePointPlacementMode) {
+                this.removeCapturePoint(x, y);
+            } else if (!this.playerPlacementMode) {
+                this.eraseTiles(x, y);
+            }
         }
     }
 
@@ -165,6 +182,45 @@ export default class MapEditionScene extends Phaser.Scene {
                 sprite.destroy();
             }
         });
+    }
+
+    addCapturePoint(x: number, y: number) {
+        const capturePointX = Math.floor(x / this.currentMap.minTileSize) * this.currentMap.minTileSize;
+        const capturePointY = Math.floor(y / this.currentMap.minTileSize) * this.currentMap.minTileSize;
+
+        this.currentMap.addCapturePointPosition(capturePointX, capturePointY);
+        this.drawCapturePoint(capturePointX, capturePointY);
+    }
+
+    drawCapturePoint(x: number, y: number) {
+        const sprite = this.add.image(x, y, RessourceKeys.CapturePoint)
+            .setOrigin(0)
+            .setDisplaySize(CAPTURE_POINT_CONST.RADIUS * 2, CAPTURE_POINT_CONST.RADIUS * 2);
+
+        this.capturePointSprites.push(sprite);
+
+        sprite.setInteractive();
+        sprite.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+            if (this.capturePointPlacementMode && pointer.rightButtonDown()) {
+                this.currentMap.removeCapturePointPosition(sprite.x, sprite.y);
+                this.capturePointSprites.splice(this.capturePointSprites.indexOf(sprite), 1);
+
+                sprite.destroy();
+            }
+        });
+    }
+
+    removeCapturePoint(x: number, y: number) {
+        const capturePointX = Math.floor(x / this.currentMap.minTileSize) * this.currentMap.minTileSize;
+        const capturePointY = Math.floor(y / this.currentMap.minTileSize) * this.currentMap.minTileSize;
+
+        this.currentMap.removeCapturePointPosition(capturePointX, capturePointY);
+
+        const sprite = this.capturePointSprites.find(candidate => candidate.x === capturePointX && candidate.y === capturePointY);
+        if (sprite) {
+            this.capturePointSprites.splice(this.capturePointSprites.indexOf(sprite), 1);
+            sprite.destroy();
+        }
     }
 
     paintTiles(x: number, y: number) {
@@ -233,6 +289,9 @@ export default class MapEditionScene extends Phaser.Scene {
         this.playerSprites.forEach(playerSprite => playerSprite.destroy());
         this.playerSprites = [];
 
+        this.capturePointSprites.forEach(capturePointSprite => capturePointSprite.destroy());
+        this.capturePointSprites = [];
+
         for (let i = 0; i < this.tiles.length; i++) {
             this.tiles[i]?.destroy();
             delete this.tiles[i];
@@ -243,6 +302,10 @@ export default class MapEditionScene extends Phaser.Scene {
     drawNewMap() {
         this.currentMap.playerPositions.forEach(playerPosition => {
             this.drawPlayer(playerPosition.x, playerPosition.y);
+        });
+
+        this.currentMap.capturePoints.forEach(capturePoint => {
+            this.drawCapturePoint(capturePoint.x, capturePoint.y);
         });
 
         for (let i = 0; i < this.currentMap.rowSize * this.currentMap.columnSize; i++) {
@@ -288,10 +351,18 @@ export default class MapEditionScene extends Phaser.Scene {
             const jsonData = JSON.parse(text);
 
             const primitiveData = jsonData.primitive;
-            const playerPositions = jsonData.playerPositions;
+            const playerPositions = jsonData.playerPositions ?? [];
+            const capturePoints = jsonData.capturePoints ?? [];
 
             this.clear();
-            this.currentMap = new PrimitiveMap(primitiveData.grid, primitiveData.rowSize, primitiveData.columnSize, primitiveData.minTileSize, playerPositions);
+            this.currentMap = new PrimitiveMap(
+                primitiveData.grid,
+                primitiveData.rowSize,
+                primitiveData.columnSize,
+                primitiveData.minTileSize,
+                playerPositions,
+                capturePoints
+            );
             this.drawNewMap();
         });
 

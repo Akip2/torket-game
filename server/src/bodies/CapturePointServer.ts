@@ -10,7 +10,7 @@ export default class CapturePointServer extends GameBody {
     private owningTeam: Team | null;
 
     constructor(x: number, y: number, id: number) {
-        const body = Bodies.circle(x, y, CAPTURE_POINT_CONST.RADIUS, {
+        const body = Bodies.circle(x + CAPTURE_POINT_CONST.RADIUS, y + CAPTURE_POINT_CONST.RADIUS, CAPTURE_POINT_CONST.RADIUS, {
             label: RessourceKeys.CapturePoint,
             plugin: id,
             isSensor: true,

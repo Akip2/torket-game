@@ -7,17 +7,18 @@ import { CAPTURE_POINT_CONST } from "@shared/const";
 export default class CapturePointClient extends Phaser.Physics.Matter.Sprite {
     private status!: CaptureStatus;
 
-    constructor(scene: GameScene, x: number, y: number, ) {
+    constructor(scene: GameScene, x: number, y: number,) {
         super(scene.matter.world, x, y, RessourceKeys.CapturePoint);
 
-        scene.add.existing(this);
         (this.body as MatterJS.BodyType).label = RessourceKeys.CapturePoint;
         (this.body as MatterJS.BodyType).isSensor = true;
- 
+
         this.setIgnoreGravity(true);
 
         this.setDepth(Depths.Fourth);
         this.setStatus(CaptureStatus.Neutral);
+
+        scene.add.existing(this);
     }
 
     setStatus(status: CaptureStatus) {
