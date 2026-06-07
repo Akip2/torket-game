@@ -7,11 +7,17 @@ import UiButton from "../buttons/UiButton";
 import { ButtonStyle } from "../ui-styles";
 import { ServerError } from "colyseus.js";
 import RoomManager from "../../managers/RoomManager";
+import type { WinCondition } from "@shared/enums/WinCondition.enum";
 
 export type GameEndScreenConfig = {
     isWin: boolean;
-    winnerName?: string;
+    winnerNames?: string[];
+    winCondition: WinCondition;
 };
+
+function convertToSecondPerso(winCondition: WinCondition) {
+    return winCondition.replaceAll("their", "your");
+}
 
 export default class GameEndScreen extends Phaser.GameObjects.Container {
     background: Phaser.GameObjects.Rectangle;
@@ -100,9 +106,11 @@ export default class GameEndScreen extends Phaser.GameObjects.Container {
         this.messageText.setText(messageText);
         this.messageText.setColor(messageColor);
 
+        const winners = config.winnerNames?.join(" and ");
+
         const detailTextContent = config.isWin
-            ? `Congratulations ${config.winnerName}!`
-            : `${config.winnerName} won the game...`;
+            ? `Congratulations ${winners}! You ${convertToSecondPerso(config.winCondition)}`
+            : `${winners} ${config.winCondition}`;
 
         this.detailText.setText(detailTextContent);
     }

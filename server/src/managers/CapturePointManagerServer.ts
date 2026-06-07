@@ -39,7 +39,24 @@ export class CapturePointManagerServer {
         }
     }
 
+    /**
+     * 
+     * @returns the winning team, null if there isn't
+     */
+    getWinner() {
+        const dominantTeam = this.capturePoints[0].getOwningTeam();
+
+        for (let i = 1; i < this.capturePoints.length; i++) {
+            if (dominantTeam !== this.capturePoints[i].getOwningTeam()) return null;
+        }
+        return dominantTeam;
+    }
+
     getSerializedCapturePoints(): CapturePoint[] {
         return this.capturePoints.map(capturePoint => capturePoint.serialize());
+    }
+
+    getCapturePointsNb() {
+        return this.capturePoints.length;
     }
 }

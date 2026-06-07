@@ -9,6 +9,7 @@ import { PlayerState } from "@shared/enums/PlayerState.enum";
 import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
 import { EXPLOSION_CONST } from "@shared/const";
 import { Body } from "matter-js";
+import { Team } from "@shared/enums/Team.enum.ts";
 
 export default class PlayerManagerServer {
     playerBodies: Map<string, PlayerServer>;
@@ -114,5 +115,9 @@ export default class PlayerManagerServer {
             playerBody.removeFromWorld();
             this.playerBodies.delete(sessionId);
         }
+    }
+
+    getTeamPlayers(team: Team) {
+        return Array.from(this.playerBodies.values()).filter(p => p.getTeam() === team);
     }
 }

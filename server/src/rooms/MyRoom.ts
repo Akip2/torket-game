@@ -20,13 +20,14 @@ import { canPlayerShoot } from "@shared/logics/player-logic";
 import { Action } from "@shared/enums/Action.enum";
 import { parsePlayerLabel } from "../server-utils";
 import { Border } from "@shared/enums/Border.enum";
-import { cleanPlayerName, generateDefaultRoomName } from "@shared/utils";
+import { cleanPlayerName, generateDefaultRoomName, wait } from "@shared/utils";
 import { ServerErrorCode } from "@shared/enums/ServerErrorCode.enum";
 import WaitingPhase from "@shared/data/phases/WaitingPhase";
 import BulletServer from "../bodies/BulletServer";
 import { Parameter } from "@shared/enums/Parameter.enum";
 import { CapturePointManagerServer } from "../managers/CapturePointManagerServer";
 import { Team } from "@shared/enums/Team.enum.ts";
+import { WinCondition } from "@shared/enums/WinCondition.enum";
 
 dotenv.config();
 
@@ -185,6 +186,10 @@ export class MyRoom extends Room<MyRoomState> {
             }, { except: client });
         });
 
+        this.onMessage(RequestTypes.Debug, (client) => {
+            this.debugFunction();
+        });
+
         this.onMessage(RequestTypes.FullSynchro, (client) => {
             this.synchronizeFully(client);
         });
@@ -224,7 +229,7 @@ export class MyRoom extends Room<MyRoomState> {
         this.terrainManager = new TerrainManagerServer(this.physicsManager, quadTree);
         this.terrainManager.createTerrain();
 
-        this.capturePointManager = new CapturePointManagerServer(this.physicsManager, map.capturePoints, (id, newOwningTeam) => {this.broadcastCapture(id, newOwningTeam)});
+        this.capturePointManager = new CapturePointManagerServer(this.physicsManager, map.capturePoints, (id, newOwningTeam) => { this.onCapture(id, newOwningTeam) });
     }
 
     setupCollisionEvents() {
@@ -363,15 +368,38 @@ export class MyRoom extends Room<MyRoomState> {
         }
     }
 
+    onCapture(id: number, newOwningTeam: Team | null) {
+        this.broadcastCapture(id, newOwningTeam);
+        const winnerTeam = this.capturePointManager.getWinner();
+
+        if (winnerTeam) {
+            const teamPlayers = this.playerManager.getTeamPlayers(winnerTeam);
+            this.endGame(teamPlayers.map(p => p.sessionId), WinCondition.Capture);
+        }
+    }
+
     onPlayerDamage(playerId: string, hp: number, damage?: number, directHit?: boolean) {
         this.broadcastDamage(playerId, hp, damage, directHit);
 
         const playersAlive = this.playerManager.getPlayersAlive();
         if (playersAlive.length === 1) {
-            this.phaseManager.endGame();
-            this.broadcast(RequestTypes.GameEnd, {
-                winnerId: playersAlive[0].sessionId
-            });
+            this.endGame([playersAlive[0].sessionId], WinCondition.Kill);
+        }
+    }
+
+    endGame(winnerIds: string[], winCondition: WinCondition) {
+        this.phaseManager.endGame();
+
+        this.broadcast(RequestTypes.GameEnd, {
+            winnerIds: winnerIds,
+            winCondition: winCondition
+        });
+    }
+
+    async debugFunction() {
+        for (let i = 0; i < this.capturePointManager.getCapturePointsNb(); i++) {
+            this.capturePointManager.manageContact(i, Team.Blue, true);
+            await wait(500);
         }
     }
 }

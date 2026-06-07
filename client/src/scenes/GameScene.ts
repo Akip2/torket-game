@@ -145,6 +145,7 @@ export default class GameScene extends Phaser.Scene {
         this.setupRoomMessages();
 
         this.input.keyboard!.on("keydown-ONE", () => { this.debugFunction() });
+        this.input.keyboard!.on("keydown-TWO", () => { this.room.send(RequestTypes.Debug) });
     }
 
     private terrainSynchro(quadBlock: QuadBlock) {
@@ -226,15 +227,17 @@ export default class GameScene extends Phaser.Scene {
             if (this.isOver) return;
             this.isOver = true;
 
-            const winnerId = gameEndInfo.winnerId;
-            const winner = this.playerManager.getPlayer(winnerId);
-            const isPlayerWinner = winnerId === this.room.sessionId;
+            const winnerIds = gameEndInfo.winnerIds;
+            const winners = winnerIds.map((id: string) => this.playerManager.getPlayer(id));
+            const isPlayerWinner = winnerIds.includes(this.room.sessionId);
 
             this.gameEndScreen.setConfig({
                 isWin: isPlayerWinner,
-                winnerName: winner.getName()
+                winnerNames: winners.map((p: PlayerClient) => p.getName()),
+                winCondition: gameEndInfo.winCondition
             });
 
+            if(isPlayerWinner) SoundManager.playWinningSound(gameEndInfo.winCondition);
             this.gameEndScreen.appear(this);
         });
 

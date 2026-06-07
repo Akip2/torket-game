@@ -10,4 +10,5 @@ export enum RequestTypes {
     GameEnd = "game-end",
     PowerUpdate = "power-update",
     Capture = "capture",
+    Debug = "debug",
 }
