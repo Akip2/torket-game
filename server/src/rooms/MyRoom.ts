@@ -239,8 +239,13 @@ export class MyRoom extends Room<MyRoomState> {
                     const isBulletA = (bodyA.label === RessourceKeys.Bullet);
                     const bullet = (isBulletA ? bodyA : bodyB) as any;
 
-                    if (bullet.hasAlreadyExplosed) continue;
+                    if (labels.includes(RessourceKeys.CapturePoint)) {
+                        const otherBody = isBulletA ? bodyB : bodyA;
+                        this.capturePointManager.manageContact(otherBody.plugin, bullet.plugin, true);
+                        continue;
+                    }
 
+                    if (bullet.hasAlreadyExplosed) continue;
                     bullet.hasAlreadyExplosed = true;
 
                     const idx = this.bullets.findIndex(b => b.body === bullet);
@@ -261,9 +266,6 @@ export class MyRoom extends Room<MyRoomState> {
                     if (playerLabel) {
                         const sessionId = parsePlayerLabel(playerLabel).sessionId;
                         this.playerManager.getPlayer(sessionId)?.applyDamage(damage!, true);
-                    } else if (labels.includes(RessourceKeys.CapturePoint)) {
-                        const otherBody = isBulletA ? bodyB : bodyA;
-                        this.capturePointManager.manageContact(otherBody.plugin, bulletObject.getOwnerTeam(), true);
                     }
                 }
 
