@@ -251,8 +251,16 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         return this.movementLeft > 0;
     }
 
+    stopHorizontalMovement(): void {
+        this.setVelocityX(0);
+    }
+
     decreaseMovementLeft(amount: number): void {
-        this.movementLeft -= amount;
+        this.movementLeft = Math.max(0, this.movementLeft - amount);
+
+        if (!this.hasMovementLeft() && this.isOnGround) {
+            this.stopHorizontalMovement();
+        }
     }
 
     fillMovementLeft() {

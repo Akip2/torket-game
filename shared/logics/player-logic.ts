@@ -29,7 +29,10 @@ export function movePlayerFromInputs(player: IPlayer, inputPayload: InputPayload
 
 export function immobilizePlayer(player: IPlayer) {
     player.isMoving = false;
-    player.setVelocityX(0);
+
+    if (player.isOnGround) {
+        player.setVelocityX(0);
+    }
 }
 
 export function canPlayerMove(player: IPlayer) {
