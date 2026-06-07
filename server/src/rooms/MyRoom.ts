@@ -1,6 +1,6 @@
 import { Room, Client } from "@colyseus/core";
 import { MyRoomState, Player } from "./schema/MyRoomState";
-import { BULLET_CONST, DEFAULT_MAP_ID, EXPLOSION_CONST, PLAYER_CONST, TILE_SIZE, TIME_STEP } from "@shared/const";
+import { BULLET_CONST, DEBUG, DEFAULT_MAP_ID, EXPLOSION_CONST, PLAYER_CONST, TILE_SIZE, TIME_STEP } from "@shared/const";
 import Matter, { Body } from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { InputPayload, GameMap, PlayerStartingPosition, ShootInfo, RoomJoinOptions, RoomCreationOptions, PowerUpdateData, ExplosionInfo, PendingExplosion } from "@shared/types";
@@ -397,6 +397,8 @@ export class MyRoom extends Room<MyRoomState> {
     }
 
     async debugFunction() {
+        if (!DEBUG) return;
+        
         for (let i = 0; i < this.capturePointManager.getCapturePointsNb(); i++) {
             this.capturePointManager.manageContact(i, Team.Blue, true);
             await wait(500);
