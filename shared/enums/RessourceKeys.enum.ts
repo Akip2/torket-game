@@ -14,4 +14,7 @@ export enum RessourceKeys {
     Death = "death",
     Reloading = "reloading",
     Shot = "shot",
+    Capture = "capture",
+    Uncapture = "uncapture",
+    CaptureVictory = "capture-victory",
 }

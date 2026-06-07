@@ -105,6 +105,10 @@ export default class GameScene extends Phaser.Scene {
         this.load.audio(RessourceKeys.Death, 'assets/sounds/death.wav');
         this.load.audio(RessourceKeys.Reloading, 'assets/sounds/reloading.wav');
         this.load.audio(RessourceKeys.Shot, 'assets/sounds/shot.wav');
+
+        this.load.audio(RessourceKeys.Capture, 'assets/sounds/capture1.wav');
+        this.load.audio(RessourceKeys.Uncapture, 'assets/sounds/uncapture.wav');
+        this.load.audio(RessourceKeys.CaptureVictory, 'assets/sounds/capturevictory.wav');
     }
 
     async create() {
@@ -181,9 +185,7 @@ export default class GameScene extends Phaser.Scene {
 
         this.capturePointManager.syncCapturePoints(synchroInfo.capturePoints);
 
-        console.log(synchroInfo.capturePoints);
-
-        this.phaseManager.setCurrentPhase(synchroInfo.phase);
+        //this.phaseManager.setCurrentPhase(synchroInfo.phase);
     }
 
     async setupRoomMessages() {

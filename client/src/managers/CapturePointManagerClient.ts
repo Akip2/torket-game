@@ -3,6 +3,8 @@ import CapturePointClient from "../game-objects/CapturePointClient";
 import type GameScene from "../scenes/GameScene";
 import type { Team } from "@shared/enums/Team.enum.ts";
 import { CaptureStatus } from "@shared/enums/CaptureStatus.enum";
+import SoundManager from "./SoundManager";
+import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 
 export default class CapturePointManagerClient {
     private capturePoints: CapturePointClient[];
@@ -37,7 +39,15 @@ export default class CapturePointManagerClient {
     }
 
     updateCapturePoint(id: number, newOwningTeam: Team) {
-        this.capturePoints[id].setStatus(this.convertTeamToCaptureStatus(newOwningTeam));
+        const captureStatus = this.convertTeamToCaptureStatus(newOwningTeam);
+
+        if (captureStatus === CaptureStatus.Captured) {
+            SoundManager.play(RessourceKeys.Capture);
+        } else if (captureStatus === CaptureStatus.EnnemyOwned) {
+            SoundManager.play(RessourceKeys.Uncapture);
+        }
+        
+        this.capturePoints[id].setStatus(captureStatus);
     }
 
     syncCapturePoints(capturePoints: CapturePoint[]) {

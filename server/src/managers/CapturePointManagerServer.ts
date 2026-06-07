@@ -27,12 +27,14 @@ export class CapturePointManagerServer {
         const currentOwner = capturePoint.getOwningTeam();
 
         if (currentOwner !== team.toString()) {
+            /*
             if (shot || currentOwner === null) {
                 capturePoint.setOwningTeam(team);
             } else {
                 capturePoint.setOwningTeam(null);
-            }
-
+            }*/
+            
+            capturePoint.setOwningTeam(team);
             this.onCapture(id, capturePoint.getOwningTeam());
         }
     }
