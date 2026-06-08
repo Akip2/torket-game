@@ -20,17 +20,36 @@ export default class TextureManager {
     generatePlayerTexture(self: boolean = true, size = 32) {
         const g = this.factory.graphics();
 
-        const baseColor = self ? PLAYER_CONST.SELF_COLOR : PLAYER_CONST.ENNEMY_COLOR;
+        const baseColor = self
+            ? PLAYER_CONST.SELF_COLOR
+            : PLAYER_CONST.ENNEMY_COLOR;
+
         const borderColor = darkenHexColor(baseColor, 25);
-        const key = self ? RessourceKeys.Player : RessourceKeys.PlayerEnnemy;
 
+        const radius = 7.5;
+        const borderWidth = size / 12;
+
+        // fill
         g.fillStyle(baseColor, 1);
-        g.fillRect(0, 0, size, size);
+        g.fillRoundedRect(
+            borderWidth / 2,
+            borderWidth / 2,
+            size - borderWidth,
+            size - borderWidth,
+            radius
+        );
 
-        g.lineStyle(size / 4, borderColor, 1);
-        g.strokeRect(0, 0, size, size);
+        // border
+        g.lineStyle(borderWidth, borderColor, 1);
+        g.strokeRoundedRect(
+            borderWidth / 2,
+            borderWidth / 2,
+            size - borderWidth,
+            size - borderWidth,
+            radius
+        );
 
-        g.generateTexture(key, size, size);
+        g.generateTexture(self ? RessourceKeys.Player : RessourceKeys.PlayerEnnemy, size, size);
         g.destroy();
     }
 

@@ -39,6 +39,7 @@ export const TextStyle = {
         color: "black",
         fontStyle: "bold",
         fontSize: 15,
+        letterSpacing: -2
     },
 
     PhaseDisplayer: {

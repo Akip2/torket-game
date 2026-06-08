@@ -1,9 +1,10 @@
 import { Border } from "./enums/Border.enum";
+import { FaceExpression } from "./enums/FaceExpression.enum";
 import { Parameter } from "./enums/Parameter.enum";
 import type { ParameterChangeCoef, Rectangle } from "./types";
 
 export const DEBUG = false;
-export const FREE_ROAM = true;
+export const FREE_ROAM = false;
 export const CLIENT_PREDICTION = false;
 
 export const DEFAULT_MAP_ID = "mirrorhold";
@@ -40,6 +41,8 @@ export const PLAYER_CONST = {
     BASE_MAX_MOVEMENT: FREE_ROAM ? Number.MAX_VALUE : 165,
 
     BASE_MASS: 26,
+
+    BASE_FACE: FaceExpression.HappySmall,
 
     BASE_FRICTION: {
         FRICTION: 0,
