@@ -35,6 +35,12 @@ export const TextStyle = {
         color: "white",
     },
 
+    PlayerFace: {
+        color: "black",
+        fontStyle: "bold",
+        fontSize: 15,
+    },
+
     PhaseDisplayer: {
         fontFamily: "Arial",
         color: "#e3f6fd",

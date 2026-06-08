@@ -13,6 +13,7 @@ import HealthBar from "../ui/bars/HealthBar";
 import Bar from "../ui/bars/Bar";
 import PowerManager from "@shared/data/power/PowerManager";
 import { Parameter } from "@shared/enums/Parameter.enum";
+import PlayerFace from "../ui/PlayerFace";
 
 export default class PlayerClient extends Phaser.Physics.Matter.Sprite implements IPlayer {
     state: PlayerState = PlayerState.Inactive;
@@ -28,6 +29,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     healthBar: HealthBar;
     movementBar: Bar;
     nameTag: NameTag;
+    face: PlayerFace;
 
     maxMovement: number;
     movementLeft: number;
@@ -49,7 +51,6 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         } else { // disable physics
             this.setIgnoreGravity(true);
             this.setStatic(true);
-            this.setFixedRotation();
             this.setFriction(0, 0, 0);
             (this.body as MatterJS.BodyType).isSensor = true;
         }
@@ -72,6 +73,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.movementBar = new Bar(scene, this.x, this.y, 1, BarStyle.Movement);
         this.movementBar.hide();
         this.nameTag = new NameTag(scene, name, x, y, TextStyle.NameTag);
+        this.face = new PlayerFace(scene, x, y, TextStyle.PlayerFace);
 
         this.generateDeathParticles = (x: number, y: number) => {
             const emmiter = scene.add.particles(x, y, RessourceKeys.DeathParticle, {
@@ -163,6 +165,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.healthBar.updateGraphics(this.x, this.y, this.hp / this.maxHp);
         this.movementBar.updateGraphics(this.x, this.y, this.movementLeft / this.maxMovement);
         this.nameTag.updatePlacement(this.x, this.y);
+        this.face.updatePlacement(this.x, this.y);
     }
 
     setDead() {
