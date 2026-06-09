@@ -1,3 +1,4 @@
+import { PLAYER_CONST } from "@shared/const";
 import { Depths } from "@shared/enums/Depths.enum.ts"
 import type { BarStyleType, UIButtonStyle } from "@shared/types";
 
@@ -38,7 +39,7 @@ export const TextStyle = {
     PlayerFace: {
         color: "black",
         fontStyle: "bold",
-        fontSize: 15,
+        fontSize: PLAYER_CONST.BASE_WIDTH / 2,
         letterSpacing: -2
     },
 

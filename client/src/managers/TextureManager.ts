@@ -17,7 +17,7 @@ export default class TextureManager {
         this.generateCapturePointTexture();
     }
 
-    generatePlayerTexture(self: boolean = true, size = 32) {
+    generatePlayerTexture(self: boolean = true, size = PLAYER_CONST.BASE_WIDTH) {
         const g = this.factory.graphics();
 
         const baseColor = self

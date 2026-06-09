@@ -31,7 +31,7 @@ const config = {
 
     render: {
         antialias: true,
-        roundPixels: false,
+        roundPixels: true,
         pixelArt: false
     },
 };
