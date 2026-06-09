@@ -30,7 +30,7 @@ export const TIME_STEP = 1000 / 60;
 export const HEALTH_TRANSITION_DURATION = 400;
 
 export const PLAYER_CONST = {
-    BASE_WIDTH: 40,
+    BASE_WIDTH: 32,
     SPEED: 4.5,
     JUMP: -18,
     BASE_MAX_HP: 100,
