@@ -38,9 +38,11 @@ export const TextStyle = {
 
     PlayerFace: {
         color: "black",
-        fontStyle: "bold",
-        fontSize: PLAYER_CONST.BASE_WIDTH / 2,
-        letterSpacing: -2
+        fontFamily: "JetBrainsMono",
+        fontSize: Math.round(PLAYER_CONST.BASE_WIDTH / 2),
+        letterSpacing: -2,
+        fixedWidth: PLAYER_CONST.BASE_WIDTH,
+        align: "center"
     },
 
     PhaseDisplayer: {

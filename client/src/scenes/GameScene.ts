@@ -23,7 +23,7 @@ import type Phase from "@shared/data/phases/Phase";
 import ActionPhase from "@shared/data/phases/ActionPhase";
 import SimulationBorderClient from "../game-objects/SimulationBorderClient";
 import { Border } from "@shared/enums/Border.enum";
-import { getExplosionSpriteScale, getServerUrl, showToast } from "../client-utils";
+import { getExplosionSpriteScale, getServerUrl, loadFont, showToast } from "../client-utils";
 import GameEndScreen from "../ui/containers/GameEndScreen";
 import SoundManager from "../managers/SoundManager";
 import { setCookie } from "typescript-cookie";
@@ -81,7 +81,7 @@ export default class GameScene extends Phaser.Scene {
         setCookie("playerName", this.playerData.name, { expires: 7 });
     }
 
-    preload() {
+    async preload() {
         this.keys = this.input.keyboard!.addKeys({
             W: Phaser.Input.Keyboard.KeyCodes.W,
             A: Phaser.Input.Keyboard.KeyCodes.A,
@@ -109,6 +109,8 @@ export default class GameScene extends Phaser.Scene {
         this.load.audio(RessourceKeys.Capture, 'assets/sounds/capture1.wav');
         this.load.audio(RessourceKeys.Uncapture, 'assets/sounds/uncapture.wav');
         this.load.audio(RessourceKeys.CaptureVictory, 'assets/sounds/capturevictory.wav');
+
+        await loadFont("JetBrainsMono", "assets/fonts/JetBrainsMono-Medium.ttf");
     }
 
     async create() {

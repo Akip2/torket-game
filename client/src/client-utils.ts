@@ -107,3 +107,14 @@ export function mountWithTransition(root: HTMLElement, html: string) {
 
     requestAnimationFrame(() => popup.classList.add("popup--visible"));
 }
+
+export async function loadFont(name: string, url: string): Promise<void> {
+    const newFont = new FontFace(name, `url(${url})`);
+
+    try {
+        const loaded = await newFont.load();
+        document.fonts.add(loaded);
+    } catch (error) {
+        throw error;
+    }
+}

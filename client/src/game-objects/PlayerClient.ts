@@ -242,6 +242,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.healthBar.destroy(fromScene);
         this.movementBar.destroy(fromScene);
         this.nameTag.destroy(fromScene);
+        this.face.destroy(fromScene);
     }
 
     setPlayerState(state: PlayerState) {

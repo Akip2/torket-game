@@ -42,7 +42,7 @@ export const PLAYER_CONST = {
 
     BASE_MASS: 26,
 
-    BASE_FACE: FaceExpression.HappySmall,
+    BASE_FACE: FaceExpression.Happy,
 
     BASE_FRICTION: {
         FRICTION: 0,
