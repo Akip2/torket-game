@@ -14,6 +14,7 @@ import Bar from "../ui/bars/Bar";
 import PowerManager from "@shared/data/power/PowerManager";
 import { Parameter } from "@shared/enums/Parameter.enum";
 import PlayerFace from "../ui/PlayerFace";
+import { FaceExpression } from "@shared/enums/FaceExpression.enum";
 
 export default class PlayerClient extends Phaser.Physics.Matter.Sprite implements IPlayer {
     state: PlayerState = PlayerState.Inactive;
@@ -269,5 +270,9 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
 
     fillMovementLeft() {
         this.movementLeft = this.maxMovement;
+    }
+
+    damageCallback() {
+        this.face.changeFace(FaceExpression.Unpleased, 500);
     }
 }

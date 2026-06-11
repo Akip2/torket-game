@@ -23,7 +23,7 @@ export default class PlayerFace extends Phaser.GameObjects.Text {
         this.y = playerY;
     }
 
-    changeFace(targetFace: FaceExpression, time: number = 200) {
+    changeFace(targetFace: FaceExpression, time: number = 500) {
         clearTimeout(this.changeFaceTimeoutId);
         
         this.setText(targetFace);

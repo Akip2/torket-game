@@ -81,7 +81,7 @@ export default class GameScene extends Phaser.Scene {
         setCookie("playerName", this.playerData.name, { expires: 7 });
     }
 
-    async preload() {
+    preload() {
         this.keys = this.input.keyboard!.addKeys({
             W: Phaser.Input.Keyboard.KeyCodes.W,
             A: Phaser.Input.Keyboard.KeyCodes.A,
@@ -109,11 +109,11 @@ export default class GameScene extends Phaser.Scene {
         this.load.audio(RessourceKeys.Capture, 'assets/sounds/capture1.wav');
         this.load.audio(RessourceKeys.Uncapture, 'assets/sounds/uncapture.wav');
         this.load.audio(RessourceKeys.CaptureVictory, 'assets/sounds/capturevictory.wav');
-
-        await loadFont("JetBrainsMono", "assets/fonts/JetBrainsMono-Medium.ttf");
     }
 
     async create() {
+        await loadFont("JetBrainsMono", "assets/fonts/JetBrainsMono-Medium.ttf");
+
         SoundManager.init(this);
 
         this.worldContainer = this.add.container();
@@ -214,6 +214,8 @@ export default class GameScene extends Phaser.Scene {
                 const textY = playerObject.y - playerObject.height * 0.75;
                 const isCrit = directHit || damage >= 12;
                 this.effectsManager.damageNumber(playerObject.x, textY, damage, isCrit);
+
+                playerObject.damageCallback();
 
                 if (directHit) {
                     this.effectsManager.hitFlash(playerObject, 0xff4444, 160);
