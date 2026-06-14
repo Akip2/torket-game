@@ -4,7 +4,7 @@ import { Parameter } from "./enums/Parameter.enum";
 import type { ParameterChangeCoef, Rectangle } from "./types";
 
 export const DEBUG = false;
-export const FREE_ROAM = false;
+export const FREE_ROAM = true;
 export const CLIENT_PREDICTION = false;
 
 export const DEFAULT_MAP_ID = "mirrorhold";
@@ -42,7 +42,7 @@ export const PLAYER_CONST = {
 
     BASE_MASS: 26,
 
-    BASE_FACE: FaceExpression.Happy,
+    BASE_FACE: FaceExpression.Shocked,
 
     BASE_FRICTION: {
         FRICTION: 0,

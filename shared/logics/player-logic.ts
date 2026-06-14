@@ -3,6 +3,7 @@ import { EXPLOSION_CONST, PLAYER_CONST } from "../const";
 import Vector from "../data/Vector";
 import type { IPlayer } from "../interfaces/Player.interface";
 import type { InputPayload, PendingExplosion } from "../types";
+import { wait } from "../utils";
 
 export function movePlayerFromInputs(player: IPlayer, inputPayload: InputPayload, instantly: boolean = false) {
     if (!canPlayerMove(player)) return;
@@ -27,11 +28,21 @@ export function movePlayerFromInputs(player: IPlayer, inputPayload: InputPayload
     }
 }
 
-export function immobilizePlayer(player: IPlayer) {
+export async function immobilizePlayer(player: IPlayer) {
     player.isMoving = false;
 
     if (player.isOnGround) {
         player.setVelocityX(0);
+    } else {
+        const velX = player.getVelocity().x
+        while (!player.isOnGround && !player.isMoving) {
+            player.setVelocityX(velX);
+            await wait(100);
+        }
+        
+        if (!player.isMoving) {
+            player.setVelocityX(0);
+        }
     }
 }
 

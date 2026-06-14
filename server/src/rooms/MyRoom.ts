@@ -290,7 +290,6 @@ export class MyRoom extends Room<MyRoomState> {
 
                         if (isGroundCollision && isFalling) {
                             playerBody.isOnGround = true;
-                            playerBody.stopHorizontalMovement();
                         }
                     } else if (labels.includes(RessourceKeys.CapturePoint)) { // CapturePoint
                         this.capturePointManager.manageContact(otherBody.plugin, playerBody.getTeam(), false);

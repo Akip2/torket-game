@@ -40,7 +40,7 @@ export const TextStyle = {
         color: "black",
         fontFamily: "JetBrainsMono",
         fontSize: Math.round(PLAYER_CONST.BASE_WIDTH / 2),
-        letterSpacing: -2,
+        letterSpacing: -1.25,
         fixedWidth: PLAYER_CONST.BASE_WIDTH,
         align: "center"
     },
