@@ -22,7 +22,7 @@ export function generateBulletOriginPosition(playerX: number, playerY: number, t
     );
 
     const normalizedBulletVector = bulletVector.getNormalizedVector();
-    const distance = (playerSize / 2) + 10;
+    const distance = (playerSize / 2) + 25;
 
     return {
         x: playerX + normalizedBulletVector.x * distance,

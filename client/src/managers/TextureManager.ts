@@ -95,9 +95,9 @@ export default class TextureManager {
         const tubeLength = size * 1.1;
         const tubeHeight = size * 0.25;
         const barrelY = size * 0.4;
-        const muzzleLength = size * 0.15;
-        const gripWidth = size * 0.15;
-        const gripHeight = size * 0.18;
+        const muzzleLength = size * 0.125;
+        const gripWidth = size * 0.2;
+        const gripHeight = size * 0.25;
 
         const lightBody = 0x5d6d7e;
         const muzzleColor = 0x34495e;

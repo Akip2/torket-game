@@ -4,7 +4,7 @@ import { Parameter } from "./enums/Parameter.enum";
 import type { ParameterChangeCoef, Rectangle } from "./types";
 
 export const DEBUG = false;
-export const FREE_ROAM = true;
+export const FREE_ROAM = false;
 export const CLIENT_PREDICTION = false;
 
 export const DEFAULT_MAP_ID = "mirrorhold";
@@ -66,6 +66,7 @@ export const PLAYER_CONST = {
 export const BULLET_CONST = {
     RADIUS: 4,
     TRAIL_DISTANCE: 2,
+    TRAIL_COLOR: 0xff2222,
     AIR_FRICTION: 0.01,
     GRAVITY_SCALE: 1,
 }
@@ -79,14 +80,14 @@ export const CAPTURE_POINT_CONST = {
 
 export const EXPLOSION_CONST = {
     SPRITE_SIZE: 32,
-    BASE_RADIUS: 50,
+    BASE_RADIUS: 55,
     BASE_PUSH: 1,
 }
 
 export const SHOT_CONST = {
     BASE_DAMAGE: 10,
-    BASE_MAX_SHOT_FORCE: 20,
-    MIN_SHOT_FORCE: 2,
+    BASE_MAX_SHOT_FORCE: 27.5,
+    MIN_SHOT_FORCE: 5,
 }
 
 const BORDER_SAFE_MARGIN = 200; // increased size to make sure bullet collision detections work

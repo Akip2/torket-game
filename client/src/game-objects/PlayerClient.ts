@@ -2,7 +2,7 @@ import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import type { IPlayer } from "@shared/interfaces/Player.interface";
 import type GameScene from "../scenes/GameScene";
 import Gun from "./Gun";
-import { CLIENT_PREDICTION, PLAYER_CONST } from "@shared/const";
+import { CLIENT_PREDICTION, FREE_ROAM, PLAYER_CONST } from "@shared/const";
 import { BarStyle, TextStyle } from "../ui/ui-styles";
 import type { Position } from "@shared/types";
 import { Depths } from "@shared/enums/Depths.enum.ts";
@@ -142,7 +142,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     }
 
     updateGunPlacement(targetPosition: Position) {
-        if (this.state !== PlayerState.Shooting) {
+        if (this.state !== PlayerState.Shooting && !FREE_ROAM) {
             this.gun.setVisible(false);
             return;
         }
@@ -150,16 +150,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.gun.setVisible(true);
         const dx = targetPosition.x - this.x;
         const dy = targetPosition.y - this.y;
-        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-
-        if (Math.abs(angle) > 90) {
-            this.gun.setScale(Math.abs(this.gun.scaleX), -Math.abs(this.gun.scaleY));
-        } else {
-            this.gun.setScale(Math.abs(this.gun.scaleX), Math.abs(this.gun.scaleY));
-        }
-
-        this.gun.setPosition(this.x, this.y);
-        this.gun.setAngle(angle);
+        this.gun.updateDisplay(this.x, this.y, dx, dy);
     }
 
     updateUI() {

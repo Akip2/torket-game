@@ -6,8 +6,8 @@ import { wait } from "@shared/utils";
 
 export default class PlayerFace extends Phaser.GameObjects.Text {
     private baseFace: FaceExpression;
-    private changeFaceTimeoutId?: number;
-    private blinkTimeoutId?: number;
+    private changeFaceTimeoutId?: ReturnType<typeof setTimeout>;
+    private blinkTimeoutId?: ReturnType<typeof setTimeout>;
 
     constructor(scene: GameScene, playerX: number, playerY: number, style: Phaser.Types.GameObjects.Text.TextStyle, baseFace: FaceExpression = PLAYER_CONST.BASE_FACE) {
         super(scene, playerX, playerY, baseFace, style);
