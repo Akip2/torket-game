@@ -142,7 +142,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     }
 
     updateGunPlacement(targetPosition: Position) {
-        if (this.state !== PlayerState.Shooting && !FREE_ROAM) {
+        if (!this.isAlive || (this.state !== PlayerState.Shooting && !FREE_ROAM)) {
             this.gun.setVisible(false);
             return;
         }
