@@ -148,6 +148,7 @@ export default class GameScene extends Phaser.Scene {
 
         this.input.keyboard!.on("keydown-ONE", () => { this.debugFunction() });
         this.input.keyboard!.on("keydown-TWO", () => { this.room.send(RequestTypes.Debug) });
+        //this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {this.scene.stop(SceneNames.Game)});
     }
 
     private terrainSynchro(quadBlock: QuadBlock) {
@@ -258,6 +259,7 @@ export default class GameScene extends Phaser.Scene {
 
         this.room.onLeave(() => {
             if (!this.isOver) {
+                this.scene.stop(SceneNames.Game);
                 this.scene.start(SceneNames.TitleScreen);
                 showToast("Disconnected from the game");
             }
@@ -338,7 +340,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     update(_time: number, delta: number): void {
-        if (!this.playerManager || !this.playerManager.currentPlayer) { return; }
+        if (!this.playerManager || !this.playerManager.currentPlayer || !this.playerManager.currentPlayer.body) { return; }
 
         this.elapsedTime += delta;
 

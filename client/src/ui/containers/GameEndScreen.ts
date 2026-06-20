@@ -78,10 +78,12 @@ export default class GameEndScreen extends Phaser.GameObjects.Container {
             scene.cameras.main.centerY + 130,
             "BACK TO MENU",
             () => {
+                scene.scene.stop(SceneNames.Game);
                 scene.scene.start(SceneNames.TitleScreen);
             },
             ButtonStyle.GameEndButton
         );
+        
         this.add(backButton);
 
         const playAgainButton = new UiButton(
@@ -121,6 +123,7 @@ export default class GameEndScreen extends Phaser.GameObjects.Container {
             const messageBuffer = await RoomManager.quickPlay(scene.playerData.name);
 
             // Start a new game
+            scene.scene.stop(SceneNames.Game);
             scene.scene.start(SceneNames.Game, {
                 playerData: { name: scene.playerData.name },
                 messageBuffer
