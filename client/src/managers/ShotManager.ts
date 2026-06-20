@@ -128,10 +128,10 @@ export default class ShotManager {
         const maxSteps = 100;
         for (let i = 0; i < maxSteps; i++) {
             vx = vx * frictionFactor;
-            vy = vy * frictionFactor + gravityStep;
-
             x += vx;
             y += vy;
+
+            vy = vy * frictionFactor + gravityStep;
 
             if (x < -100 || x > GAME_WIDTH + 100 || y > GAME_HEIGHT + 100) break;
 
