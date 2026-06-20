@@ -15,7 +15,7 @@ export default class CapturePointClient extends Phaser.Physics.Matter.Sprite {
 
         this.setIgnoreGravity(true);
 
-        this.setDepth(Depths.Fourth);
+        this.setDepth(Depths.Tenth);
         this.setStatus(CaptureStatus.Neutral);
 
         scene.worldContainer.add(this);

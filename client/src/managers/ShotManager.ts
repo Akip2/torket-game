@@ -49,7 +49,7 @@ export default class ShotManager {
 
     async chargeShot() {
         if (!this.owner) throw new Error("ShotManager: owner not set");
-        
+
         this.isCharging = true;
 
         let sign = 1;
@@ -58,7 +58,7 @@ export default class ShotManager {
         const MAX_FORCE = this.owner.powerManager.getParameterValue(Parameter.Range);
 
         while (this.isCharging) {
-            this.force += (MAX_FORCE / 60) * sign;
+            this.force += (MAX_FORCE / 100) * sign;
             this.drawTrajectory(this.generateShotInfo());
 
             await wait(TIME_STEP);
@@ -66,7 +66,6 @@ export default class ShotManager {
                 sign *= -1;
                 await wait(TIME_STEP);
             }
-
         }
     }
 
@@ -103,7 +102,11 @@ export default class ShotManager {
     drawTrajectory(shootInfo: ShootInfo) {
         if (!this.trajectoryDrawer) {
             this.trajectoryDrawer = this.scene.add.graphics();
+            this.scene.worldContainer.add(this.trajectoryDrawer);
+            this.scene.worldContainer.sendToBack(this.trajectoryDrawer);
+            this.trajectoryDrawer.setDepth(Depths.None);
         }
+
         this.trajectoryDrawer.clear();
         //this.trajectoryDrawer = this.scene.add.graphics();
         this.trajectoryDrawer.fillStyle(0xffffff, 0.9);
@@ -134,8 +137,6 @@ export default class ShotManager {
 
             this.trajectoryDrawer.fillCircle(x, y, 2);
         }
-
-        this.trajectoryDrawer.setDepth(Depths.None);
     }
 
     generateShotInfo() {
