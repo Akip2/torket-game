@@ -80,12 +80,12 @@ export const CAPTURE_POINT_CONST = {
 
 export const EXPLOSION_CONST = {
     SPRITE_SIZE: 32,
-    BASE_RADIUS: 55,
+    BASE_RADIUS: 65,
     BASE_PUSH: 1,
 }
 
 export const SHOT_CONST = {
-    BASE_DAMAGE: 10,
+    BASE_DAMAGE: 20,
     BASE_MAX_SHOT_FORCE: 27.5,
     MIN_SHOT_FORCE: 5,
 }

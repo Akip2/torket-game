@@ -1,4 +1,4 @@
-import { immobilizePlayer, isPlayerInRadius, movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
+import { getPlayerDistanceFromPoint, immobilizePlayer, isPlayerInRadius, movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
 import { InputPayload, PendingExplosion } from "@shared/types";
 import PlayerServer from "../bodies/PlayerServer";
 import { Player } from "../rooms/schema/MyRoomState";
@@ -84,8 +84,9 @@ export default class PlayerManagerServer {
             playerReactToExplosion(p, pendingExplosion);
 
             if (isPlayerInRadius(p, pendingExplosion.cx, pendingExplosion.cy, pendingExplosion.radius)) {
-                // Explosion damage is not a direct hit
-                this.playerBodies.get(id)?.applyDamage(pendingExplosion.damage!, false);
+                const distanceToExplosion = getPlayerDistanceFromPoint(p, pendingExplosion.cx, pendingExplosion.cy);
+                // Explosion damage is not a direct hit, but it scales with distance to the center.
+                this.playerBodies.get(id)?.applyDamage(pendingExplosion.damage!, false, distanceToExplosion, pendingExplosion.radius);
             }
         });
     }

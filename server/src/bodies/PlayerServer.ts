@@ -8,6 +8,7 @@ import { Position } from "@shared/types";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
 import PowerManager from "@shared/data/power/PowerManager";
 import { Parameter } from "@shared/enums/Parameter.enum";
+import { calculateExplosionDamage } from "@shared/logics/player-logic";
 
 export default class PlayerServer extends GameBody implements IPlayer {
     isMoving: boolean = false;
@@ -88,8 +89,8 @@ export default class PlayerServer extends GameBody implements IPlayer {
         Body.setMass(this.body, 1);
     }
 
-    applyDamage(damage: number, directHit: boolean) {
-        const actualDamage = Math.round(damage * (directHit ? 1.5 : 1) + (Math.random() * 5));
+    applyDamage(damage: number, directHit: boolean, distanceToExplosion?: number, explosionRadius?: number) {
+        const actualDamage = calculateExplosionDamage(damage, directHit, distanceToExplosion, explosionRadius);
 
         this.playerRef.hp -= actualDamage;
 

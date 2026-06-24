@@ -64,6 +64,22 @@ export function isPlayerInRadius(player: IPlayer, cx: number, cy: number, radius
     return getPlayerDistanceFromPoint(player, cx, cy) <= radius * 0.9;
 }
 
+export function calculateExplosionDamage(baseDamage: number, directHit: boolean, distanceToExplosion?: number, explosionRadius?: number) {
+    if (directHit) {
+        return Math.max(0, Math.round(baseDamage * 1.5));
+    }
+
+    if (typeof distanceToExplosion !== "number" || typeof explosionRadius !== "number" || explosionRadius <= 0) {
+        return Math.max(0, Math.round(baseDamage));
+    }
+
+    const clampedDistance = Math.min(Math.max(distanceToExplosion, 0), explosionRadius);
+    const normalizedDistance = clampedDistance / explosionRadius;
+    const damageRatio = Math.max(0, 1 - Math.pow(normalizedDistance, 2.2));
+
+    return Math.max(0, Math.round(baseDamage * damageRatio));
+}
+
 export function playerReactToExplosion(player: IPlayer, pendingExplosion: PendingExplosion) {
     const { radius, pushCoef } = pendingExplosion;
     const { cx, cy } = pendingExplosion;
