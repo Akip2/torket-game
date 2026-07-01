@@ -31,19 +31,14 @@ export function movePlayerFromInputs(player: IPlayer, inputPayload: InputPayload
 export async function immobilizePlayer(player: IPlayer) {
     player.isMoving = false;
 
-    if (player.isOnGround) {
-        player.setVelocityX(0);
-    } else {
+    if (!player.hasMovementLeft() && !player.isOnGround) {
         const velX = player.getVelocity().x
-        while (!player.isOnGround && !player.isMoving) {
+        while (!player.isOnGround) {
             player.setVelocityX(velX);
             await wait(100);
         }
-        
-        if (!player.isMoving) {
-            player.setVelocityX(0);
-        }
     }
+    player.setVelocityX(0);
 }
 
 export function canPlayerMove(player: IPlayer) {

@@ -286,9 +286,8 @@ export class MyRoom extends Room<MyRoomState> {
                         const normal = isPlayerA ? collision.normal : { x: -collision.normal.x, y: -collision.normal.y };
 
                         const isGroundCollision = normal.y < -0.3;
-                        const isFalling = playerBody.getVelocity().y > 0.5;
 
-                        if (isGroundCollision && isFalling) {
+                        if (isGroundCollision) {
                             playerBody.isOnGround = true;
                         }
                     } else if (labels.includes(RessourceKeys.CapturePoint)) { // CapturePoint

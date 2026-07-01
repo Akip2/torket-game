@@ -14,6 +14,7 @@ import { PlayerState } from "@shared/enums/PlayerState.enum";
 import GameEndPhase from "@shared/data/phases/GameEndPhase";
 import { FREE_ROAM } from "@shared/const";
 import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
+import { immobilizePlayer } from "@shared/logics/player-logic";
 
 export default class PhaseManagerServer {
     currentIndex: number = -1;
@@ -174,8 +175,9 @@ export default class PhaseManagerServer {
             } else if (!concernedPlayer.hasMovementLeft()) {
                 clearInterval(loop);
                 concernedPlayer.enableMass();
+                immobilizePlayer(concernedPlayer);
                 this.next(500);
             }
-        }, 500)
+        }, 50)
     }
 }
