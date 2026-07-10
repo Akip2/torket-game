@@ -31,11 +31,15 @@ export default class GameEndScreen extends Phaser.GameObjects.Container {
         this.setDepth(Depths.First + 1);
         this.setScrollFactor(0);
 
+        const viewportCenter = scene.cameraManager.getUiViewportCenter();
+        const viewportWidth = scene.cameraManager.getUiViewportWidth();
+        const viewportHeight = scene.cameraManager.getUiViewportHeight();
+
         this.background = scene.add.rectangle(
-            scene.cameras.main.centerX,
-            scene.cameras.main.centerY,
-            scene.cameras.main.width,
-            scene.cameras.main.height,
+            viewportCenter.x,
+            viewportCenter.y,
+            viewportWidth,
+            viewportHeight,
             0x000000,
             0.825
         );
@@ -44,8 +48,8 @@ export default class GameEndScreen extends Phaser.GameObjects.Container {
 
         // Message principal (vide au départ)
         this.messageText = scene.add.text(
-            scene.cameras.main.centerX,
-            scene.cameras.main.centerY - 60,
+            viewportCenter.x,
+            viewportCenter.y - 60,
             "",
             {
                 fontSize: "64px",
@@ -59,8 +63,8 @@ export default class GameEndScreen extends Phaser.GameObjects.Container {
 
         // Détail (vide)
         this.detailText = scene.add.text(
-            scene.cameras.main.centerX,
-            scene.cameras.main.centerY + 40,
+            viewportCenter.x,
+            viewportCenter.y + 40,
             "",
             {
                 fontSize: "24px",
@@ -74,8 +78,8 @@ export default class GameEndScreen extends Phaser.GameObjects.Container {
         // Boutons (inchangés)
         const backButton = new UiButton(
             scene,
-            scene.cameras.main.centerX - 120,
-            scene.cameras.main.centerY + 130,
+            viewportCenter.x - 120,
+            viewportCenter.y + 130,
             "BACK TO MENU",
             () => {
                 scene.scene.stop(SceneNames.Game);
@@ -88,8 +92,8 @@ export default class GameEndScreen extends Phaser.GameObjects.Container {
 
         const playAgainButton = new UiButton(
             scene,
-            scene.cameras.main.centerX + 120,
-            scene.cameras.main.centerY + 130,
+            viewportCenter.x + 120,
+            viewportCenter.y + 130,
             "PLAY AGAIN",
             () => {
                 this.playAgain(scene);

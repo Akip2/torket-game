@@ -1,4 +1,3 @@
-import { GAME_HEIGHT, GAME_WIDTH } from "@shared/const";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import type GameScene from "../../scenes/GameScene";
 import { TextStyle } from "../ui-styles";
@@ -21,12 +20,16 @@ export default class ActionChoicePanel {
         this.container.setDepth(0);
         scene.uiContainer.sort('depth');
 
+        const viewportCenter = scene.cameraManager.getUiViewportCenter();
+        const viewportWidth = scene.cameraManager.getUiViewportWidth();
+        const viewportHeight = scene.cameraManager.getUiViewportHeight();
+
         // Dark background overlay
-        const background = scene.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.75);
+        const background = scene.add.rectangle(viewportCenter.x, viewportCenter.y, viewportWidth, viewportHeight, 0x000000, 0.75);
         this.container.add(background);
 
         // Main instruction text
-        this.titleText = scene.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 100, 'CHOOSE YOUR ACTION', {
+        this.titleText = scene.add.text(viewportCenter.x, viewportCenter.y - 100, 'CHOOSE YOUR ACTION', {
             ...TextStyle.PhaseDisplayer,
             fontSize: '48px',
             color: '#00ffff',
@@ -47,11 +50,11 @@ export default class ActionChoicePanel {
         });
 
         // Create buttons
-        const buttonY = GAME_HEIGHT / 2 + 80;
+        const buttonY = viewportCenter.y + 80;
 
         this.moveButton = new ActionButton(
             scene,
-            GAME_WIDTH / 2 - 180,
+            viewportCenter.x - 180,
             buttonY,
             Action.Move,
             () => this.selectAction(scene.room, Action.Move),
@@ -62,7 +65,7 @@ export default class ActionChoicePanel {
 
         this.shootButton = new ActionButton(
             scene,
-            GAME_WIDTH / 2 + 180,
+            viewportCenter.x + 180,
             buttonY,
             Action.Shoot,
             () => this.selectAction(scene.room, Action.Shoot)

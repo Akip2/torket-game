@@ -67,7 +67,7 @@ export default class PhaseManagerServer {
                     this.next()
                     if(phase instanceof StartingPhase) this.onGameStart();
                 },
-                (phase as TimedPhase).duration * 1000 + 1250
+                (phase as TimedPhase).duration * 1000 + 200
             );
         }
 

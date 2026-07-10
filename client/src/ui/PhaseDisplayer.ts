@@ -1,4 +1,3 @@
-import { GAME_WIDTH } from "@shared/const";
 import type GameScene from "../scenes/GameScene";
 import UiText from "./UiText";
 import type PhaseManagerClient from "../managers/PhaseManagerClient";
@@ -23,11 +22,12 @@ export default class PhaseDisplayer extends UiText {
         phaseManager: PhaseManagerClient,
         style: Phaser.Types.GameObjects.Text.TextStyle
     ) {
-        const background = scene.add.rectangle(GAME_WIDTH / 2, 15, 0, 0, 0x071623, 0.85);
+        const viewportCenter = scene.cameraManager.getUiViewportCenter();
+        const background = scene.add.rectangle(viewportCenter.x, 15, 0, 0, 0x071623, 0.85);
         scene.uiContainer.add(background);
 
         const phaseName = phaseManager.currentPhase.name
-        super(scene, phaseName, GAME_WIDTH / 2, 15, style);
+        super(scene, phaseName, viewportCenter.x, 15, style);
         this.phaseManager = phaseManager;
         this.setOrigin(0.5, 0);
 
@@ -53,12 +53,13 @@ export default class PhaseDisplayer extends UiText {
                 this.setText(currentPhase.name);
             }
             
-            this.x = GAME_WIDTH / 2;
+            const viewportCenter = (this.scene as unknown as GameScene).cameraManager.getUiViewportCenter();
+            this.x = viewportCenter.x;
 
             const padding = 12;
             const height = 28;
             this.background.setSize(this.width + padding, height);
-            this.background.x = GAME_WIDTH / 2;
+            this.background.x = viewportCenter.x;
 
             if (currentPhase.isTimed) {
                 const timeLeft = (currentPhase as TimedPhase).getTimeLeft();

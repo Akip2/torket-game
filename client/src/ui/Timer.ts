@@ -1,4 +1,3 @@
-import { GAME_WIDTH } from "@shared/const";
 import type GameScene from "../scenes/GameScene";
 import UiText from "./UiText";
 import { TextStyle } from "./ui-styles";
@@ -10,10 +9,11 @@ export default class Timer extends UiText {
     constructor(
         scene: GameScene,
     ) {
-        const background = scene.add.rectangle(GAME_WIDTH / 2, 50, 0, 0, 0x091922, 0.85);
+        const viewportCenter = scene.cameraManager.getUiViewportCenter();
+        const background = scene.add.rectangle(viewportCenter.x, 50, 0, 0, 0x091922, 0.85);
         scene.uiContainer.add(background);
 
-        super(scene, "", GAME_WIDTH / 2, 48, TextStyle.Timer);
+        super(scene, "", viewportCenter.x, 48, TextStyle.Timer);
         this.setOrigin(0.5, 0);
 
         this.background = background
@@ -34,12 +34,12 @@ export default class Timer extends UiText {
         const seconds = Math.ceil(timeLeft / 1000);
         this.setText(`${seconds}`);
 
+        const viewportCenter = (this.scene as unknown as GameScene).cameraManager.getUiViewportCenter();
         const fixedWidth = 35;
         const height = 26;
         this.background.setSize(fixedWidth, height);
 
-        // center the text on the background
-        this.setPosition(this.background.x, this.y);
+        this.setPosition(viewportCenter.x, this.y);
         this.background.setPosition(this.x, this.y - 3);
     }
 }

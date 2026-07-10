@@ -31,6 +31,7 @@ import RoomManager from "../managers/RoomManager";
 import EndTurnButton from "../ui/buttons/EndTurnButton";
 import CapturePointClient from "../game-objects/CapturePointClient";
 import CapturePointManagerClient from "../managers/CapturePointManagerClient";
+import CameraManager from "../managers/CameraManager";
 import type QuadBlock from "@shared/data/QuadBlock";
 
 export default class GameScene extends Phaser.Scene {
@@ -53,6 +54,7 @@ export default class GameScene extends Phaser.Scene {
     phaseManager!: PhaseManagerClient;
     effectsManager!: EffectsManager;
     capturePointManager!: CapturePointManagerClient;
+    cameraManager!: CameraManager;
 
     worldContainer!: Phaser.GameObjects.Container;
     uiContainer!: Phaser.GameObjects.Container;
@@ -130,6 +132,7 @@ export default class GameScene extends Phaser.Scene {
         this.effectsManager = new EffectsManager(this);
         this.capturePointManager = new CapturePointManagerClient(this);
         this.phaseManager = new PhaseManagerClient();
+        this.cameraManager = new CameraManager(this.cameras.main);
 
         this.playerManager = new PlayerManagerClient(this.room);
         this.playerManager.setupPlayerListeners(this);
@@ -140,6 +143,7 @@ export default class GameScene extends Phaser.Scene {
 
         this.setupCollisionEvents();
         this.setupPointerEvents();
+        this.setupCameraControls();
         this.setupVisibilityHandler();
         this.setupUi();
         this.setupBorders();
@@ -282,9 +286,16 @@ export default class GameScene extends Phaser.Scene {
     }
 
     setupPointerEvents() {
+        this.input.mouse?.disableContextMenu();
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => this.pointerDownEvent(pointer));
         this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => this.pointerUpEvent(pointer));
         this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => this.pointerMoveEvent(pointer));
+    }
+
+    setupCameraControls() {
+        this.input.on('wheel', (pointer: Phaser.Input.Pointer, _gameObjects: Phaser.GameObjects.GameObject[], _deltaX: number, deltaY: number) => {
+            this.cameraManager.handleWheel(pointer, deltaY);
+        });
     }
 
     setupVisibilityHandler() {
@@ -299,11 +310,12 @@ export default class GameScene extends Phaser.Scene {
     }
 
     setupUi() {
-        const uiCam = this.cameras.add(0, 0, GAME_WIDTH, GAME_HEIGHT);
+        const uiCam = this.cameras.add(0, 0, this.scale.gameSize.width, this.scale.gameSize.height);
         uiCam.setScroll(0, 0);
 
         this.cameras.main.ignore(this.uiContainer);
         uiCam.ignore(this.worldContainer);
+        this.cameraManager.setUiCamera(uiCam);
 
         this.phaseDisplayer = new PhaseDisplayer(this, this.phaseManager, TextStyle.PhaseDisplayer);
         this.actionChoicePanel = new ActionChoicePanel(this);
@@ -413,32 +425,43 @@ export default class GameScene extends Phaser.Scene {
         this.playerManager.reactToExplosion(bullet);
     }
 
+    private getWorldPointerPosition(pointer: Phaser.Input.Pointer): Position {
+        const worldPoint = this.cameraManager.getWorldPoint(pointer);
+        return { x: worldPoint.x, y: worldPoint.y };
+    }
+
     pointerDownEvent(pointer: Phaser.Input.Pointer) {
+        if (!this.cameraManager.handlePointerDown(pointer))  return;
         if (!canPlayerShoot(this.playerManager.currentPlayer)) return;
 
-        this.shotManager.setTargetPosition(pointer.x, pointer.y);
+        const worldPosition = this.getWorldPointerPosition(pointer);
+        this.shotManager.setTargetPosition(worldPosition.x, worldPosition.y);
         this.shotManager.setStartingPosition(this.playerManager.currentPlayer.x, this.playerManager.currentPlayer.y);
 
         this.shotManager.chargeShot();
     }
 
     pointerUpEvent(pointer: Phaser.Input.Pointer) {
+        if (!this.cameraManager.handlePointerUp())  return;
+
+
         if (!canPlayerShoot(this.playerManager.currentPlayer)) return;
 
-        this.shotManager.setTargetPosition(pointer.x, pointer.y);
+        const worldPosition = this.getWorldPointerPosition(pointer);
+        this.shotManager.setTargetPosition(worldPosition.x, worldPosition.y);
         this.shotManager.setStartingPosition(this.playerManager.currentPlayer.x, this.playerManager.currentPlayer.y);
 
         this.shotManager.releaseShot();
     }
 
     pointerMoveEvent(pointer: Phaser.Input.Pointer) {
-        this.shotManager.setTargetPosition(pointer.x, pointer.y);
+        if (this.cameraManager.handlePointerMove(pointer)) return;
+
+        const worldPosition = this.getWorldPointerPosition(pointer);
+        this.shotManager.setTargetPosition(worldPosition.x, worldPosition.y);
         this.shotManager.setStartingPosition(this.playerManager.currentPlayer.x, this.playerManager.currentPlayer.y);
 
-        this.currentMousePosition = {
-            x: pointer.x,
-            y: pointer.y
-        }
+        this.currentMousePosition = worldPosition;
     }
 
     getMovementInput() {
