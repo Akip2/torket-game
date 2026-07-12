@@ -34,4 +34,18 @@ export default class PhaseManagerClient {
     isConcerned(playerId: string): boolean {
         return this.concernedPlayerId ? this.concernedPlayerId === playerId : true;
     }
+
+    updateDisplay() {
+        const nameEl = document.getElementById("phase-name");
+        const timerEl = document.getElementById("phase-timer");
+
+        if (nameEl) nameEl.textContent = this.currentPhase.name;
+
+        if (timerEl && this.currentPhase.isTimed) {
+            const timeLeft = (this.currentPhase as TimedPhase).getTimeLeft();
+            timerEl.textContent = `${Math.ceil(timeLeft / 1000)}s`;
+        } else if (timerEl) {
+            timerEl.textContent = "";
+        }
+    }
 }

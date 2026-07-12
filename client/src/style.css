@@ -172,10 +172,10 @@ button:focus {
 
 #game-container {
   position: absolute;
-  top: var(--hud-height);
+  top: 0;
   left: 0;
   width: 100%;
-  height: calc(100% - var(--hud-height));
+  height: 100%;
 }
 
 canvas {
@@ -504,7 +504,7 @@ canvas {
   height: var(--hud-height);
   background-color: rgb(5, 25, 45);
   border-bottom: 2px solid rgb(77, 208, 255);
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   z-index: 10;

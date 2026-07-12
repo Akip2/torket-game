@@ -13,8 +13,6 @@ import { SceneNames } from "@shared/enums/SceneNames.enum";
 import type { CaptureInfo, ExplosionInfo, FullSynchroInfo, InitData, PlayerData, Position, PowerUpdateData, ShootInfo } from "@shared/types";
 import { Depths } from "@shared/enums/Depths.enum.ts";
 import PhaseManagerClient from "../managers/PhaseManagerClient";
-import PhaseDisplayer from "../ui/PhaseDisplayer";
-import { TextStyle } from "../ui/ui-styles";
 import UiText from "../ui/UiText";
 import { canPlayerShoot } from "@shared/logics/player-logic";
 import ActionChoicePanel from "../ui/containers/ActionChoicePanel";
@@ -23,7 +21,7 @@ import type Phase from "@shared/data/phases/Phase";
 import ActionPhase from "@shared/data/phases/ActionPhase";
 import SimulationBorderClient from "../game-objects/SimulationBorderClient";
 import { Border } from "@shared/enums/Border.enum";
-import { getExplosionSpriteScale, getServerUrl, loadFont, showToast } from "../client-utils";
+import { displayHud, getExplosionSpriteScale, getServerUrl, loadFont, showToast } from "../client-utils";
 import GameEndScreen from "../ui/containers/GameEndScreen";
 import SoundManager from "../managers/SoundManager";
 import { setCookie } from "typescript-cookie";
@@ -33,7 +31,6 @@ import CapturePointClient from "../game-objects/CapturePointClient";
 import CapturePointManagerClient from "../managers/CapturePointManagerClient";
 import CameraManager from "../managers/CameraManager";
 import type QuadBlock from "@shared/data/QuadBlock";
-import type TimedPhase from "@shared/data/phases/TimedPhase";
 
 export default class GameScene extends Phaser.Scene {
     active: boolean = true;
@@ -84,7 +81,7 @@ export default class GameScene extends Phaser.Scene {
         setCookie("playerName", this.playerData.name, { expires: 7 });
     }
 
-    preload() {
+    preload() {      
         this.keys = this.input.keyboard!.addKeys({
             W: Phaser.Input.Keyboard.KeyCodes.W,
             A: Phaser.Input.Keyboard.KeyCodes.A,
@@ -115,6 +112,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     async create() {
+        displayHud();
         await loadFont("JetBrainsMono", "assets/fonts/JetBrainsMono-Medium.ttf");
 
         SoundManager.init(this);
@@ -153,7 +151,6 @@ export default class GameScene extends Phaser.Scene {
 
         this.input.keyboard!.on("keydown-ONE", () => { this.debugFunction() });
         this.input.keyboard!.on("keydown-TWO", () => { this.room.send(RequestTypes.Debug) });
-        //this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {this.scene.stop(SceneNames.Game)});
     }
 
     private terrainSynchro(quadBlock: QuadBlock) {
@@ -318,7 +315,6 @@ export default class GameScene extends Phaser.Scene {
         uiCam.ignore(this.worldContainer);
         this.cameraManager.setUiCamera(uiCam);
 
-        //this.phaseDisplayer = new PhaseDisplayer(this, this.phaseManager, TextStyle.PhaseDisplayer);
         this.actionChoicePanel = new ActionChoicePanel(this);
 
         this.endTurnButton = new EndTurnButton(
@@ -363,20 +359,7 @@ export default class GameScene extends Phaser.Scene {
         }
 
         this.playerManager.updatePlayers();
-        //this.phaseDisplayer.update();
-
-        const currentPhase = this.phaseManager.currentPhase;
-        const nameEl = document.getElementById("phase-name");
-        const timerEl = document.getElementById("phase-timer");
-
-        if (nameEl) nameEl.textContent = currentPhase.name;
-
-        if (timerEl && currentPhase.isTimed) {
-            const timeLeft = (currentPhase as TimedPhase).getTimeLeft();
-            timerEl.textContent = `${Math.ceil(timeLeft / 1000)}s`;
-        } else if (timerEl) {
-            timerEl.textContent = "";
-        }
+        this.phaseManager.updateDisplay();
     }
 
     setupCollisionEvents() {
