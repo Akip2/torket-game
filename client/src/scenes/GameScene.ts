@@ -33,6 +33,7 @@ import CapturePointClient from "../game-objects/CapturePointClient";
 import CapturePointManagerClient from "../managers/CapturePointManagerClient";
 import CameraManager from "../managers/CameraManager";
 import type QuadBlock from "@shared/data/QuadBlock";
+import type TimedPhase from "@shared/data/phases/TimedPhase";
 
 export default class GameScene extends Phaser.Scene {
     active: boolean = true;
@@ -64,7 +65,7 @@ export default class GameScene extends Phaser.Scene {
     playerData!: PlayerData; // data related to the current player, sent to the server on connection
 
     //UI
-    phaseDisplayer!: PhaseDisplayer;
+    //phaseDisplayer!: PhaseDisplayer;
     actionChoicePanel!: ActionChoicePanel;
     endTurnButton!: EndTurnButton;
     gameEndScreen!: GameEndScreen;
@@ -246,7 +247,7 @@ export default class GameScene extends Phaser.Scene {
                 winCondition: gameEndInfo.winCondition
             });
 
-            if(isPlayerWinner) SoundManager.playWinningSound(gameEndInfo.winCondition);
+            if (isPlayerWinner) SoundManager.playWinningSound(gameEndInfo.winCondition);
             this.gameEndScreen.appear(this);
         });
 
@@ -317,7 +318,7 @@ export default class GameScene extends Phaser.Scene {
         uiCam.ignore(this.worldContainer);
         this.cameraManager.setUiCamera(uiCam);
 
-        this.phaseDisplayer = new PhaseDisplayer(this, this.phaseManager, TextStyle.PhaseDisplayer);
+        //this.phaseDisplayer = new PhaseDisplayer(this, this.phaseManager, TextStyle.PhaseDisplayer);
         this.actionChoicePanel = new ActionChoicePanel(this);
 
         this.endTurnButton = new EndTurnButton(
@@ -362,7 +363,20 @@ export default class GameScene extends Phaser.Scene {
         }
 
         this.playerManager.updatePlayers();
-        this.phaseDisplayer.update();
+        //this.phaseDisplayer.update();
+
+        const currentPhase = this.phaseManager.currentPhase;
+        const nameEl = document.getElementById("phase-name");
+        const timerEl = document.getElementById("phase-timer");
+
+        if (nameEl) nameEl.textContent = currentPhase.name;
+
+        if (timerEl && currentPhase.isTimed) {
+            const timeLeft = (currentPhase as TimedPhase).getTimeLeft();
+            timerEl.textContent = `${Math.ceil(timeLeft / 1000)}s`;
+        } else if (timerEl) {
+            timerEl.textContent = "";
+        }
     }
 
     setupCollisionEvents() {
@@ -431,7 +445,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     pointerDownEvent(pointer: Phaser.Input.Pointer) {
-        if (!this.cameraManager.handlePointerDown(pointer))  return;
+        if (!this.cameraManager.handlePointerDown(pointer)) return;
         if (!canPlayerShoot(this.playerManager.currentPlayer)) return;
 
         const worldPosition = this.getWorldPointerPosition(pointer);
@@ -442,7 +456,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     pointerUpEvent(pointer: Phaser.Input.Pointer) {
-        if (!this.cameraManager.handlePointerUp())  return;
+        if (!this.cameraManager.handlePointerUp()) return;
 
 
         if (!canPlayerShoot(this.playerManager.currentPlayer)) return;

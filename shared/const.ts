@@ -142,3 +142,4 @@ export const PARAM_BASE_VALUE_MAP = new Map<Parameter, number>([
 
 export const MAP_PREVIEW_WIDTH = 300;
 export const MAP_PREVIEW_HEIGHT = 150;
+export const HUD_HEIGHT = 42;

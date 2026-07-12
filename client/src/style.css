@@ -1,4 +1,6 @@
 :root {
+  --hud-height: 42px;
+
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -154,6 +156,7 @@ button.loading::after {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -168,11 +171,11 @@ button:focus {
 }
 
 #game-container {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
+  position: absolute;
+  top: var(--hud-height);
+  left: 0;
+  width: 100%;
+  height: calc(100% - var(--hud-height));
 }
 
 canvas {
@@ -491,4 +494,35 @@ canvas {
   .vertical-container input {
     padding: 0.6em;
   }
+}
+
+#hud-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: var(--hud-height);
+  background-color: rgb(5, 25, 45);
+  border-bottom: 2px solid rgb(77, 208, 255);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  font-family: "JetBrainsMono", monospace;
+  font-size: 500px;
+}
+
+#phase-display {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  color: white;
+  font-size: 20px;
+}
+
+#phase-timer {
+  color: rgb(245, 201, 113);
+  font-weight: bold;
+  min-width: 20px;
+  text-align: center;
 }
