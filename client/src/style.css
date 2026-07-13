@@ -526,3 +526,8 @@ canvas {
   min-width: 20px;
   text-align: center;
 }
+
+.dots {
+  display: inline-block;
+  width: 1.2em;
+}

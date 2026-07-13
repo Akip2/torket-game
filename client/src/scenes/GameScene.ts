@@ -62,7 +62,6 @@ export default class GameScene extends Phaser.Scene {
     playerData!: PlayerData; // data related to the current player, sent to the server on connection
 
     //UI
-    //phaseDisplayer!: PhaseDisplayer;
     actionChoicePanel!: ActionChoicePanel;
     endTurnButton!: EndTurnButton;
     gameEndScreen!: GameEndScreen;
@@ -81,7 +80,7 @@ export default class GameScene extends Phaser.Scene {
         setCookie("playerName", this.playerData.name, { expires: 7 });
     }
 
-    preload() {      
+    preload() {
         this.keys = this.input.keyboard!.addKeys({
             W: Phaser.Input.Keyboard.KeyCodes.W,
             A: Phaser.Input.Keyboard.KeyCodes.A,
@@ -112,7 +111,6 @@ export default class GameScene extends Phaser.Scene {
     }
 
     async create() {
-        displayHud();
         await loadFont("JetBrainsMono", "assets/fonts/JetBrainsMono-Medium.ttf");
 
         SoundManager.init(this);
@@ -151,6 +149,7 @@ export default class GameScene extends Phaser.Scene {
 
         this.input.keyboard!.on("keydown-ONE", () => { this.debugFunction() });
         this.input.keyboard!.on("keydown-TWO", () => { this.room.send(RequestTypes.Debug) });
+        displayHud();
     }
 
     private terrainSynchro(quadBlock: QuadBlock) {
