@@ -19,7 +19,6 @@ import StartingPhase from "@shared/data/phases/StartingPhase";
 import { canPlayerShoot } from "@shared/logics/player-logic";
 import { Action } from "@shared/enums/Action.enum";
 import { parsePlayerLabel } from "../server-utils";
-import { Border } from "@shared/enums/Border.enum";
 import { cleanPlayerName, generateDefaultRoomName, wait } from "@shared/utils";
 import { ServerErrorCode } from "@shared/enums/ServerErrorCode.enum";
 import WaitingPhase from "@shared/data/phases/WaitingPhase";
@@ -103,7 +102,7 @@ export class MyRoom extends Room<MyRoomState> {
         this.playerManager.addPlayer(client.sessionId, player, (hp: number, damage?: number, directHit?: boolean) => this.onPlayerDamage(client.sessionId, hp, damage, directHit), this.physicsManager)
         this.state.players.set(client.sessionId, player);
 
-        this.synchronizeFully(client);
+        this.firstSynchronization(client);
 
         if (this.playerManager.getPlayerNb() === this.maxClients) { // if enough players we start the game
             this.phaseManager.start();
@@ -226,8 +225,8 @@ export class MyRoom extends Room<MyRoomState> {
         this.maxClients = this.playerStartingPositions.length;
         this.maxClients = 2; // TEMPORARY
 
-        this.terrainManager = new TerrainManagerServer(this.physicsManager, quadTree);
-        this.terrainManager.createTerrain();
+        this.terrainManager = new TerrainManagerServer(this.physicsManager, quadTree, map.bounds);
+        this.terrainManager.createEnvironment();
 
         this.capturePointManager = new CapturePointManagerServer(this.physicsManager, map.capturePoints, (id, newOwningTeam) => { this.onCapture(id, newOwningTeam) });
     }
@@ -274,7 +273,7 @@ export class MyRoom extends Room<MyRoomState> {
                     }
                 }
 
-                if (playerLabel && (labels.includes(RessourceKeys.Ground) || labels.includes(RessourceKeys.CapturePoint) || plugins.includes(Border.Bottom))) {
+                if (playerLabel && (labels.includes(RessourceKeys.Ground) || labels.includes(RessourceKeys.CapturePoint) || labels.includes(RessourceKeys.Border))) {
                     const sessionId = parsePlayerLabel(playerLabel).sessionId;
                     const playerBody = this.playerManager.getPlayer(sessionId);
                     const isPlayerA = bodyA.label.startsWith(`${RessourceKeys.Player}:`);
@@ -299,7 +298,6 @@ export class MyRoom extends Room<MyRoomState> {
             }
         });
     }
-
 
     fixedTick(deltaTime: number) {
         this.playerManager.applyInputs();
@@ -364,6 +362,17 @@ export class MyRoom extends Room<MyRoomState> {
         } else {
             this.broadcast(RequestTypes.FullSynchro, content);
         }
+    }
+
+    firstSynchronization(client: Client) {
+        const content = {
+            terrain: this.terrainManager.root,
+            capturePoints: this.capturePointManager.getSerializedCapturePoints(),
+            phase: this.phaseManager.currentPhase,
+            bounds: this.terrainManager.bounds
+        };
+
+        client.send(RequestTypes.FirstSynchro, content);
     }
 
     onCapture(id: number, newOwningTeam: Team | null) {

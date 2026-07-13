@@ -3,6 +3,7 @@ export enum RequestTypes {
     Shoot = "shoot",
     TerrainSynchro = "terrain-synchro",
     PhaseSynchro = "phase-synchro",
+    FirstSynchro = "first-synchro",
     FullSynchro = "full-synchro",
     HealthUpdate = "health-update",
     SelectAction = "select-action",

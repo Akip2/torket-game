@@ -1,20 +1,16 @@
 import { Bodies } from "matter-js";
 import GameBody from "./GameBody";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
-import { Border } from "@shared/enums/Border.enum";
-import { BORDERS_CONST } from "@shared/const";
 
 export default class SimulationBorderServer extends GameBody {
-    constructor(placement: Border) {
-        const {x, y, width, height} = BORDERS_CONST[placement];
-
+    constructor(x: number, y: number, width: number, height: number, isBottomBorder: boolean = false) {
         const body = Bodies.rectangle(x, y, width, height, {
             friction: 0,
             frictionAir: 0,
             frictionStatic: 0,
             isStatic: true,
             label: RessourceKeys.Border,
-            plugin: placement
+            plugin: isBottomBorder
         });
 
         super(body);

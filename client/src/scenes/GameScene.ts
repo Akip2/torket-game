@@ -10,7 +10,7 @@ import ShotManager from "../managers/ShotManager";
 import PlayerManagerClient from "../managers/PlayerManagerClient";
 import EffectsManager from "../managers/EffectsManager";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
-import type { CaptureInfo, ExplosionInfo, FullSynchroInfo, InitData, PlayerData, Position, PowerUpdateData, ShootInfo } from "@shared/types";
+import type { CaptureInfo, ExplosionInfo, FirstSynchroInfo, FullSynchroInfo, InitData, PlayerData, Position, PowerUpdateData, ShootInfo } from "@shared/types";
 import { Depths } from "@shared/enums/Depths.enum.ts";
 import PhaseManagerClient from "../managers/PhaseManagerClient";
 import UiText from "../ui/UiText";
@@ -19,8 +19,6 @@ import ActionChoicePanel from "../ui/containers/ActionChoicePanel";
 import UiButton from "../ui/buttons/UiButton";
 import type Phase from "@shared/data/phases/Phase";
 import ActionPhase from "@shared/data/phases/ActionPhase";
-import SimulationBorderClient from "../game-objects/SimulationBorderClient";
-import { Border } from "@shared/enums/Border.enum";
 import { displayHud, getExplosionSpriteScale, getServerUrl, loadFont, showToast } from "../client-utils";
 import GameEndScreen from "../ui/containers/GameEndScreen";
 import SoundManager from "../managers/SoundManager";
@@ -122,9 +120,6 @@ export default class GameScene extends Phaser.Scene {
         new TextureManager(this.add).generateTextures();
 
         this.terrainManager = new TerrainManagerClient(this);
-        this.terrainManager.drawTerrain();
-        this.terrainManager.createTerrainColliders();
-
         this.shotManager = new ShotManager(this);
         this.effectsManager = new EffectsManager(this);
         this.capturePointManager = new CapturePointManagerClient(this);
@@ -143,7 +138,7 @@ export default class GameScene extends Phaser.Scene {
         this.setupCameraControls();
         this.setupVisibilityHandler();
         this.setupUi();
-        this.setupBorders();
+        //this.setupBorders();
 
         this.setupRoomMessages();
 
@@ -189,8 +184,14 @@ export default class GameScene extends Phaser.Scene {
         this.terrainManager.redrawTerrain();
 
         this.capturePointManager.syncCapturePoints(synchroInfo.capturePoints);
+    }
 
-        //this.phaseManager.setCurrentPhase(synchroInfo.phase);
+    private firstSynchro(synchroInfo: FirstSynchroInfo) {
+        this.terrainManager.constructQuadBlock(synchroInfo.terrain);
+        this.terrainManager.redrawTerrain();
+
+        this.capturePointManager.syncCapturePoints(synchroInfo.capturePoints);
+        this.terrainManager.createBorders(synchroInfo.bounds);
     }
 
     async setupRoomMessages() {
@@ -198,6 +199,7 @@ export default class GameScene extends Phaser.Scene {
         this.room.onMessage(RequestTypes.PhaseSynchro, (phase: Phase) => { this.phaseSynchro(phase) });
 
         this.room.onMessage(RequestTypes.FullSynchro, (synchroInfo: FullSynchroInfo) => { this.fullSynchro(synchroInfo) });
+        this.room.onMessage(RequestTypes.FirstSynchro, (synchroInfo: FirstSynchroInfo) => { this.firstSynchro(synchroInfo) });
 
         this.room.onMessage(RequestTypes.Shoot, (data: { shootInfo: ShootInfo, explosionInfo: ExplosionInfo }) => {
             if (this.active) this.shotManager.shootBulletFromInfo(data.shootInfo, data.explosionInfo);
@@ -268,7 +270,7 @@ export default class GameScene extends Phaser.Scene {
 
         for (const { type, data } of this.messageBuffer ?? []) {
             if (type === RequestTypes.FullSynchro) {
-                this.fullSynchro(data);
+                //this.fullSynchro(data);
             }
             else if (type === RequestTypes.TerrainSynchro) {
                 this.terrainSynchro(data);
@@ -276,6 +278,8 @@ export default class GameScene extends Phaser.Scene {
             }
             else if (type === RequestTypes.PhaseSynchro) {
                 this.phaseSynchro(data);
+            } else if (type === RequestTypes.FirstSynchro) {
+                this.firstSynchro(data);
             }
         }
 
@@ -322,13 +326,6 @@ export default class GameScene extends Phaser.Scene {
             GAME_HEIGHT - 20,
             () => { this.room.send(RequestTypes.EndTurn) }
         );
-    }
-
-    setupBorders() {
-        new SimulationBorderClient(this, Border.Top);
-        new SimulationBorderClient(this, Border.Bottom);
-        new SimulationBorderClient(this, Border.Right);
-        new SimulationBorderClient(this, Border.Left);
     }
 
     fixedTick() {

@@ -1,7 +1,6 @@
-import { Border } from "./enums/Border.enum";
 import { FaceExpression } from "./enums/FaceExpression.enum";
 import { Parameter } from "./enums/Parameter.enum";
-import type { ParameterChangeCoef, Rectangle } from "./types";
+import type { ParameterChangeCoef } from "./types";
 
 export const DEBUG = false;
 export const FREE_ROAM = false;
@@ -90,42 +89,12 @@ export const SHOT_CONST = {
     MIN_SHOT_FORCE: 5,
 }
 
-const BORDER_SAFE_MARGIN = 200; // increased size to make sure bullet collision detections work
-const TOP_OFFSET = 150;
-
-export const BORDERS_CONST = {
-    [Border.Top]: {
-        x: GAME_WIDTH / 2,
-        y: -BORDER_SAFE_MARGIN / 2 - TOP_OFFSET,
-
-        width: GAME_WIDTH,
-        height: BORDER_SAFE_MARGIN
-    },
-
-    [Border.Bottom]: {
-        x: GAME_WIDTH / 2,
-        y: GAME_HEIGHT + BORDER_SAFE_MARGIN / 2,
-
-        width: GAME_WIDTH,
-        height: BORDER_SAFE_MARGIN
-    },
-
-    [Border.Right]: {
-        x: GAME_WIDTH + BORDER_SAFE_MARGIN / 2,
-        y: (GAME_HEIGHT - TOP_OFFSET) / 2,
-
-        width: BORDER_SAFE_MARGIN,
-        height: GAME_HEIGHT + TOP_OFFSET
-    },
-
-    [Border.Left]: {
-        x: -BORDER_SAFE_MARGIN / 2,
-        y: (GAME_HEIGHT - TOP_OFFSET) / 2,
-
-        width: BORDER_SAFE_MARGIN,
-        height: GAME_HEIGHT + TOP_OFFSET
-    },
-} as Record<Border, Rectangle>;
+export const BORDER_CONST = {
+    THICKNESS: 30,
+    UP_OFFSET: 1000,
+    DOWN_OFFSET: 30,
+    HORIZONTAL_OFFSET: 400,
+}
 
 export const PARAM_COEF_TABLE = { [-3]: -0.6, [-2]: -0.4, [-1]: -0.2, [1]: 0.2, [2]: 0.4, [3]: 0.6, } as Record<ParameterChangeCoef, number>;
 

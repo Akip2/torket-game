@@ -34,7 +34,7 @@ export default class PrimitiveMap {
         return new PrimitiveMap(grid, rowSize, columnSize, minTileSize);
     }
 
-    addPlayerPosition(x: number, y :number) {
+    addPlayerPosition(x: number, y: number) {
         this.playerPositions.push({
             x: x,
             y: y
@@ -101,8 +101,9 @@ export default class PrimitiveMap {
 
     serialize() {
         const obj = {
-            capturePoints: this.capturePoints,
+            bounds: this.computeBounds(),
             playerPositions: this.playerPositions,
+            capturePoints: this.capturePoints,
             quadTree: this.toQuadBlock(),
 
             primitive: {
@@ -176,5 +177,26 @@ export default class PrimitiveMap {
         }
 
         return resQuadBlock;
+    }
+
+    computeBounds() {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+        for (let i = 0; i < this.grid.length; i++) {
+            if (this.grid[i] !== 1) continue;
+
+            const x = (i % this.rowSize) * this.minTileSize;
+            const y = Math.floor(i / this.rowSize) * this.minTileSize;
+
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x + this.minTileSize;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y + this.minTileSize;
+        }
+
+        return {
+            x: { min: minX, max: maxX },
+            y: { min: minY, max: maxY }
+        };
     }
 }

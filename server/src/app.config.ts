@@ -22,6 +22,8 @@ const MAPS = fs.readdirSync(MAPS_DIR)
         };
     });
 
+console.log(MAPS)
+
 const DEFAULT_MAP = MAPS.find(m => m.id === DEFAULT_MAP_ID);
 
 /**

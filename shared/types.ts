@@ -57,6 +57,13 @@ export type FullSynchroInfo = {
     phase: Phase
 }
 
+export type FirstSynchroInfo = {
+    terrain: QuadBlockType,
+    capturePoints: CapturePoint[],
+    phase: Phase,
+    bounds: Bounds
+}
+
 export type QuadBlockType = {
     x: number;
     y: number;
@@ -105,7 +112,8 @@ export type UIButtonStyle = {
 export type GameMap = {
     capturePoints: Position[],
     playerPositions: Position[],
-    quadTree: QuadBlockType
+    quadTree: QuadBlockType,
+    bounds: Bounds
 }
 
 export type PlayerStartingPosition = {
@@ -191,4 +199,9 @@ export type ParameterChangeCoef = -3 | -2 | -1 | 1 | 2 | 3;
 export type PowerUpdateData = {
     id?: string;
     powerName: string;
+}
+
+export type Bounds = {
+    x: { min: number, max: number },
+    y: { min: number, max: number }
 }
