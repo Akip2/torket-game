@@ -91,10 +91,15 @@ export default class PrimitiveMap {
     }
 
     getDimensions() {
-        const horizontalLength = this.bounds.x.max - this.bounds.x.min;
-        const verticalLength = this.bounds.y.max - this.bounds.y.min;
+        const rowSize =
+            (this.bounds.x.max - this.bounds.x.min) /
+            EDITION_TILE_SIZE + 1;
 
-        return { rowSize: horizontalLength / EDITION_TILE_SIZE, columnSize: verticalLength / EDITION_TILE_SIZE };
+        const columnSize =
+            (this.bounds.y.max - this.bounds.y.min) /
+            EDITION_TILE_SIZE + 1;
+
+        return { rowSize: rowSize, columnSize: columnSize };
     }
 
     toQuadBlock(): QuadBlock {
@@ -117,13 +122,9 @@ export default class PrimitiveMap {
         const { rowSize, columnSize } = this.getDimensions();
 
         this.grid = new Uint8Array(rowSize * columnSize);
-        let i = 0;
         for (const tileIndex of tileIndices) {
             const gridIndex = this.convertMapIndexToGridIndex(tileIndex);
-            console.log(gridIndex);
             this.grid[gridIndex] = 1;
-
-            i++;
         }
     }
 
@@ -133,8 +134,14 @@ export default class PrimitiveMap {
 
     getIndex(x: number, y: number) {
         const { rowSize } = this.getDimensions();
-        const tileX = Math.floor(x / EDITION_TILE_SIZE);
-        const tileY = Math.floor(y / EDITION_TILE_SIZE);
+
+        const tileX = Math.floor(
+            (x - this.bounds.x.min) / EDITION_TILE_SIZE
+        );
+
+        const tileY = Math.floor(
+            (y - this.bounds.y.min) / EDITION_TILE_SIZE
+        );
 
         return tileX + tileY * rowSize;
     }

@@ -367,22 +367,16 @@ export default class MapEditionScene extends Phaser.Scene {
                 const x = minX + (i % rowSize) * EDITION_TILE_SIZE;
                 const y = minY + Math.floor(i / rowSize) * EDITION_TILE_SIZE;
 
-                const sprite = this.add.tileSprite(
-                    x,
-                    y,
-                    EDITION_TILE_SIZE,
-                    EDITION_TILE_SIZE,
-                    RessourceKeys.Ground
-                ).setOrigin(0);
-
+                const sprite = this.add.tileSprite(x, y, EDITION_TILE_SIZE, EDITION_TILE_SIZE, RessourceKeys.Ground).setOrigin(0);
                 this.tiles.set(this.generateIndex(x, y), sprite);
             }
         }
     }
 
     generateBounds() {
-        const sortedKeys = Array.from(this.tiles.keys()).sort();
-        let currentIndex = sortedKeys[0];
+        const keys = this.tiles.keys();
+
+        let currentIndex = keys.next().value!;
         let splittedIndex = currentIndex.split("_");
         let x = parseInt(splittedIndex[0]);
         let y = parseInt(splittedIndex[1]);
@@ -392,12 +386,15 @@ export default class MapEditionScene extends Phaser.Scene {
             y: { min: y, max: y }
         }
 
-        for (let i = 1; i < sortedKeys.length; i++) {
-            currentIndex = sortedKeys[i];
+        for (const key of keys) {
+            currentIndex = key;
             splittedIndex = currentIndex.split("_");
             x = parseInt(splittedIndex[0]);
             y = parseInt(splittedIndex[1]);
 
+            if (x < bounds.x.min) {
+                bounds.x.min = x;
+            }
             if (x > bounds.x.max) {
                 bounds.x.max = x;
             }
@@ -408,6 +405,7 @@ export default class MapEditionScene extends Phaser.Scene {
                 bounds.y.min = y;
             }
         }
+
         return bounds;
     }
 
