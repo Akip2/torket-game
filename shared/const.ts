@@ -2,7 +2,7 @@ import { FaceExpression } from "./enums/FaceExpression.enum";
 import { Parameter } from "./enums/Parameter.enum";
 import type { ParameterChangeCoef } from "./types";
 
-export const DEBUG = false;
+export const DEBUG = true;
 export const FREE_ROAM = false;
 export const CLIENT_PREDICTION = false;
 

@@ -1,37 +1,27 @@
-import type { Position } from "../types";
+import { EDITION_TILE_SIZE } from "../const";
+import type { Bounds, Position } from "../types";
 import QuadBlock from "./QuadBlock";
 
 export default class PrimitiveMap {
-    rowSize: number;
-    columnSize: number;
-    grid: Uint8Array;
-    minTileSize: number;
-
     playerPositions: Position[];
     capturePoints: Position[];
+    bounds: Bounds;
+    grid: Uint8Array;
 
     constructor(
-        grid: Uint8Array,
-        rowSize: number,
-        columnSize: number,
-        minTileSize: number,
+        grid = [],
+        bounds: Bounds = { x: { min: 0, max: 0 }, y: { min: 0, max: 0 } },
         playerPositions: Position[] = [],
         capturePoints: Position[] = []
     ) {
         this.grid = new Uint8Array(grid);
-        this.rowSize = rowSize;
-        this.columnSize = columnSize;
-        this.minTileSize = minTileSize;
+        this.bounds = bounds;
         this.playerPositions = playerPositions;
         this.capturePoints = capturePoints;
     }
 
-    static createEmptyMap(width: number, height: number, minTileSize: number) {
-        const rowSize = width / minTileSize;
-        const columnSize = height / minTileSize;
-        const grid = new Uint8Array(rowSize * columnSize);
-
-        return new PrimitiveMap(grid, rowSize, columnSize, minTileSize);
+    static createEmptyMap() {
+        return new PrimitiveMap();
     }
 
     addPlayerPosition(x: number, y: number) {
@@ -80,36 +70,19 @@ export default class PrimitiveMap {
         }
     }
 
-    getIndex(x: number, y: number) {
-        const tileX = Math.floor(x / this.minTileSize);
-        const tileY = Math.floor(y / this.minTileSize);
-
-        return tileX + tileY * this.rowSize;
-    }
-
-    add(x: number, y: number) {
-        this.grid[this.getIndex(x, y)] = 1;
-    }
-
-    remove(x: number, y: number) {
-        this.grid[this.getIndex(x, y)] = 0;
-    }
-
-    isFilled(x: number, y: number) {
-        return this.grid[this.getIndex(x, y)] === 1;
-    }
-
     serialize() {
+        const { rowSize, columnSize } = this.getDimensions();
+
         const obj = {
-            bounds: this.computeBounds(),
+            bounds: this.bounds,
             playerPositions: this.playerPositions,
             capturePoints: this.capturePoints,
             quadTree: this.toQuadBlock(),
 
             primitive: {
-                rowSize: this.rowSize,
-                columnSize: this.columnSize,
-                minTileSize: this.minTileSize,
+                rowSize: rowSize,
+                columnSize: columnSize,
+                minTileSize: EDITION_TILE_SIZE,
                 grid: Array.from(this.grid),
             }
         };
@@ -117,18 +90,64 @@ export default class PrimitiveMap {
         return JSON.stringify(obj, null, 2);
     }
 
+    getDimensions() {
+        const horizontalLength = this.bounds.x.max - this.bounds.x.min;
+        const verticalLength = this.bounds.y.max - this.bounds.y.min;
+
+        return { rowSize: horizontalLength / EDITION_TILE_SIZE, columnSize: verticalLength / EDITION_TILE_SIZE };
+    }
+
     toQuadBlock(): QuadBlock {
-        const result = this.buildQuadBlock(0, 0, this.rowSize, this.columnSize);
+        const { rowSize, columnSize } = this.getDimensions();
+        const result = this.buildQuadBlock(0, 0, rowSize, columnSize);
         result.cleanup();
 
         return result;
     }
 
+    convertMapIndexToGridIndex(mapIndex?: string) {
+        if (!mapIndex) return -1;
+
+        const [x, y] = mapIndex.split("_").map(Number);
+        const { rowSize } = this.getDimensions();
+        return ((x - this.bounds.x.min) / EDITION_TILE_SIZE) + ((y - this.bounds.y.min) / EDITION_TILE_SIZE) * rowSize;
+    }
+
+    generateGrid(tileIndices: MapIterator<string>) {
+        const { rowSize, columnSize } = this.getDimensions();
+
+        this.grid = new Uint8Array(rowSize * columnSize);
+        let i = 0;
+        for (const tileIndex of tileIndices) {
+            const gridIndex = this.convertMapIndexToGridIndex(tileIndex);
+            console.log(gridIndex);
+            this.grid[gridIndex] = 1;
+
+            i++;
+        }
+    }
+
+    setBounds(bounds: Bounds) {
+        this.bounds = bounds;
+    }
+
+    getIndex(x: number, y: number) {
+        const { rowSize } = this.getDimensions();
+        const tileX = Math.floor(x / EDITION_TILE_SIZE);
+        const tileY = Math.floor(y / EDITION_TILE_SIZE);
+
+        return tileX + tileY * rowSize;
+    }
+
+    isFilled(x: number, y: number) {
+        return this.grid[this.getIndex(x, y)] === 1;
+    }
+
     buildQuadBlock(tileX: number, tileY: number, tilesW: number, tilesH: number): QuadBlock {
-        const x = tileX * this.minTileSize;
-        const y = tileY * this.minTileSize;
-        const width = tilesW * this.minTileSize;
-        const height = tilesH * this.minTileSize;
+        const x = tileX * EDITION_TILE_SIZE;
+        const y = tileY * EDITION_TILE_SIZE;
+        const width = tilesW * EDITION_TILE_SIZE;
+        const height = tilesH * EDITION_TILE_SIZE;
 
         const resQuadBlock = new QuadBlock(x, y, width, height);
 
@@ -140,7 +159,7 @@ export default class PrimitiveMap {
         let isFilled = true;
         for (let currentTileY = tileY; currentTileY < tileY + tilesH && isFilled; currentTileY++) {
             for (let currentTileX = tileX; currentTileX < tileX + tilesW && isFilled; currentTileX++) {
-                isFilled = this.isFilled(currentTileX * this.minTileSize, currentTileY * this.minTileSize);
+                isFilled = this.isFilled(currentTileX * EDITION_TILE_SIZE, currentTileY * EDITION_TILE_SIZE);
             }
         }
 
@@ -177,26 +196,5 @@ export default class PrimitiveMap {
         }
 
         return resQuadBlock;
-    }
-
-    computeBounds() {
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-
-        for (let i = 0; i < this.grid.length; i++) {
-            if (this.grid[i] !== 1) continue;
-
-            const x = (i % this.rowSize) * this.minTileSize;
-            const y = Math.floor(i / this.rowSize) * this.minTileSize;
-
-            if (x < minX) minX = x;
-            if (x > maxX) maxX = x + this.minTileSize;
-            if (y < minY) minY = y;
-            if (y > maxY) maxY = y + this.minTileSize;
-        }
-
-        return {
-            x: { min: minX, max: maxX },
-            y: { min: minY, max: maxY }
-        };
     }
 }
