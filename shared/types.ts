@@ -205,3 +205,20 @@ export type Bounds = {
     x: { min: number, max: number },
     y: { min: number, max: number }
 }
+
+export type CameraManagerOptions = {
+    initialZoom?: number;
+    zoomSensitivity?: number;
+    zoomFollowStrength?: number;
+    uiCamera?: Phaser.Cameras.Scene2D.Camera;
+    worldBounds?: {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+    };
+    initialCenter?: {
+        x: number;
+        y: number;
+    };
+}

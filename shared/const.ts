@@ -2,7 +2,7 @@ import { FaceExpression } from "./enums/FaceExpression.enum";
 import { Parameter } from "./enums/Parameter.enum";
 import type { ParameterChangeCoef } from "./types";
 
-export const DEBUG = true;
+export const DEBUG = false;
 export const FREE_ROAM = false;
 export const CLIENT_PREDICTION = false;
 
@@ -94,6 +94,13 @@ export const BORDER_CONST = {
     UP_OFFSET: 1000,
     DOWN_OFFSET: 30,
     HORIZONTAL_OFFSET: 400,
+}
+
+export const ZOOM_CONST = {
+    MIN_ZOOM: 0.02,
+    MAX_ZOOM: Number.MAX_VALUE,
+    SENSITIVITY: 1.1,
+    FOLLOW_STRENGTH: 0.85,
 }
 
 export const PARAM_COEF_TABLE = { [-3]: -0.6, [-2]: -0.4, [-1]: -0.2, [1]: 0.2, [2]: 0.4, [3]: 0.6, } as Record<ParameterChangeCoef, number>;

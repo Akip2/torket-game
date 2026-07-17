@@ -1,29 +1,11 @@
 import Phaser from "phaser";
-import { GAME_HEIGHT, GAME_WIDTH } from "@shared/const";
-
-export interface CameraManagerOptions {
-    initialZoom?: number;
-    minZoom?: number;
-    maxZoom?: number;
-    zoomSensitivity?: number;
-    uiCamera?: Phaser.Cameras.Scene2D.Camera;
-    worldBounds?: {
-        x: number;
-        y: number;
-        width: number;
-        height: number;
-    };
-    initialCenter?: {
-        x: number;
-        y: number;
-    };
-}
+import { GAME_HEIGHT, GAME_WIDTH, ZOOM_CONST } from "@shared/const";
+import type { CameraManagerOptions } from "@shared/types";
 
 export default class CameraManager {
     private readonly camera: Phaser.Cameras.Scene2D.Camera;
-    private readonly minZoom: number;
-    private readonly maxZoom: number;
     private readonly zoomSensitivity: number;
+    private readonly zoomFollowStrength: number;
     private uiCamera?: Phaser.Cameras.Scene2D.Camera;
 
     private isPanningCamera = false;
@@ -32,9 +14,8 @@ export default class CameraManager {
 
     constructor(camera: Phaser.Cameras.Scene2D.Camera, options: CameraManagerOptions = {}) {
         this.camera = camera;
-        this.minZoom = options.minZoom ?? 0.02;
-        this.maxZoom = options.maxZoom ?? Number.POSITIVE_INFINITY;
-        this.zoomSensitivity = options.zoomSensitivity ?? 1.1;
+        this.zoomSensitivity = options.zoomSensitivity ?? ZOOM_CONST.SENSITIVITY;
+        this.zoomFollowStrength = options.zoomFollowStrength ?? ZOOM_CONST.FOLLOW_STRENGTH;
         this.uiCamera = options.uiCamera;
 
         this.initialize(options);
@@ -66,7 +47,6 @@ export default class CameraManager {
 
     syncUiCamera() {
         if (!this.uiCamera) return;
-
         this.uiCamera.setViewport(0, 0, this.camera.width, this.camera.height);
         this.uiCamera.setScroll(0, 0);
         this.uiCamera.setZoom(1);
@@ -88,21 +68,30 @@ export default class CameraManager {
     }
 
     handleWheel(pointer: Phaser.Input.Pointer, deltaY: number) {
-        const worldPoint = this.camera.getWorldPoint(pointer.x, pointer.y);
-        const zoomFactor = deltaY > 0 ? 1 / this.zoomSensitivity : this.zoomSensitivity;
-        const nextZoom = this.camera.zoom * zoomFactor;
+        const worldBefore = this.camera.getWorldPoint(pointer.x, pointer.y);
 
-        if (nextZoom < this.minZoom || nextZoom > this.maxZoom) {
+        const zoomStep = deltaY > 0 ? 1 / this.zoomSensitivity : this.zoomSensitivity;
+        const nextZoom = Phaser.Math.Clamp(this.camera.zoom * zoomStep, ZOOM_CONST.MIN_ZOOM, ZOOM_CONST.MAX_ZOOM);
+
+        if (nextZoom === this.camera.zoom) {
             return;
         }
 
         this.camera.setZoom(nextZoom);
 
-        const updatedWorldPoint = this.camera.getWorldPoint(pointer.x, pointer.y);
-        const deltaWorldX = updatedWorldPoint.x - worldPoint.x;
-        const deltaWorldY = updatedWorldPoint.y - worldPoint.y;
+        // Important: refresh the matrix so getWorldPoint uses the new zoom immediately.
+        this.camera.preRender();
 
-        this.camera.setScroll(this.camera.scrollX - deltaWorldX, this.camera.scrollY - deltaWorldY);
+        const worldAfter = this.camera.getWorldPoint(pointer.x, pointer.y);
+
+        const diffX = worldAfter.x - worldBefore.x;
+        const diffY = worldAfter.y - worldBefore.y;
+
+        const follow = this.zoomFollowStrength;
+        this.camera.setScroll(
+            this.camera.scrollX - diffX * follow,
+            this.camera.scrollY - diffY * follow
+        );
     }
 
     handlePointerDown(pointer: Phaser.Input.Pointer): boolean {
