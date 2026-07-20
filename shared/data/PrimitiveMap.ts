@@ -104,9 +104,10 @@ export default class PrimitiveMap {
 
     toQuadBlock(): QuadBlock {
         const { rowSize, columnSize } = this.getDimensions();
-        const result = this.buildQuadBlock(0, 0, rowSize, columnSize);
+        const startTileX = this.bounds.x.min / EDITION_TILE_SIZE;
+        const startTileY = this.bounds.y.min / EDITION_TILE_SIZE;
+        const result = this.buildQuadBlock(startTileX, startTileY, rowSize, columnSize);
         result.cleanup();
-
         return result;
     }
 
