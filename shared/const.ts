@@ -31,8 +31,10 @@ export const HEALTH_TRANSITION_DURATION = 400;
 export const PLAYER_CONST = {
     BASE_WIDTH: 32,
     SPEED: 4.5,
-    JUMP: -18,
+    JUMP: -17.5,
     BASE_MAX_HP: 100,
+
+    BASE_JUMP_COST: 20,
 
     SELF_COLOR: 0x3498db,
     ENNEMY_COLOR: 0xdb3445,

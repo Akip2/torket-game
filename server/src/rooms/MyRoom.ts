@@ -288,6 +288,7 @@ export class MyRoom extends Room<MyRoomState> {
 
                         if (isGroundCollision) {
                             playerBody.isOnGround = true;
+                            playerBody.resetJumpCost();
                         }
                     } else if (labels.includes(RessourceKeys.CapturePoint)) { // CapturePoint
                         this.capturePointManager.manageContact(otherBody.plugin, playerBody.getTeam(), false);

@@ -21,10 +21,17 @@ export function movePlayerFromInputs(player: IPlayer, inputPayload: InputPayload
         immobilizePlayer(player);
     }
 
-    if (inputPayload.up && canPlayerJump(player) && !instantly) {
-        player.isOnGround = false;
-        player.setVelocityY(PLAYER_CONST.JUMP);
-        player.decreaseMovementLeft(20);
+    if (inputPayload.up) {
+        if (canPlayerJump(player) && !instantly) {
+            player.isOnGround = false;
+            player.decreaseMovementLeft(player.getJumpCost());
+            player.increaseJumpCost();
+            player.setVelocityY(PLAYER_CONST.JUMP);
+        }
+
+        player.setJumpKeyPressed(true);
+    } else {
+        player.setJumpKeyPressed(false);
     }
 }
 
@@ -52,7 +59,7 @@ export function canPlayerShoot(player: IPlayer) {
 }
 
 export function canPlayerJump(player: IPlayer) {
-    return Math.abs(player.getVelocity().y) < 0.1 && player.isOnGround;
+    return !player.isJumpKeyPressed();//Math.abs(player.getVelocity().y) < 0.1 && player.isOnGround;
 }
 
 export function isPlayerInRadius(player: IPlayer, cx: number, cy: number, radius: number) {

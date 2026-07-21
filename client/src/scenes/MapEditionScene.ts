@@ -65,10 +65,10 @@ export default class MapEditionScene extends Phaser.Scene {
         });
 
         this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
-            if (!this.cameraManager.handlePointerMove(p)) {
-                this.doToolAction(p);
-                this.updateBrushPreview(p);
-            }
+            //if (!this.cameraManager.handlePointerMove(p)) {
+            this.doToolAction(p);
+            this.updateBrushPreview(p);
+            //}
         });
         this.input.mouse?.disableContextMenu();
 

@@ -22,6 +22,9 @@ export default class PlayerServer extends GameBody implements IPlayer {
     maxHp: number;
     maxMovement: number;
 
+    jumpCostCoef: number = 1;
+    jumpKeyPressed: boolean;
+
     currentScale: number;
 
     constructor(playerRef: Player, sessionId: string, onDamage: (hp: number, damage?: number, directHit?: boolean) => void, size: number = PLAYER_CONST.BASE_WIDTH) {
@@ -41,11 +44,27 @@ export default class PlayerServer extends GameBody implements IPlayer {
         this.onDamage = onDamage;
         this.sessionId = sessionId;
         this.powerManager = new PowerManager();
+        this.jumpKeyPressed = false;
 
         this.maxHp = PLAYER_CONST.BASE_MAX_HP;
         this.maxMovement = PLAYER_CONST.BASE_MAX_MOVEMENT;
 
         this.currentScale = 1;
+    }
+    isJumpKeyPressed(): boolean {
+        return this.jumpKeyPressed;
+    }
+    setJumpKeyPressed(pressed: boolean): void {
+        this.jumpKeyPressed = pressed;
+    }
+    resetJumpCost(): void {
+        this.jumpCostCoef = 1;
+    }
+    increaseJumpCost(): void {
+        this.jumpCostCoef += 1;
+    }
+    getJumpCost(): number {
+        return PLAYER_CONST.BASE_JUMP_COST * this.jumpCostCoef;
     }
 
     hasMovementLeft(): boolean {

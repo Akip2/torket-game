@@ -35,6 +35,9 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     maxMovement: number;
     movementLeft: number;
 
+    jumpCostCoef: number;
+    jumpKeyPressed: boolean;
+
     powerManager: PowerManager;
 
     generateDeathParticles: (x: number, y: number) => void;
@@ -65,6 +68,9 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.maxHp = PLAYER_CONST.BASE_MAX_HP;
         this.hp = this.maxHp;
 
+        this.jumpCostCoef = 1;
+        this.jumpKeyPressed = false;
+
         this.maxMovement = PLAYER_CONST.BASE_MAX_MOVEMENT;
         this.movementLeft = this.maxMovement;
 
@@ -90,6 +96,26 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
 
             emmiter.explode(50);
         }
+    }
+
+    setJumpKeyPressed(pressed: boolean): void {
+        this.jumpKeyPressed = pressed;
+    }
+
+    isJumpKeyPressed(): boolean {
+        return this.jumpKeyPressed;
+    }
+
+    increaseJumpCost() {
+        this.jumpCostCoef += 1;
+    }
+
+    resetJumpCost(): void {
+        this.jumpCostCoef = 1;
+    }
+
+    getJumpCost(): number {
+        return PLAYER_CONST.BASE_JUMP_COST * this.jumpCostCoef;
     }
 
     addForceX(x: number): void {

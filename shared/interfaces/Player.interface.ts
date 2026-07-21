@@ -13,6 +13,13 @@ export interface IPlayer extends IBasicBody {
     hasMovementLeft(): boolean;
     decreaseMovementLeft(amount: number): void;
 
+    resetJumpCost(): void;
+    increaseJumpCost(): void;
+    getJumpCost(): number;
+
+    isJumpKeyPressed(): boolean;
+    setJumpKeyPressed(pressed: boolean): void;
+
     updateFromNewParameters(): void;
     addPower(powerName: string): void;
 
