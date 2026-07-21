@@ -5,6 +5,7 @@ import type { Team } from "@shared/enums/Team.enum.ts";
 import { CaptureStatus } from "@shared/enums/CaptureStatus.enum";
 import SoundManager from "./SoundManager";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
+import { DISPLAY_CAPTURE_POINTS } from "@shared/const";
 
 export default class CapturePointManagerClient {
     private capturePoints: CapturePointClient[];
@@ -39,6 +40,8 @@ export default class CapturePointManagerClient {
     }
 
     updateCapturePoint(id: number, newOwningTeam: Team) {
+        if (!DISPLAY_CAPTURE_POINTS) return;
+        
         const captureStatus = this.convertTeamToCaptureStatus(newOwningTeam);
 
         if (captureStatus === CaptureStatus.Captured) {
@@ -51,6 +54,8 @@ export default class CapturePointManagerClient {
     }
 
     syncCapturePoints(capturePoints: CapturePoint[]) {
+        if (!DISPLAY_CAPTURE_POINTS) return;
+        
         if (this.capturePoints.length !== capturePoints.length) {
             this.clear();
 

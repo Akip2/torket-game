@@ -2,13 +2,14 @@ import { CapturePoint, Position } from "@shared/types";
 import CapturePointServer from "../bodies/CapturePointServer";
 import { Team } from "@shared/enums/Team.enum.ts";
 import PhysicsManager from "./PhysicsManager";
+import { DISPLAY_CAPTURE_POINTS } from "@shared/const";
 
 export class CapturePointManagerServer {
     private capturePoints: CapturePointServer[];
     private onCapture: (id: number, newOwningTeam: Team | null) => void;
 
     constructor(physicsManager: PhysicsManager, capturePointsPositions: Position[], onCapture: (id: number, newOwningTeam: Team | null) => void) {
-        if (!capturePointsPositions) {
+        if (!capturePointsPositions || !DISPLAY_CAPTURE_POINTS) {
             this.capturePoints = [];
         } else {
             this.capturePoints = capturePointsPositions.map((position, id) => {

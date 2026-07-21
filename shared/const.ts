@@ -8,6 +8,8 @@ export const CLIENT_PREDICTION = false;
 
 export const DEFAULT_MAP_ID = "mirrorhold";
 
+export const DISPLAY_CAPTURE_POINTS = false;
+
 // Client prediction & interpolation settings
 export const INTERPOLATION_SPEED_X = 0.4; // Time-based lerp factor (0.4 = faster catch-up)
 export const INTERPOLATION_SPEED_Y = 0.5; // Vertical is more important for feel (gravity, jumps)
