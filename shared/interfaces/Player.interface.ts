@@ -23,6 +23,10 @@ export interface IPlayer extends IBasicBody {
     updateFromNewParameters(): void;
     addPower(powerName: string): void;
 
+    hasBullets(): boolean;
+    decreaseBulletCount(): void;
+    reload(): void;
+
     addForce(x: number, y: number): void;
     addForceX(x: number): void;
     addForceY(y: number): void;

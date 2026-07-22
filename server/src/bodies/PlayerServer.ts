@@ -51,6 +51,17 @@ export default class PlayerServer extends GameBody implements IPlayer {
 
         this.currentScale = 1;
     }
+    hasBullets(): boolean {
+        return this.playerRef.bulletCount > 0;
+    }
+    decreaseBulletCount(): void {
+        this.playerRef.bulletCount -= 1;
+    }
+
+    reload(): void {
+        this.playerRef.bulletCount = PLAYER_CONST.BASE_MAX_BULLET_COUNT;
+    }
+
     isJumpKeyPressed(): boolean {
         return this.jumpKeyPressed;
     }

@@ -20,6 +20,8 @@ export class Player extends Schema {
   @type("boolean") isAlive: boolean = true;
   @type("number") hp: number = PLAYER_CONST.BASE_MAX_HP;
 
+  @type("number") bulletCount: number = 0;
+
   @type("number") movementLeft: number = PLAYER_CONST.BASE_MAX_MOVEMENT;
   
   @type("number") timeStamp: number = 0;

@@ -55,7 +55,7 @@ export function canPlayerMove(player: IPlayer) {
 
 export function canPlayerShoot(player: IPlayer) {
     const playerState = player.getState();
-    return playerState === PlayerState.Shooting || playerState === PlayerState.Free;
+    return (playerState === PlayerState.Shooting || playerState === PlayerState.Free) && player.hasBullets();
 }
 
 export function canPlayerJump(player: IPlayer) {

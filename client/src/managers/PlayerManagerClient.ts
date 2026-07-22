@@ -84,14 +84,19 @@ export default class PlayerManagerClient {
         }
     }
 
+    playerChangeEvent(player: any, playerObject: PlayerClient) {
+        playerObject.setData("targetX", player.x);
+        playerObject.setData("targetY", player.y);
+        playerObject.bulletCount = player.bulletCount;
+    }
+
     setupLocalPlayer(player: any, playerObject: PlayerClient, shotManager: ShotManager) {
         const $ = getStateCallbacks(this.room);
 
         this.currentPlayer = playerObject;
 
         $(player).onChange(() => {
-            playerObject.setData("targetX", player.x);
-            playerObject.setData("targetY", player.y);
+            this.playerChangeEvent(player, playerObject);
             playerObject.movementLeft = player.movementLeft;
 
             this.remoteRef.x = player.x;
@@ -108,8 +113,7 @@ export default class PlayerManagerClient {
         const $ = getStateCallbacks(this.room);
 
         $(player).onChange(() => {
-            playerObject.setData("targetX", player.x);
-            playerObject.setData("targetY", player.y);
+            this.playerChangeEvent(player, playerObject);
 
             playerObject.setData("mousePosition", {
                 x: player.mouseX,

@@ -27,6 +27,7 @@ import { Parameter } from "@shared/enums/Parameter.enum";
 import { CapturePointManagerServer } from "../managers/CapturePointManagerServer";
 import { Team } from "@shared/enums/Team.enum.ts";
 import { WinCondition } from "@shared/enums/WinCondition.enum";
+import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
 
 dotenv.config();
 
@@ -151,7 +152,8 @@ export class MyRoom extends Room<MyRoomState> {
             if (!playerBody) return;
 
             if (canPlayerShoot(playerBody)) {
-                this.phaseManager.disableAction(playerBody);
+                //this.phaseManager.disableAction(playerBody);
+                playerBody.decreaseBulletCount();
             } else { // can't shoot, refusing action
                 return;
             }
@@ -324,7 +326,12 @@ export class MyRoom extends Room<MyRoomState> {
     explode(bullet: BulletServer, minSize: number = TILE_SIZE) {
         this.terrainManager.explodeTerrain(bullet, minSize);
 
-        this.phaseManager.next(500);
+        if (this.phaseManager.currentPhase.type === PhaseTypes.Shooting && this.phaseManager.concernedPlayerId) {
+            const concernedPlayer = this.playerManager.getPlayer(this.phaseManager.concernedPlayerId);
+            if (concernedPlayer && canPlayerShoot(concernedPlayer)) {
+                this.phaseManager.next(500);
+            }
+        }
     }
 
     broadcastDamage(playerId: string, hp: number, damage?: number, directHit?: boolean) {

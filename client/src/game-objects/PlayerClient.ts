@@ -38,6 +38,9 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     jumpCostCoef: number;
     jumpKeyPressed: boolean;
 
+    maxBulletCount: number;
+    bulletCount: number;
+
     powerManager: PowerManager;
 
     generateDeathParticles: (x: number, y: number) => void;
@@ -71,6 +74,9 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.jumpCostCoef = 1;
         this.jumpKeyPressed = false;
 
+        this.maxBulletCount = PLAYER_CONST.BASE_MAX_BULLET_COUNT;
+        this.bulletCount = 0;
+
         this.maxMovement = PLAYER_CONST.BASE_MAX_MOVEMENT;
         this.movementLeft = this.maxMovement;
 
@@ -96,6 +102,16 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
 
             emmiter.explode(50);
         }
+    }
+    hasBullets(): boolean {
+        return this.bulletCount > 0;
+    }
+    decreaseBulletCount(): void {
+        if(this.hasBullets()) this.bulletCount -= 1;
+    }
+
+    reload(): void {
+        this.bulletCount = this.maxBulletCount;
     }
 
     setJumpKeyPressed(pressed: boolean): void {

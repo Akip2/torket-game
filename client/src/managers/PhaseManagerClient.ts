@@ -72,7 +72,6 @@ export default class PhaseManagerClient {
             this.dotCount = (this.dotCount + 1) % 4;
 
             const dots = '.'.repeat(this.dotCount);
-            const spaces = ' '.repeat(3 - this.dotCount);
             this.nameEl.innerHTML = `${this.currentPhase.name}<span class="dots">${dots}</span>`;
         }
     }
