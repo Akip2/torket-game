@@ -15,6 +15,7 @@ import PowerManager from "@shared/data/power/PowerManager";
 import { Parameter } from "@shared/enums/Parameter.enum";
 import PlayerFace from "../ui/PlayerFace";
 import { FaceExpression } from "@shared/enums/FaceExpression.enum";
+import BulletReserve from "../ui/BulletReserve";
 
 export default class PlayerClient extends Phaser.Physics.Matter.Sprite implements IPlayer {
     state: PlayerState = PlayerState.Inactive;
@@ -28,6 +29,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
 
     gun: Gun;
     healthBar: HealthBar;
+    bulletReserve: BulletReserve;
     movementBar: Bar;
     nameTag: NameTag;
     face: PlayerFace;
@@ -87,6 +89,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.movementBar.hide();
         this.nameTag = new NameTag(scene, name, x, y, TextStyle.NameTag);
         this.face = new PlayerFace(scene, x, y, TextStyle.PlayerFace);
+        this.bulletReserve = new BulletReserve(scene, x, y);
 
         this.generateDeathParticles = (x: number, y: number) => {
             const emmiter = scene.add.particles(x, y, RessourceKeys.DeathParticle, {
@@ -200,6 +203,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.movementBar.updateGraphics(this.x, this.y, this.movementLeft / this.maxMovement);
         this.nameTag.updatePlacement(this.x, this.y);
         this.face.updatePlacement(this.x, this.y);
+        this.bulletReserve.updatePlacement(this.x, this.y);
     }
 
     setDead() {

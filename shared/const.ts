@@ -78,6 +78,14 @@ export const BULLET_CONST = {
     GRAVITY_SCALE: 1,
 }
 
+export const BULLET_RESERVE_CONST = {
+    RADIUS: 6,
+    COLOR: {
+        FULL: 0xf0c040,
+        EMPTY: 0x555555
+    }
+}
+
 export const CAPTURE_POINT_CONST = {
     RADIUS: 16,
     BASE_COLOR: 0xD3D3D3,
