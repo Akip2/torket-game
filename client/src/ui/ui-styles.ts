@@ -13,7 +13,7 @@ export const BarStyle = {
         marginY: -32,
         marginX: 0,
         opacity: 0.85,
-        depth: Depths.First,
+        depth: Depths.PlayerUi,
     },
 
     Movement: {
@@ -26,7 +26,7 @@ export const BarStyle = {
         marginY: -23.5,
         marginX: 0,
         opacity: 0.85,
-        depth: Depths.First,
+        depth: Depths.PlayerUi,
     }
 } as Record<string, BarStyleType>;
 

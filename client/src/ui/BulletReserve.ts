@@ -20,7 +20,7 @@ export default class BulletReserve {
                 0,
                 0,
                 RessourceKeys.Bullet
-            ).setDepth(Depths.First);
+            ).setDepth(Depths.PlayerUi);
             this.sprites.push(sprite);
             this.updatePlacement(x, y);
 

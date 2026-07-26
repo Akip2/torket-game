@@ -11,7 +11,7 @@ export default class Gun extends Phaser.Physics.Matter.Sprite {
         this.setIgnoreGravity(true);
         this.setCollidesWith([]);
 
-        this.setDepth(Depths.First);
+        this.setDepth(Depths.Gun);
         this.setOrigin(0.25, 0.5);
         this.setAlpha(0.9)
     }

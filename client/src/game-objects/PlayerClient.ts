@@ -52,7 +52,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
 
         scene.worldContainer.add(this);
         (this.body as MatterJS.BodyType).label = RessourceKeys.Player;
-        this.setDepth(Depths.Third)
+        this.setDepth(Depths.PlayerUi)
         this.setFixedRotation();
 
         if (CLIENT_PREDICTION) {
@@ -101,7 +101,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
                 gravityY: 50,
                 blendMode: 'ADD',
                 emitting: false
-            }).setDepth(Depths.First);
+            }).setDepth(Depths.Player);
 
             emmiter.explode(50);
         }
