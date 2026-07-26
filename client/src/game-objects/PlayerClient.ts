@@ -106,15 +106,24 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
             emmiter.explode(50);
         }
     }
+    
+    setBulletCount(bulletCount: number) {
+        if ((bulletCount === this.bulletCount) || (bulletCount > this.maxBulletCount) || (bulletCount < 0)) return;
+
+        this.bulletCount = bulletCount;
+        this.bulletReserve.updateBulletCount(bulletCount);
+    }
+
     hasBullets(): boolean {
         return this.bulletCount > 0;
     }
+
     decreaseBulletCount(): void {
-        if(this.hasBullets()) this.bulletCount -= 1;
+        this.setBulletCount(this.bulletCount - 1);
     }
 
     reload(): void {
-        this.bulletCount = this.maxBulletCount;
+        this.setBulletCount(this.bulletCount + 1);
     }
 
     setJumpKeyPressed(pressed: boolean): void {
@@ -281,6 +290,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.movementBar.destroy(fromScene);
         this.nameTag.destroy(fromScene);
         this.face.destroy(fromScene);
+        this.bulletReserve.destroy(fromScene);
     }
 
     setPlayerState(state: PlayerState) {

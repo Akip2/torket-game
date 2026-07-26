@@ -58,6 +58,10 @@ export default class PlayerServer extends GameBody implements IPlayer {
         this.playerRef.bulletCount -= 1;
     }
 
+    setBulletCount(bulletCount: number) {
+        this.playerRef.bulletCount = bulletCount;
+    }
+
     reload(): void {
         this.playerRef.bulletCount = PLAYER_CONST.BASE_MAX_BULLET_COUNT;
     }

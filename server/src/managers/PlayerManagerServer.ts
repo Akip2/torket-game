@@ -7,7 +7,7 @@ import Phase from "@shared/data/phases/Phase";
 import SoloActionPhase from "@shared/data/phases/SoloActionPhase";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
 import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
-import { EXPLOSION_CONST } from "@shared/const";
+import { EXPLOSION_CONST, PLAYER_CONST } from "@shared/const";
 import { Body } from "matter-js";
 import { Team } from "@shared/enums/Team.enum.ts";
 
@@ -120,5 +120,13 @@ export default class PlayerManagerServer {
 
     getTeamPlayers(team: Team) {
         return Array.from(this.playerBodies.values()).filter(p => p.getTeam() === team);
+    }
+
+    initBulletCounts() {
+        let i = 0;
+        this.playerBodies.forEach((p) => {
+            p.setBulletCount(PLAYER_CONST.BASE_BULLET_COUNT[i]);
+            i++;
+        })
     }
 }

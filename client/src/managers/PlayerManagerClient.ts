@@ -87,7 +87,7 @@ export default class PlayerManagerClient {
     playerChangeEvent(player: any, playerObject: PlayerClient) {
         playerObject.setData("targetX", player.x);
         playerObject.setData("targetY", player.y);
-        playerObject.bulletCount = player.bulletCount;
+        playerObject.setBulletCount(player.bulletCount);
     }
 
     setupLocalPlayer(player: any, playerObject: PlayerClient, shotManager: ShotManager) {

@@ -6,13 +6,12 @@ import { BarStyle } from "./ui-styles";
 
 export default class BulletReserve {
     private sprites: Phaser.GameObjects.Image[] = [];
-    private bulletCount: number;
+    private bulletCount!: number;
     private maxBullets: number;
     private spacing: number;
 
     constructor(scene: GameScene, x: number, y: number) {
         this.maxBullets = PLAYER_CONST.BASE_MAX_BULLET_COUNT;
-        this.bulletCount = this.maxBullets;
         this.spacing = (BarStyle.Health.width / this.maxBullets);
 
         for (let i = 0; i < this.maxBullets; i++) {
@@ -20,25 +19,37 @@ export default class BulletReserve {
                 scene,
                 0,
                 0,
-                RessourceKeys.AmmoFull
+                RessourceKeys.Bullet
             ).setDepth(Depths.First);
             this.sprites.push(sprite);
             this.updatePlacement(x, y);
 
             scene.add.existing(sprite);
         }
+
+        this.updateBulletCount(0);
     }
 
-    setBulletCount(count: number) {
-        this.bulletCount = Math.max(0, Math.min(count, this.maxBullets));
-
+    updateDisplay() {
         this.sprites.forEach((sprite, i) => {
-            sprite.setTexture(
-                i < this.bulletCount
-                    ? RessourceKeys.AmmoFull
-                    : RessourceKeys.AmmoEmpty
+            const isFull = i < this.bulletCount;
+            sprite.setTint(
+                isFull
+                    ? 0xFFFFFF
+                    : 0xAAAAAA
             );
+
+            sprite.setAlpha(
+                isFull
+                    ? 0.85
+                    : 0.5
+            )
         });
+    }
+
+    updateBulletCount(count: number) {
+        this.bulletCount = Math.max(0, Math.min(count, this.maxBullets));
+        this.updateDisplay();
     }
 
     updatePlacement(x: number, y: number) {
@@ -52,8 +63,8 @@ export default class BulletReserve {
         }
     }
 
-    destroy() {
-        this.sprites.forEach(s => s.destroy());
+    destroy(fromScene?: boolean) {
+        this.sprites.forEach(s => s.destroy(fromScene));
         this.sprites = [];
     }
 }

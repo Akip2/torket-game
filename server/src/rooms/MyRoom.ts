@@ -72,10 +72,15 @@ export class MyRoom extends Room<MyRoomState> {
 
         this.setupMessages();
         this.setupCollisionEvents();
-        this.phaseManager = new PhaseManagerServer(this.playerManager, () => this.lock(), (phase) => this.broadcastPhase(phase));
+        this.phaseManager = new PhaseManagerServer(this.playerManager, () => { this.onGameStart() }, (phase) => this.broadcastPhase(phase));
 
         const mapId = options.mapId ?? this.getRandomMapId();
         await this.setupTerrain(mapId);
+    }
+
+    onGameStart() {
+        this.lock();
+        this.playerManager.initBulletCounts();
     }
 
     getRandomMapId() {
