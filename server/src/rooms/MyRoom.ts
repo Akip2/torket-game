@@ -333,7 +333,7 @@ export class MyRoom extends Room<MyRoomState> {
 
         if (this.phaseManager.currentPhase.type === PhaseTypes.Shooting && this.phaseManager.concernedPlayerId) {
             const concernedPlayer = this.playerManager.getPlayer(this.phaseManager.concernedPlayerId);
-            if (concernedPlayer && canPlayerShoot(concernedPlayer)) {
+            if (concernedPlayer && !canPlayerShoot(concernedPlayer)) {
                 this.phaseManager.next(500);
             }
         }

@@ -56,6 +56,10 @@ export default class PlayerServer extends GameBody implements IPlayer {
     }
     decreaseBulletCount(): void {
         this.playerRef.bulletCount -= 1;
+
+        if (!this.hasBullets() && this.getState() === PlayerState.Shooting) {
+            this.setState(PlayerState.Inactive);
+        }
     }
 
     setBulletCount(bulletCount: number) {
