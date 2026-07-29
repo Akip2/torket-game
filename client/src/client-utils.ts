@@ -138,3 +138,16 @@ export function removeHud() {
     gameCanvas.style.top = "0";
     gameCanvas.style.height = "100%";
 }
+
+export function showEndTurnButton(enabled: boolean) {
+    const btn = document.getElementById("end-turn-btn") as HTMLButtonElement;
+    if (!btn) return;
+    btn.style.display = "block";
+    btn.disabled = !enabled;
+}
+
+export function hideEndTurnButton() {
+    const btn = document.getElementById("end-turn-btn") as HTMLButtonElement;
+    if (!btn) return;
+    btn.style.display = "none";
+}

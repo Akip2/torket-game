@@ -1,4 +1,4 @@
-import { DEBUG, EXPLOSION_CONST, GAME_HEIGHT, GAME_WIDTH, GROUND_TYPE, TEXTURE_SIZE, TILE_SIZE, TIME_STEP } from "@shared/const";
+import { DEBUG, EXPLOSION_CONST, GROUND_TYPE, TEXTURE_SIZE, TILE_SIZE, TIME_STEP } from "@shared/const";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import BulletClient from "../game-objects/BulletClient";
 import PlayerClient from "../game-objects/PlayerClient";
@@ -19,12 +19,11 @@ import ActionChoicePanel from "../ui/containers/ActionChoicePanel";
 import UiButton from "../ui/buttons/UiButton";
 import type Phase from "@shared/data/phases/Phase";
 import ActionPhase from "@shared/data/phases/ActionPhase";
-import { displayHud, getExplosionSpriteScale, getServerUrl, loadFont, showToast } from "../client-utils";
+import { displayHud, getExplosionSpriteScale, getServerUrl, hideEndTurnButton, loadFont, showEndTurnButton, showToast } from "../client-utils";
 import GameEndScreen from "../ui/containers/GameEndScreen";
 import SoundManager from "../managers/SoundManager";
 import { setCookie } from "typescript-cookie";
 import RoomManager from "../managers/RoomManager";
-import EndTurnButton from "../ui/buttons/EndTurnButton";
 import CapturePointClient from "../game-objects/CapturePointClient";
 import CapturePointManagerClient from "../managers/CapturePointManagerClient";
 import CameraManager from "../managers/CameraManager";
@@ -61,7 +60,6 @@ export default class GameScene extends Phaser.Scene {
 
     //UI
     actionChoicePanel!: ActionChoicePanel;
-    endTurnButton!: EndTurnButton;
     gameEndScreen!: GameEndScreen;
 
     constructor() {
@@ -145,6 +143,16 @@ export default class GameScene extends Phaser.Scene {
         this.input.keyboard!.on("keydown-ONE", () => { this.debugFunction() });
         this.input.keyboard!.on("keydown-TWO", () => { this.room.send(RequestTypes.Debug) });
         displayHud();
+        this.setupEndTurnButtonEvent();
+    }
+
+    private setupEndTurnButtonEvent() {
+        const btn = document.getElementById("end-turn-btn") as HTMLButtonElement;
+        if (!btn) return;
+
+        btn.addEventListener("click", () => {
+            this.room.send(RequestTypes.EndTurn);
+        })
     }
 
     private terrainSynchro(quadBlock: QuadBlock) {
@@ -160,7 +168,7 @@ export default class GameScene extends Phaser.Scene {
         this.phaseManager.setCurrentPhase(phase);
 
         if (!ActionPhase.TYPES.includes(phase.type)) {
-            this.endTurnButton.hide();
+            hideEndTurnButton();
             this.actionChoicePanel.hide();
             return;
         }
@@ -168,12 +176,11 @@ export default class GameScene extends Phaser.Scene {
         const isConcerned = this.phaseManager.isConcerned(this.room.sessionId);
 
         if (this.phaseManager.isActionChoicePhase()) {
-            this.endTurnButton.hide();
+            hideEndTurnButton()
             isConcerned ? this.actionChoicePanel.show() : this.actionChoicePanel.hide();
         } else {
             this.actionChoicePanel.hide();
-            this.endTurnButton.show();
-            isConcerned ? this.endTurnButton.enable() : this.endTurnButton.disable();
+            showEndTurnButton(isConcerned)
         }
     }
 
@@ -319,13 +326,6 @@ export default class GameScene extends Phaser.Scene {
         this.cameraManager.setUiCamera(uiCam);
 
         this.actionChoicePanel = new ActionChoicePanel(this);
-
-        this.endTurnButton = new EndTurnButton(
-            this,
-            GAME_WIDTH / 2,
-            GAME_HEIGHT - 20,
-            () => { this.room.send(RequestTypes.EndTurn) }
-        );
     }
 
     fixedTick() {

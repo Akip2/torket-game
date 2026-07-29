@@ -107,6 +107,7 @@ export default class PhaseManagerServer {
 
     async endTurn(playerId: string) {
         if (playerId !== this.concernedPlayerId) return;
+        this.concernedPlayerId = null;
 
         clearTimeout(this.timeOut);
         await wait(250);

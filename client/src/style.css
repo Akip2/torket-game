@@ -497,7 +497,7 @@ canvas {
 }
 
 #hud-top {
-  position: absolute;
+  position: relative;
   top: 0;
   left: 0;
   width: 100%;
@@ -509,7 +509,10 @@ canvas {
   justify-content: center;
   z-index: 10;
   font-family: "JetBrainsMono", monospace;
-  font-size: 500px;
+
+  align-items: center;
+  justify-content: center;
+  gap: 2%;
 }
 
 #phase-display {
@@ -525,6 +528,36 @@ canvas {
   font-weight: bold;
   min-width: 20px;
   text-align: center;
+}
+
+#end-turn-btn {
+  font-size: 15px;
+  padding: 0.2em 0.5em;
+  min-width: unset;
+  background-color: rgb(30, 90, 120);
+  border: 1px solid rgb(60, 140, 180);
+  border-radius: 6px;
+  color: white;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  transition: background-color 0.15s, box-shadow 0.15s, transform 0.1s;
+  cursor: pointer;
+}
+
+#end-turn-btn:not(:disabled):hover {
+  background-color: rgb(40, 120, 160);
+  box-shadow: 0 0 8px rgba(60, 140, 180, 0.6);
+  transform: translateY(-1px);
+}
+
+#end-turn-btn:not(:disabled):active {
+  transform: translateY(0px);
+  box-shadow: none;
+}
+
+#end-turn-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .dots {
