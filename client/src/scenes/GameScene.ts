@@ -150,9 +150,12 @@ export default class GameScene extends Phaser.Scene {
         const btn = document.getElementById("end-turn-btn") as HTMLButtonElement;
         if (!btn) return;
 
-        btn.addEventListener("click", () => {
-            this.room.send(RequestTypes.EndTurn);
-        })
+        btn.removeEventListener("click", this.onEndTurnClick);
+        btn.addEventListener("click", this.onEndTurnClick);
+    }
+
+    private onEndTurnClick = () => {
+        this.room.send(RequestTypes.EndTurn);
     }
 
     private terrainSynchro(quadBlock: QuadBlock) {
