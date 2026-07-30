@@ -118,6 +118,10 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         return this.bulletCount > 0;
     }
 
+    hasMaxBulletCount(): boolean {
+        return this.bulletCount === this.maxBulletCount;
+    }
+
     decreaseBulletCount(): void {
         this.setBulletCount(this.bulletCount - 1);
     }

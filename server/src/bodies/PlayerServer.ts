@@ -54,6 +54,10 @@ export default class PlayerServer extends GameBody implements IPlayer {
     hasBullets(): boolean {
         return this.playerRef.bulletCount > 0;
     }
+
+    hasMaxBulletCount(): boolean {
+        return this.playerRef.bulletCount === PLAYER_CONST.BASE_MAX_BULLET_COUNT;
+    }
     decreaseBulletCount(): void {
         this.playerRef.bulletCount -= 1;
 
@@ -67,7 +71,11 @@ export default class PlayerServer extends GameBody implements IPlayer {
     }
 
     reload(): void {
-        this.playerRef.bulletCount = PLAYER_CONST.BASE_MAX_BULLET_COUNT;
+        if(this.playerRef.bulletCount < PLAYER_CONST.BASE_MAX_BULLET_COUNT) this.playerRef.bulletCount++;
+    }
+
+    getPseudo() {
+        return this.playerRef.pseudo;
     }
 
     isJumpKeyPressed(): boolean {

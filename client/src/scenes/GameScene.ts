@@ -18,7 +18,6 @@ import { canPlayerShoot } from "@shared/logics/player-logic";
 import ActionChoicePanel from "../ui/containers/ActionChoicePanel";
 import UiButton from "../ui/buttons/UiButton";
 import type Phase from "@shared/data/phases/Phase";
-import ActionPhase from "@shared/data/phases/ActionPhase";
 import { displayHud, getExplosionSpriteScale, getServerUrl, hideEndTurnButton, loadFont, showEndTurnButton, showToast } from "../client-utils";
 import GameEndScreen from "../ui/containers/GameEndScreen";
 import SoundManager from "../managers/SoundManager";
@@ -28,6 +27,9 @@ import CapturePointClient from "../game-objects/CapturePointClient";
 import CapturePointManagerClient from "../managers/CapturePointManagerClient";
 import CameraManager from "../managers/CameraManager";
 import type QuadBlock from "@shared/data/QuadBlock";
+import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
+import type ReloadPhase from "@shared/data/phases/ReloadPhase";
+import ActionPhase from "@shared/data/phases/ActionPhase";
 
 export default class GameScene extends Phaser.Scene {
     active: boolean = true;
@@ -168,6 +170,13 @@ export default class GameScene extends Phaser.Scene {
         if (!ActionPhase.TYPES.includes(phase.type)) {
             hideEndTurnButton();
             this.actionChoicePanel.hide();
+
+            if (phase.type === PhaseTypes.Reload) {
+                SoundManager.play(RessourceKeys.Reloading);
+
+                const concernedPlayer = this.playerManager.getPlayer((phase as ReloadPhase).playerId);
+                this.effectsManager.floatingText(concernedPlayer.x, concernedPlayer.y, "+1 bullet");
+            }
             return;
         }
 

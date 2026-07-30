@@ -25,6 +25,7 @@ export interface IPlayer extends IBasicBody {
 
     hasBullets(): boolean;
     decreaseBulletCount(): void;
+    hasMaxBulletCount(): boolean;
     reload(): void;
 
     addForce(x: number, y: number): void;

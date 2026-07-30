@@ -3,10 +3,67 @@ import { Depths } from "@shared/enums/Depths.enum.ts";
 
 export default class EffectsManager {
     private scene: GameScene;
-    private activeDamageBoxes: Array<{ x: number; y: number; width: number; height: number; ref: Phaser.GameObjects.Text }> = [];
+
+    private activeDamageBoxes: Array<{
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+        ref: Phaser.GameObjects.Text;
+    }> = [];
 
     constructor(scene: GameScene) {
         this.scene = scene;
+    }
+
+    /**
+     * Creates a floating text effect at the given world position.
+     */
+    floatingText(
+        x: number,
+        y: number,
+        content: string,
+        options: {
+            color?: string;
+            fontSize?: string;
+            fontFamily?: string;
+            fontStyle?: string;
+            duration?: number;
+            rise?: number;
+            depth?: number;
+        } = {}
+    ): Phaser.GameObjects.Text {
+        const {
+            color = "#ffffff",
+            fontSize = "24px",
+            fontFamily = "Arial",
+            fontStyle = "bold",
+            duration = 1000,
+            rise = 50,
+            depth = Depths.Second
+        } = options;
+
+        const text = this.scene.add.text(x, y, content, {
+            fontSize,
+            color,
+            fontFamily,
+            fontStyle
+        });
+
+        text.setOrigin(0.5);
+        text.setDepth(depth);
+        this.scene.worldContainer.add(text);
+
+        this.scene.tweens.add({
+            targets: text,
+            y: y - rise,
+            alpha: 0,
+            duration,
+            ease: "Quad.easeOut",
+            onComplete: () => text.destroy()
+        });
+
+        return text;
     }
 
     /**
@@ -23,7 +80,10 @@ export default class EffectsManager {
             const randomX = (Math.random() - 0.5) * intensity;
             const randomY = (Math.random() - 0.5) * intensity;
 
-            this.scene.cameras.main.setScroll(originalX + randomX, originalY + randomY);
+            this.scene.cameras.main.setScroll(
+                originalX + randomX,
+                originalY + randomY
+            );
 
             if (elapsed >= duration) {
                 clearInterval(shakeInterval);
@@ -35,7 +95,11 @@ export default class EffectsManager {
     /**
      * Flash effect - white screen flash
      */
-    flash(color: number = 0xffffff, duration: number = 150, intensity: number = 0.6) {
+    flash(
+        color: number = 0xffffff,
+        duration: number = 150,
+        intensity: number = 0.6
+    ) {
         const flash = this.scene.add.rectangle(
             this.scene.cameras.main.centerX,
             this.scene.cameras.main.centerY,
@@ -44,6 +108,7 @@ export default class EffectsManager {
             color,
             intensity
         );
+
         flash.setDepth(Depths.First);
         flash.setScrollFactor(0);
         this.scene.uiContainer.add(flash);
@@ -52,7 +117,7 @@ export default class EffectsManager {
             targets: flash,
             alpha: 0,
             duration,
-            ease: 'Quad.easeOut',
+            ease: "Quad.easeOut",
             onComplete: () => flash.destroy()
         });
     }
@@ -60,11 +125,23 @@ export default class EffectsManager {
     /**
      * Burst particle effect from a position
      */
-    burstParticles(x: number, y: number, count: number = 8, color: number = 0xffffff) {
+    burstParticles(
+        x: number,
+        y: number,
+        count: number = 8,
+        color: number = 0xffffff
+    ) {
         for (let i = 0; i < count; i++) {
             const angle = (i / count) * Math.PI * 2;
 
-            const particle = this.scene.add.circle(x, y, 3, color, 0.8);
+            const particle = this.scene.add.circle(
+                x,
+                y,
+                3,
+                color,
+                0.8
+            );
+
             particle.setDepth(Depths.Second);
 
             this.scene.tweens.add({
@@ -74,7 +151,7 @@ export default class EffectsManager {
                 alpha: 0,
                 scale: 0.5,
                 duration: 400,
-                ease: 'Quad.easeOut',
+                ease: "Quad.easeOut",
                 onComplete: () => particle.destroy()
             });
         }
@@ -83,39 +160,49 @@ export default class EffectsManager {
     /**
      * Damage number floating effect
      */
-    damageNumber(x: number, y: number, value: number, isCrit: boolean = false) {
-        const color = isCrit ? '#ff0000' : '#ffffff';
-        const size = isCrit ? '32px' : '24px';
+    damageNumber(
+        x: number,
+        y: number,
+        value: number,
+        isCrit: boolean = false
+    ) {
+        const color = isCrit ? "#ff0000" : "#ffffff";
+        const fontSize = isCrit ? "32px" : "24px";
 
-        const text = this.scene.add.text(x, y, value.toString(), {
-            fontSize: size,
+        // Create first to know its dimensions.
+        const text = this.scene.add.text(0, 0, value.toString(), {
+            fontSize,
             color,
-            fontStyle: isCrit ? 'bold' : 'normal',
-            fontFamily: 'Arial'
+            fontStyle: isCrit ? "bold" : "normal",
+            fontFamily: "Arial"
         });
-        text.setOrigin(0.5);
-        text.setDepth(Depths.Second);
-        this.scene.worldContainer.add(text);
 
-        // Avoid overlapping: stack upwards if nearby damage numbers exist
+        text.setOrigin(0.5);
+
         const padding = 6;
-        const horizontalThreshold = 48; // pixels
-        let targetX = x;
-        let targetY = y;
+        const horizontalThreshold = 48;
 
         const textW = text.width;
         const textH = text.height;
 
-        // Try shifting upwards until there's no overlap with active boxes
+        let targetX = x;
+        let targetY = y;
+
         let attempts = 0;
+
         while (attempts < 10) {
             let overlap = false;
+
             for (const box of this.activeDamageBoxes) {
                 const dx = Math.abs(box.x - targetX);
-                if (dx > horizontalThreshold) continue;
+
+                if (dx > horizontalThreshold) {
+                    continue;
+                }
 
                 const boxTop = box.y - box.height / 2;
                 const boxBottom = box.y + box.height / 2;
+
                 const textTop = targetY - textH / 2;
                 const textBottom = targetY + textH / 2;
 
@@ -125,24 +212,42 @@ export default class EffectsManager {
                 }
             }
 
-            if (!overlap) break;
-            targetY -= (textH + padding);
+            if (!overlap) {
+                break;
+            }
+
+            targetY -= textH + padding;
             attempts++;
         }
 
-        // Register active box
-        this.activeDamageBoxes.push({ x: targetX, y: targetY, width: textW, height: textH, ref: text });
+        // The generic effect owns positioning / animation.
+        text.setPosition(targetX, targetY);
+        text.setDepth(Depths.Second);
+        this.scene.worldContainer.add(text);
+
+        this.activeDamageBoxes.push({
+            x: targetX,
+            y: targetY,
+            width: textW,
+            height: textH,
+            ref: text
+        });
 
         this.scene.tweens.add({
             targets: text,
             y: targetY - 50,
             alpha: 0,
             duration: 1000,
-            ease: 'Quad.easeOut',
+            ease: "Quad.easeOut",
             onComplete: () => {
-                // remove from active list
-                const idx = this.activeDamageBoxes.findIndex(b => b.ref === text);
-                if (idx !== -1) this.activeDamageBoxes.splice(idx, 1);
+                const idx = this.activeDamageBoxes.findIndex(
+                    box => box.ref === text
+                );
+
+                if (idx !== -1) {
+                    this.activeDamageBoxes.splice(idx, 1);
+                }
+
                 text.destroy();
             }
         });
@@ -151,10 +256,15 @@ export default class EffectsManager {
     /**
      * Hit flash - quick color change
      */
-    hitFlash(target: any, color: number = 0xff0000, duration: number = 100) {
+    hitFlash(
+        target: any,
+        color: number = 0xff0000,
+        duration: number = 100
+    ) {
         if (!target.setTint) return;
 
         target.setTint(color);
+
         this.scene.time.delayedCall(duration, () => {
             target.clearTint();
         });
@@ -163,7 +273,12 @@ export default class EffectsManager {
     /**
      * Spinning/loading effect
      */
-    spinningLoader(x: number, y: number, size: number = 20, duration: number = 1000): Phaser.GameObjects.Graphics {
+    spinningLoader(
+        x: number,
+        y: number,
+        size: number = 20,
+        duration: number = 1000
+    ): Phaser.GameObjects.Graphics {
         const graphics = this.scene.add.graphics();
         graphics.setDepth(Depths.Second);
 
@@ -172,18 +287,26 @@ export default class EffectsManager {
             rotation: Math.PI * 2,
             duration,
             repeat: -1,
-            ease: 'Linear'
+            ease: "Linear"
         });
 
         const draw = () => {
             graphics.clear();
             graphics.lineStyle(2, 0x00ff00);
             graphics.beginPath();
-            graphics.arc(x, y, size, 0, Math.PI * 1.5, false);
+            graphics.arc(
+                x,
+                y,
+                size,
+                0,
+                Math.PI * 1.5,
+                false
+            );
             graphics.strokePath();
         };
 
-        this.scene.events.on('update', draw);
+        this.scene.events.on("update", draw);
+
         return graphics;
     }
 }

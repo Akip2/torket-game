@@ -6,4 +6,6 @@ export enum PhaseTypes {
     Waiting = "Waiting for players",
     Starting = "Starting",
     GameEnd = "Game end",
+    Transition = "Transition",
+    Reload = "reloading",
 }

@@ -53,6 +53,10 @@ export function canPlayerMove(player: IPlayer) {
     return player.hasMovementLeft() && (playerState === PlayerState.Moving || playerState === PlayerState.Free);
 }
 
+export function canPlayerReload(player: IPlayer) {
+    return !player.hasMaxBulletCount();
+}
+
 export function canPlayerShoot(player: IPlayer) {
     const playerState = player.getState();
     return (playerState === PlayerState.Shooting || playerState === PlayerState.Free) && player.hasBullets();
