@@ -8,9 +8,8 @@ import ActionButton from "../buttons/ActionButton";
 export default class ActionChoicePanel {
     container: Phaser.GameObjects.Container;
     private scene: GameScene;
-    private moveButton!: ActionButton;
-    private shootButton!: ActionButton;
-    private titleText!: Phaser.GameObjects.Text;
+    private titleText: Phaser.GameObjects.Text;
+    private actionButtons: ActionButton[];
 
     constructor(scene: GameScene) {
         this.scene = scene;
@@ -50,36 +49,33 @@ export default class ActionChoicePanel {
         });
 
         // Create buttons
-        const buttonY = viewportCenter.y + 80;
+        const buttonY = viewportCenter.y + 60;
+        const spacing = 300;
 
-        this.moveButton = new ActionButton(
-            scene,
-            viewportCenter.x - 180,
-            buttonY,
-            Action.Move,
-            () => this.selectAction(scene.room, Action.Move),
-        );
-        this.moveButton.setScale(0);
-        this.moveButton.setAlpha(0);
-        this.container.add(this.moveButton);
+        const actions = [Action.Move, Action.Reload, Action.Shoot];
+        const startingX = viewportCenter.x - spacing
+        this.actionButtons = [];
+        for (let i = 0; i < actions.length; i++) {
+            const button = new ActionButton(
+                scene,
+                startingX + (spacing * i),
+                buttonY,
+                actions[i],
+                () => this.selectAction(scene.room, actions[i]),
+            );
+            button.setScale(0);
+            button.setAlpha(0);
 
-        this.shootButton = new ActionButton(
-            scene,
-            viewportCenter.x + 180,
-            buttonY,
-            Action.Shoot,
-            () => this.selectAction(scene.room, Action.Shoot)
-        );
-        this.shootButton.setScale(0);
-        this.shootButton.setAlpha(0);
-        this.container.add(this.shootButton);
+            this.actionButtons.push(button);
+            this.container.add(button);
+        }
 
         this.hideInstantly();
     }
 
     selectAction(room: Room | undefined, action: Action) {
         this.scene.effectsManager.flash(0x00d4ff, 400, 0.3);
-        
+
         // Create click effect
         this.createActionEffect(action);
 
@@ -88,12 +84,29 @@ export default class ActionChoicePanel {
     }
 
     private createActionEffect(action: Action) {
-        const button = action === Action.Move ? this.moveButton : this.shootButton;
+        let button: ActionButton;
+        let color: number;
+
+        switch (action) {
+            case Action.Move:
+                button = this.actionButtons[0];
+                color = 0x00d4ff;
+                break;
+
+            case Action.Reload:
+                button = this.actionButtons[1];
+                color = 0xffd93d;
+                break;
+
+            default:
+                button = this.actionButtons[2];
+                color = 0xff6b6b;
+                break;
+        }
+
         const buttonX = button.x;
         const buttonY = button.y;
-        const color = action === Action.Move ? 0x00d4ff : 0xff6b6b;
 
-        // Create explosion of particles
         for (let i = 0; i < 12; i++) {
             const angle = (Math.PI * 2 * i) / 12;
             const particle = this.scene.add.circle(buttonX, buttonY, 6, color, 0.8);
@@ -113,30 +126,23 @@ export default class ActionChoicePanel {
 
     show() {
         this.container.setVisible(true);
-        
-        // Stagger animations for buttons
-        this.scene.tweens.add({
-            targets: this.moveButton,
-            scale: 1,
-            alpha: 1,
-            duration: 400,
-            delay: 100,
-            ease: 'Back.easeOut'
-        });
 
-        this.scene.tweens.add({
-            targets: this.shootButton,
-            scale: 1,
-            alpha: 1,
-            duration: 400,
-            delay: 250,
-            ease: 'Back.easeOut'
+        // Stagger animations for buttons
+        this.actionButtons.forEach((b, id) => {
+            this.scene.tweens.add({
+                targets: b,
+                scale: 1,
+                alpha: 1,
+                duration: 400,
+                delay: 100 + id * 75,
+                ease: 'Back.easeOut'
+            });
         });
 
         // Add wiggle animation to buttons after they appear
         setTimeout(() => {
             this.scene.tweens.add({
-                targets: [this.moveButton, this.shootButton],
+                targets: this.actionButtons,
                 angle: 3,
                 yoyo: true,
                 repeat: 2,
@@ -147,23 +153,17 @@ export default class ActionChoicePanel {
     }
 
     hide() {
-        this.scene.tweens.add({
-            targets: this.moveButton,
-            scale: 0.5,
-            alpha: 0,
-            duration: 250,
-            ease: 'Quad.easeIn'
+        this.actionButtons.forEach((b, id) => {
+            this.scene.tweens.add({
+                targets: b,
+                scale: 0.5,
+                alpha: 0,
+                duration: 250,
+                ease: 'Quad.easeIn',
+                delay: id * 25
+            });
         });
 
-        this.scene.tweens.add({
-            targets: this.shootButton,
-            scale: 0.5,
-            alpha: 0,
-            duration: 250,
-            ease: 'Quad.easeIn',
-            delay: 50
-        });
-        
         setTimeout(() => {
             this.hideInstantly();
         }, 300);

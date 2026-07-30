@@ -135,7 +135,7 @@ export default class PlayerManagerClient {
             case PlayerState.Shooting:
                 playerObject.movementBar.hide();
                 if (local) {
-                    SoundManager.play(RessourceKeys.Reloading);
+                    SoundManager.play(RessourceKeys.DrawingGun);
                     setCursor(Cursor.Crosshair);
                 }
                 break;

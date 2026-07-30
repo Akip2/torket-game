@@ -296,7 +296,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     setPlayerState(state: PlayerState) {
         this.state = state;
 
-        if (state === PlayerState.Shooting) SoundManager.play(RessourceKeys.Reloading);
+        if (state === PlayerState.Shooting) SoundManager.play(RessourceKeys.DrawingGun);
     }
 
     hasMovementLeft(): boolean {

@@ -1,5 +1,6 @@
 import { FaceExpression } from "./enums/FaceExpression.enum";
 import { Parameter } from "./enums/Parameter.enum";
+import { RessourceKeys } from "./enums/RessourceKeys.enum";
 import type { ParameterChangeCoef } from "./types";
 
 export const DEBUG = false;
@@ -137,3 +138,14 @@ export const PARAM_BASE_VALUE_MAP = new Map<Parameter, number>([
 export const MAP_PREVIEW_WIDTH = 300;
 export const MAP_PREVIEW_HEIGHT = 150;
 export const HUD_HEIGHT = 42;
+
+export const AUDIO_RESSOURCE_KEYS = [
+    RessourceKeys.Explosion,
+    RessourceKeys.Death,
+    RessourceKeys.DrawingGun,
+    RessourceKeys.Reloading,
+    RessourceKeys.Shot,
+    RessourceKeys.Capture,
+    RessourceKeys.Uncapture,
+    RessourceKeys.CaptureVictory,
+];

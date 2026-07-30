@@ -1,4 +1,4 @@
-import { DEBUG, EXPLOSION_CONST, GROUND_TYPE, TEXTURE_SIZE, TILE_SIZE, TIME_STEP } from "@shared/const";
+import { AUDIO_RESSOURCE_KEYS, DEBUG, EXPLOSION_CONST, GROUND_TYPE, TEXTURE_SIZE, TILE_SIZE, TIME_STEP } from "@shared/const";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import BulletClient from "../game-objects/BulletClient";
 import PlayerClient from "../game-objects/PlayerClient";
@@ -96,14 +96,9 @@ export default class GameScene extends Phaser.Scene {
         this.load.image(RessourceKeys.ExplosionParticle, 'assets/particles/explosion-particle.png');
         this.load.image(RessourceKeys.DeathParticle, 'assets/particles/death-particle.png');
 
-        this.load.audio(RessourceKeys.Explosion, 'assets/sounds/explosion.wav');
-        this.load.audio(RessourceKeys.Death, 'assets/sounds/death.wav');
-        this.load.audio(RessourceKeys.Reloading, 'assets/sounds/reloading.wav');
-        this.load.audio(RessourceKeys.Shot, 'assets/sounds/shot.wav');
-
-        this.load.audio(RessourceKeys.Capture, 'assets/sounds/capture1.wav');
-        this.load.audio(RessourceKeys.Uncapture, 'assets/sounds/uncapture.wav');
-        this.load.audio(RessourceKeys.CaptureVictory, 'assets/sounds/capturevictory.wav');
+        AUDIO_RESSOURCE_KEYS.forEach(audioKey => {
+            this.load.audio(audioKey, `assets/sounds/${audioKey as string}.wav`);
+        });
     }
 
     async create() {
