@@ -1,32 +1,39 @@
-import { GAME_HEIGHT, GAME_WIDTH } from "@shared/const";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import type GameScene from "../../scenes/GameScene";
 import { TextStyle } from "../ui-styles";
 import { Action } from "@shared/enums/Action.enum";
 import type { Room } from "colyseus.js";
 import ActionButton from "../buttons/ActionButton";
+import type { IPlayer } from "@shared/interfaces/Player.interface";
 
 export default class ActionChoicePanel {
     container: Phaser.GameObjects.Container;
     private scene: GameScene;
-    private moveButton!: ActionButton;
-    private shootButton!: ActionButton;
-    private titleText!: Phaser.GameObjects.Text;
+    private titleText: Phaser.GameObjects.Text;
+    private actionButtons: ActionButton[];
+    private mainPlayer: IPlayer;
+    private validityCallbacks: (() => boolean)[];
+    private disabledMessages: string[];
 
-    constructor(scene: GameScene) {
+    constructor(scene: GameScene, mainPlayer: IPlayer) {
         this.scene = scene;
+        this.mainPlayer = mainPlayer;
         this.container = scene.add.container(0, 0);
         scene.uiContainer.add(this.container);
 
         this.container.setDepth(0);
         scene.uiContainer.sort('depth');
 
+        const viewportCenter = scene.cameraManager.getUiViewportCenter();
+        const viewportWidth = scene.cameraManager.getUiViewportWidth();
+        const viewportHeight = scene.cameraManager.getUiViewportHeight();
+
         // Dark background overlay
-        const background = scene.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.75);
+        const background = scene.add.rectangle(viewportCenter.x, viewportCenter.y, viewportWidth, viewportHeight, 0x000000, 0.75);
         this.container.add(background);
 
         // Main instruction text
-        this.titleText = scene.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 100, 'CHOOSE YOUR ACTION', {
+        this.titleText = scene.add.text(viewportCenter.x, viewportCenter.y - 100, 'CHOOSE YOUR ACTION', {
             ...TextStyle.PhaseDisplayer,
             fontSize: '48px',
             color: '#00ffff',
@@ -47,36 +54,45 @@ export default class ActionChoicePanel {
         });
 
         // Create buttons
-        const buttonY = GAME_HEIGHT / 2 + 80;
+        const buttonY = viewportCenter.y + 60;
+        const spacing = 300;
 
-        this.moveButton = new ActionButton(
-            scene,
-            GAME_WIDTH / 2 - 180,
-            buttonY,
-            Action.Move,
-            () => this.selectAction(scene.room, Action.Move),
-        );
-        this.moveButton.setScale(0);
-        this.moveButton.setAlpha(0);
-        this.container.add(this.moveButton);
+        const actions = [Action.Move, Action.Reload, Action.Shoot];
+        const startingX = viewportCenter.x - spacing
+        this.actionButtons = [];
+        for (let i = 0; i < actions.length; i++) {
+            const button = new ActionButton(
+                scene,
+                startingX + (spacing * i),
+                buttonY,
+                actions[i],
+                () => this.selectAction(scene.room, actions[i]),
+            );
+            button.setScale(0);
+            button.setAlpha(0);
 
-        this.shootButton = new ActionButton(
-            scene,
-            GAME_WIDTH / 2 + 180,
-            buttonY,
-            Action.Shoot,
-            () => this.selectAction(scene.room, Action.Shoot)
-        );
-        this.shootButton.setScale(0);
-        this.shootButton.setAlpha(0);
-        this.container.add(this.shootButton);
+            this.actionButtons.push(button);
+            this.container.add(button);
+        }
+
+        this.validityCallbacks = [
+            () => true, // Move is always valid
+            () => this.mainPlayer.hasMaxBulletCount() === false, // Reload is valid if not at max bullets
+            () => this.mainPlayer.hasBullets() // Shoot is valid if player has bullets
+        ]
+
+        this.disabledMessages = [
+            "",
+            "Already at max bullets.",
+            "No bullets to shoot."
+        ]
 
         this.hideInstantly();
     }
 
     selectAction(room: Room | undefined, action: Action) {
         this.scene.effectsManager.flash(0x00d4ff, 400, 0.3);
-        
+
         // Create click effect
         this.createActionEffect(action);
 
@@ -85,12 +101,29 @@ export default class ActionChoicePanel {
     }
 
     private createActionEffect(action: Action) {
-        const button = action === Action.Move ? this.moveButton : this.shootButton;
+        let button: ActionButton;
+        let color: number;
+
+        switch (action) {
+            case Action.Move:
+                button = this.actionButtons[0];
+                color = 0x00d4ff;
+                break;
+
+            case Action.Reload:
+                button = this.actionButtons[1];
+                color = 0xffd93d;
+                break;
+
+            default:
+                button = this.actionButtons[2];
+                color = 0xff6b6b;
+                break;
+        }
+
         const buttonX = button.x;
         const buttonY = button.y;
-        const color = action === Action.Move ? 0x00d4ff : 0xff6b6b;
 
-        // Create explosion of particles
         for (let i = 0; i < 12; i++) {
             const angle = (Math.PI * 2 * i) / 12;
             const particle = this.scene.add.circle(buttonX, buttonY, 6, color, 0.8);
@@ -110,30 +143,22 @@ export default class ActionChoicePanel {
 
     show() {
         this.container.setVisible(true);
-        
-        // Stagger animations for buttons
-        this.scene.tweens.add({
-            targets: this.moveButton,
-            scale: 1,
-            alpha: 1,
-            duration: 400,
-            delay: 100,
-            ease: 'Back.easeOut'
-        });
 
-        this.scene.tweens.add({
-            targets: this.shootButton,
-            scale: 1,
-            alpha: 1,
-            duration: 400,
-            delay: 250,
-            ease: 'Back.easeOut'
+        // Stagger animations for buttons
+        this.actionButtons.forEach((b, id) => {
+            b.appear(this.scene, 100 + id * 75);
+
+            if (this.validityCallbacks[id]()) {
+                b.enable();
+            } else {
+                b.disable(this.disabledMessages[id]);
+            }
         });
 
         // Add wiggle animation to buttons after they appear
         setTimeout(() => {
             this.scene.tweens.add({
-                targets: [this.moveButton, this.shootButton],
+                targets: this.actionButtons,
                 angle: 3,
                 yoyo: true,
                 repeat: 2,
@@ -144,23 +169,10 @@ export default class ActionChoicePanel {
     }
 
     hide() {
-        this.scene.tweens.add({
-            targets: this.moveButton,
-            scale: 0.5,
-            alpha: 0,
-            duration: 250,
-            ease: 'Quad.easeIn'
+        this.actionButtons.forEach((b, id) => {
+            b.disappear(this.scene, id * 50);
         });
 
-        this.scene.tweens.add({
-            targets: this.shootButton,
-            scale: 0.5,
-            alpha: 0,
-            duration: 250,
-            ease: 'Quad.easeIn',
-            delay: 50
-        });
-        
         setTimeout(() => {
             this.hideInstantly();
         }, 300);

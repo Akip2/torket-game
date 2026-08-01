@@ -4,7 +4,7 @@ import { generateBulletOriginPosition, shoot } from "@shared/logics/bullet-logic
 import type GameScene from "../scenes/GameScene";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import { wait } from "@shared/utils";
-import { BULLET_CONST, GAME_HEIGHT, GAME_WIDTH, GRAVITY, TIME_STEP, SHOT_CONST } from "@shared/const";
+import { BULLET_CONST, GRAVITY, TIME_STEP, SHOT_CONST } from "@shared/const";
 import Vector from "@shared/data/Vector";
 import { Depths } from "@shared/enums/Depths.enum.ts";
 import SoundManager from "./SoundManager";
@@ -49,7 +49,7 @@ export default class ShotManager {
 
     async chargeShot() {
         if (!this.owner) throw new Error("ShotManager: owner not set");
-        
+
         this.isCharging = true;
 
         let sign = 1;
@@ -58,7 +58,7 @@ export default class ShotManager {
         const MAX_FORCE = this.owner.powerManager.getParameterValue(Parameter.Range);
 
         while (this.isCharging) {
-            this.force += (MAX_FORCE / 60) * sign;
+            this.force += (MAX_FORCE / 100) * sign;
             this.drawTrajectory(this.generateShotInfo());
 
             await wait(TIME_STEP);
@@ -66,7 +66,6 @@ export default class ShotManager {
                 sign *= -1;
                 await wait(TIME_STEP);
             }
-
         }
     }
 
@@ -90,6 +89,10 @@ export default class ShotManager {
     }
 
     shootBullet() {
+        if (!this.owner.hasBullets()) return;
+
+        this.owner.decreaseBulletCount();
+
         const shotInfo = this.generateShotInfo();
         const explosionInfo = this.generateExplosionInfo();
 
@@ -103,7 +106,11 @@ export default class ShotManager {
     drawTrajectory(shootInfo: ShootInfo) {
         if (!this.trajectoryDrawer) {
             this.trajectoryDrawer = this.scene.add.graphics();
+            this.scene.worldContainer.add(this.trajectoryDrawer);
+            this.scene.worldContainer.sendToBack(this.trajectoryDrawer);
+            this.trajectoryDrawer.setDepth(Depths.None);
         }
+
         this.trajectoryDrawer.clear();
         //this.trajectoryDrawer = this.scene.add.graphics();
         this.trajectoryDrawer.fillStyle(0xffffff, 0.9);
@@ -125,17 +132,13 @@ export default class ShotManager {
         const maxSteps = 100;
         for (let i = 0; i < maxSteps; i++) {
             vx = vx * frictionFactor;
-            vy = vy * frictionFactor + gravityStep;
-
             x += vx;
             y += vy;
 
-            if (x < -100 || x > GAME_WIDTH + 100 || y > GAME_HEIGHT + 100) break;
+            vy = vy * frictionFactor + gravityStep;
 
             this.trajectoryDrawer.fillCircle(x, y, 2);
         }
-
-        this.trajectoryDrawer.setDepth(Depths.None);
     }
 
     generateShotInfo() {

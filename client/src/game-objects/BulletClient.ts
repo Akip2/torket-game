@@ -57,12 +57,12 @@ export default class BulletClient extends Phaser.Physics.Matter.Sprite implement
     }
 
     private createTrailParticle(x: number, y: number) {
-        const particle = (this.scene as GameScene).add.circle(x, y, 3, 0xff2700, 0.6);
+        const particle = (this.scene as GameScene).add.circle(x, y, 3, BULLET_CONST.TRAIL_COLOR, 0.75);
         particle.setDepth(Depths.None - 1);
 
         (this.scene as GameScene).tweens.add({
             targets: particle,
-            scale: 0.2,
+            scale: 0.5,
             alpha: 0,
             duration: 300,
             ease: 'Quad.easeOut',

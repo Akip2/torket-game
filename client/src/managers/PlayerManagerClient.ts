@@ -3,7 +3,7 @@ import PlayerClient from "../game-objects/PlayerClient";
 import type GameScene from "../scenes/GameScene";
 import type { InputPayload, Position } from "@shared/types";
 import { movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
-import { CLIENT_PREDICTION, DEBUG, INTERPOLATION_SPEED_X, INTERPOLATION_SPEED_Y } from "@shared/const";
+import { CLIENT_PREDICTION, DEBUG, DISPLAY_CAPTURE_POINTS, INTERPOLATION_SPEED_X, INTERPOLATION_SPEED_Y } from "@shared/const";
 import { Depths } from "@shared/enums/Depths.enum";
 import type ShotManager from "./ShotManager";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
@@ -74,10 +74,20 @@ export default class PlayerManagerClient {
             scene.worldContainer.add(this.remoteRef);
             scene.shotManager.setOwner(playerObject);
 
+            if (DISPLAY_CAPTURE_POINTS) {
+                scene.capturePointManager.setPlayerTeam(player.team);
+            }
+
             this.setupLocalPlayer(player, playerObject, scene.shotManager);
         } else {
             this.setupRemotePlayer(player, playerObject);
         }
+    }
+
+    playerChangeEvent(player: any, playerObject: PlayerClient) {
+        playerObject.setData("targetX", player.x);
+        playerObject.setData("targetY", player.y);
+        playerObject.setBulletCount(player.bulletCount);
     }
 
     setupLocalPlayer(player: any, playerObject: PlayerClient, shotManager: ShotManager) {
@@ -86,8 +96,8 @@ export default class PlayerManagerClient {
         this.currentPlayer = playerObject;
 
         $(player).onChange(() => {
-            playerObject.setData("targetX", player.x);
-            playerObject.setData("targetY", player.y);
+            this.playerChangeEvent(player, playerObject);
+            playerObject.movementLeft = player.movementLeft;
 
             this.remoteRef.x = player.x;
             this.remoteRef.y = player.y;
@@ -103,8 +113,7 @@ export default class PlayerManagerClient {
         const $ = getStateCallbacks(this.room);
 
         $(player).onChange(() => {
-            playerObject.setData("targetX", player.x);
-            playerObject.setData("targetY", player.y);
+            this.playerChangeEvent(player, playerObject);
 
             playerObject.setData("mousePosition", {
                 x: player.mouseX,
@@ -126,7 +135,7 @@ export default class PlayerManagerClient {
             case PlayerState.Shooting:
                 playerObject.movementBar.hide();
                 if (local) {
-                    SoundManager.play(RessourceKeys.Reloading);
+                    SoundManager.play(RessourceKeys.DrawingGun);
                     setCursor(Cursor.Crosshair);
                 }
                 break;

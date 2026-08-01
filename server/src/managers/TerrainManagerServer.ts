@@ -3,15 +3,44 @@ import QuadBlock from "@shared/data/QuadBlock";
 import TerrainBlock from "../bodies/TerrainBlock";
 import PhysicsManager from "./PhysicsManager";
 import BulletServer from "../bodies/BulletServer";
+import { Bounds } from "@shared/types";
+import { generateBorderData } from "@shared/utils";
+import SimulationBorderServer from "../bodies/SimulationBorderServer";
 
 export default class TerrainManagerServer {
     physicsManager: PhysicsManager;
     root: QuadBlock;
     terrainBlocks: TerrainBlock[] = [];
+    bounds: Bounds;
 
-    constructor(physicsManager: PhysicsManager, root: QuadBlock) {
+    constructor(physicsManager: PhysicsManager, root: QuadBlock, bounds: Bounds) {
         this.physicsManager = physicsManager;
         this.root = root;
+        this.bounds = bounds;
+    }
+
+    createEnvironment() {
+        this.createTerrain();
+        this.createBorders();
+    }
+
+    createBorders() {
+        const borders = generateBorderData(this.bounds);
+
+        for (let i = 0; i < borders.length; i++) {
+            const isBottom = i === borders.length - 1;
+            const border = borders[i];
+
+            this.physicsManager.add(
+                new SimulationBorderServer(
+                    border.x,
+                    border.y,
+                    border.width,
+                    border.height,
+                    isBottom
+                )
+            );
+        }
     }
 
     createTerrain() {

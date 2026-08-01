@@ -4,20 +4,26 @@ import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { BULLET_CONST, GRAVITY } from "@shared/const";
 import { ExplosionInfo } from "@shared/types";
 import { IBulletInterface } from "@shared/interfaces/Bullet.interface";
+import { Team } from "@shared/enums/Team.enum.ts";
 
 export default class BulletServer extends GameBody implements IBulletInterface {
     private gravityScale: number;
     private explosionInfo: ExplosionInfo;
 
-    constructor(x: number, y: number, radius: number, explosionInfo: ExplosionInfo, gravityScale: number = BULLET_CONST.GRAVITY_SCALE) {
+    constructor(x: number, y: number, radius: number, explosionInfo: ExplosionInfo, ownerTeam: Team, gravityScale: number = BULLET_CONST.GRAVITY_SCALE) {
         const body = Bodies.rectangle(x, y, radius * 2, radius * 2, {
-            label: RessourceKeys.Bullet
+            label: RessourceKeys.Bullet,
+            plugin: ownerTeam
         });
 
         super(body);
 
         this.gravityScale = gravityScale;
         this.explosionInfo = explosionInfo;
+    }
+
+    getOwnerTeam() {
+        return this.body.plugin;
     }
 
     getExplosionInfo() {

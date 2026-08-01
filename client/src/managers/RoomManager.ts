@@ -52,6 +52,10 @@ export default class RoomManager {
         this.room.onMessage(RequestTypes.FullSynchro, (data) => {
             messageBuffer.push({ type: RequestTypes.FullSynchro, data });
         });
+
+        this.room.onMessage(RequestTypes.FirstSynchro, (data) => {
+            messageBuffer.push({ type: RequestTypes.FirstSynchro, data });
+        });
         this.room.onMessage(RequestTypes.TerrainSynchro, (data) => {
             messageBuffer.push({ type: RequestTypes.TerrainSynchro, data });
         });

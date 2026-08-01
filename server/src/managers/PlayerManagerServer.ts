@@ -1,4 +1,4 @@
-import { immobilizePlayer, isPlayerInRadius, movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
+import { getPlayerDistanceFromPoint, immobilizePlayer, isPlayerInRadius, movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
 import { InputPayload, PendingExplosion } from "@shared/types";
 import PlayerServer from "../bodies/PlayerServer";
 import { Player } from "../rooms/schema/MyRoomState";
@@ -7,8 +7,9 @@ import Phase from "@shared/data/phases/Phase";
 import SoloActionPhase from "@shared/data/phases/SoloActionPhase";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
 import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
-import { EXPLOSION_CONST } from "@shared/const";
+import { EXPLOSION_CONST, PLAYER_CONST } from "@shared/const";
 import { Body } from "matter-js";
+import { Team } from "@shared/enums/Team.enum.ts";
 
 export default class PlayerManagerServer {
     playerBodies: Map<string, PlayerServer>;
@@ -17,8 +18,8 @@ export default class PlayerManagerServer {
         this.playerBodies = new Map();
     }
 
-    addPlayer(sessionId: string, player: Player, onDamage: (hp: number) => void, physicsManager: PhysicsManager) {
-        const playerBody = new PlayerServer(player, sessionId, (hp: number) => onDamage(hp));
+    addPlayer(sessionId: string, player: Player, onDamage: (hp: number, damage?: number, directHit?: boolean) => void, physicsManager: PhysicsManager) {
+        const playerBody = new PlayerServer(player, sessionId, (hp: number, damage?: number, directHit?: boolean) => onDamage(hp, damage, directHit));
         this.playerBodies.set(sessionId, playerBody);
         physicsManager.add(playerBody);
     }
@@ -83,7 +84,9 @@ export default class PlayerManagerServer {
             playerReactToExplosion(p, pendingExplosion);
 
             if (isPlayerInRadius(p, pendingExplosion.cx, pendingExplosion.cy, pendingExplosion.radius)) {
-                this.playerBodies.get(id)?.applyDamage(pendingExplosion.damage!, true);
+                const distanceToExplosion = getPlayerDistanceFromPoint(p, pendingExplosion.cx, pendingExplosion.cy);
+                // Explosion damage is not a direct hit, but it scales with distance to the center.
+                this.playerBodies.get(id)?.applyDamage(pendingExplosion.damage!, false, distanceToExplosion, pendingExplosion.radius);
             }
         });
     }
@@ -113,5 +116,17 @@ export default class PlayerManagerServer {
             playerBody.removeFromWorld();
             this.playerBodies.delete(sessionId);
         }
+    }
+
+    getTeamPlayers(team: Team) {
+        return Array.from(this.playerBodies.values()).filter(p => p.getTeam() === team);
+    }
+
+    initBulletCounts() {
+        let i = 0;
+        this.playerBodies.forEach((p) => {
+            p.setBulletCount(PLAYER_CONST.BASE_BULLET_COUNT[i]);
+            i++;
+        })
     }
 }

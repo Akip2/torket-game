@@ -10,6 +10,6 @@ export default class BlockSprite extends Phaser.GameObjects.TileSprite {
         this.setDepth(Depths.Fourth);
         this.tilePositionX = tilePosX;
         this.tilePositionY = tilePosY;
-        scene.add.existing(this);
+        scene.worldContainer.add(this);
     }
 }

@@ -2,9 +2,11 @@ import QuadBlock from "@shared/data/QuadBlock";
 import type GameScene from "../scenes/GameScene";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { DEBUG, TEXTURE_SIZE, TILE_SIZE } from "@shared/const";
-import type { QuadBlockType } from "@shared/types";
+import type { Bounds, QuadBlockType } from "@shared/types";
 import { Depths } from "@shared/enums/Depths.enum.ts";
 import BlockSprite from "../game-objects/BlockSprite";
+import { generateBorderData } from "@shared/utils";
+import SimulationBorderClient from "../game-objects/SimulationBorderClient";
 
 export default class TerrainManagerClient {
     scene: GameScene;
@@ -86,6 +88,15 @@ export default class TerrainManagerClient {
         }
 
         this.createTerrainColliders();
+    }
+
+    createBorders(bounds: Bounds) {
+        const borders = generateBorderData(bounds);
+
+        for (let i = 0; i < borders.length; i++) {
+            const border = borders[i];
+            new SimulationBorderClient(this.scene, border.x, border.y, border.width, border.height);
+        }
     }
 
     createTerrainColliders() {

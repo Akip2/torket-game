@@ -1,14 +1,16 @@
-import { EDITION_TILE_SIZE, GAME_HEIGHT, GAME_WIDTH, GROUND_TYPE, PLAYER_CONST, TEXTURE_SIZE } from "@shared/const";
+import { CAPTURE_POINT_CONST, EDITION_TILE_SIZE, GAME_HEIGHT, GAME_WIDTH, GROUND_TYPE, PLAYER_CONST, TEXTURE_SIZE } from "@shared/const";
 import PrimitiveMap from "@shared/data/PrimitiveMap";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
 import TextureManager from "../managers/TextureManager";
 import { Depths } from "@shared/enums/Depths.enum.ts";
+import CameraManager from "../managers/CameraManager";
 
 export default class MapEditionScene extends Phaser.Scene {
     currentMap: PrimitiveMap;
-    tiles: Phaser.GameObjects.TileSprite[] = [];
+    tiles: Map<string, Phaser.GameObjects.TileSprite> = new Map();
     playerSprites: Phaser.GameObjects.TileSprite[] = [];
+    capturePointSprites: Phaser.GameObjects.Image[] = [];
 
     gridGraphics!: Phaser.GameObjects.Graphics;
     subdivisionGraphics!: Phaser.GameObjects.Graphics;
@@ -18,10 +20,13 @@ export default class MapEditionScene extends Phaser.Scene {
 
     mirrorMode: boolean = false;
     playerPlacementMode: boolean = false;
+    capturePointPlacementMode: boolean = false;
+
+    cameraManager!: CameraManager;
 
     constructor() {
         super(SceneNames.MapEditor);
-        this.currentMap = PrimitiveMap.createEmptyMap(GAME_WIDTH, GAME_HEIGHT, EDITION_TILE_SIZE);
+        this.currentMap = PrimitiveMap.createEmptyMap();
     }
 
     preload() {
@@ -29,12 +34,41 @@ export default class MapEditionScene extends Phaser.Scene {
     }
 
     create() {
-        new TextureManager(this.add).generatePlayerTexture();
+        const textureManager = new TextureManager(this.add);
+        textureManager.generatePlayerTexture();
+        textureManager.generateCapturePointTexture();
 
-        this.input.on("pointerdown", (p: Phaser.Input.Pointer) => this.doToolAction(p));
-        this.input.on("pointermove", (p: Phaser.Input.Pointer) => {
+        this.cameraManager = new CameraManager(this.cameras.main);
+
+        this.brushPreview = this.add.rectangle(0, 0, EDITION_TILE_SIZE, EDITION_TILE_SIZE, 0x00ff00, 0.25)
+            .setOrigin(0)
+            .setDepth(Depths.First)
+            .setVisible(false);
+
+        this.setupInputs();
+
+        this.drawGrid();
+    }
+
+    setupInputs() {
+        this.input.on('wheel', (pointer: Phaser.Input.Pointer, _go: any, _dx: number, deltaY: number) => {
+            this.cameraManager.handleWheel(pointer, deltaY);
+        });
+
+        this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
+            this.cameraManager.handlePointerDown(p);
+            this.doToolAction(p);
+        });
+
+        this.input.on('pointerup', () => {
+            this.cameraManager.handlePointerUp();
+        });
+
+        this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
+            //if (!this.cameraManager.handlePointerMove(p)) {
             this.doToolAction(p);
             this.updateBrushPreview(p);
+            //}
         });
         this.input.mouse?.disableContextMenu();
 
@@ -50,7 +84,14 @@ export default class MapEditionScene extends Phaser.Scene {
 
         this.input.keyboard!.on("keydown-P", () => {
             this.playerPlacementMode = !this.playerPlacementMode;
-            this.brushSize = Math.floor(PLAYER_CONST.BASE_WIDTH / this.currentMap.minTileSize);
+            this.capturePointPlacementMode = false;
+            this.brushSize = Math.floor(PLAYER_CONST.BASE_WIDTH / EDITION_TILE_SIZE);
+        });
+
+        this.input.keyboard!.on("keydown-C", () => {
+            this.capturePointPlacementMode = !this.capturePointPlacementMode;
+            this.playerPlacementMode = false;
+            this.brushSize = Math.floor(CAPTURE_POINT_CONST.RADIUS * 2 / EDITION_TILE_SIZE);
         });
 
         this.input.keyboard!.on("keydown-A", () => {
@@ -64,32 +105,42 @@ export default class MapEditionScene extends Phaser.Scene {
 
         this.input.keyboard!.on("keydown-S", () => this.saveMap());
         this.input.keyboard!.on("keydown-L", () => this.loadMap());
+    }
 
-        this.brushPreview = this.add.rectangle(0, 0, EDITION_TILE_SIZE, EDITION_TILE_SIZE, 0x00ff00, 0.25)
-            .setOrigin(0)
-            .setDepth(Depths.First)
-            .setVisible(false);
-
+    update() {
         this.drawGrid();
     }
 
     drawGrid() {
-        this.gridGraphics = this.add.graphics();
-        this.gridGraphics.lineStyle(1, 0x333333, 0.25);
-
-        const step = this.currentMap.minTileSize;
-
-        for (let x = 0; x <= GAME_WIDTH; x += step) {
-            this.gridGraphics.moveTo(x, 0);
-            this.gridGraphics.lineTo(x, GAME_HEIGHT);
+        if (!this.gridGraphics) {
+            this.gridGraphics = this.add.graphics();
+            this.gridGraphics.setDepth(Depths.Third);
         }
-        for (let y = 0; y <= GAME_HEIGHT; y += step) {
-            this.gridGraphics.moveTo(0, y);
-            this.gridGraphics.lineTo(GAME_WIDTH, y);
+
+        const cam = this.cameras.main;
+        const step = EDITION_TILE_SIZE;
+
+        const topLeft = cam.getWorldPoint(0, 0);
+        const bottomRight = cam.getWorldPoint(cam.width, cam.height);
+
+        const startX = Math.floor(topLeft.x / step) * step;
+        const startY = Math.floor(topLeft.y / step) * step;
+        const endX = Math.ceil(bottomRight.x / step) * step;
+        const endY = Math.ceil(bottomRight.y / step) * step;
+
+        this.gridGraphics.clear();
+        this.gridGraphics.lineStyle(1 / cam.zoom, 0x333333, 0.25);
+
+        for (let x = startX; x <= endX; x += step) {
+            this.gridGraphics.moveTo(x, startY);
+            this.gridGraphics.lineTo(x, endY);
         }
+        for (let y = startY; y <= endY; y += step) {
+            this.gridGraphics.moveTo(startX, y);
+            this.gridGraphics.lineTo(endX, y);
+        }
+
         this.gridGraphics.strokePath();
-
-        this.gridGraphics.setDepth(Depths.Third);
     }
 
     drawSubdivisionAxis() {
@@ -115,30 +166,38 @@ export default class MapEditionScene extends Phaser.Scene {
     }
 
     doToolAction(pointer: Phaser.Input.Pointer) {
-        const x = pointer.x;
-        const y = pointer.y;
+        const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+        const x = worldPoint.x;
+        const y = worldPoint.y;
+
 
         if (pointer.leftButtonDown()) {
             if (this.playerPlacementMode) {
                 this.addPlayer(x, y);
+            } else if (this.capturePointPlacementMode) {
+                this.addCapturePoint(x, y);
             } else {
                 this.paintTiles(x, y);
             }
-        } else if (pointer.rightButtonDown() && !this.playerPlacementMode) {
-            this.eraseTiles(x, y);
+        } else if (pointer.rightButtonDown()) {
+            if (this.capturePointPlacementMode) {
+                this.removeCapturePoint(x, y);
+            } else if (!this.playerPlacementMode) {
+                this.eraseTiles(x, y);
+            }
         }
     }
 
     getMirrorX(x: number): number {
-        const tileSize = this.currentMap.minTileSize;
+        const tileSize = EDITION_TILE_SIZE;
         const tileX = Math.floor(x / tileSize);
-        const mirroredTileX = this.currentMap.rowSize - 1 - tileX;
+        const mirroredTileX = Math.floor(GAME_WIDTH / tileSize) - 1 - tileX;
         return mirroredTileX * tileSize;
     }
 
     addPlayer(x: number, y: number) {
-        const playerX = Math.floor(x / this.currentMap.minTileSize) * this.currentMap.minTileSize;
-        const playerY = Math.floor(y / this.currentMap.minTileSize) * this.currentMap.minTileSize;
+        const playerX = Math.floor(x / EDITION_TILE_SIZE) * EDITION_TILE_SIZE;
+        const playerY = Math.floor(y / EDITION_TILE_SIZE) * EDITION_TILE_SIZE;
 
         this.currentMap.addPlayerPosition(playerX, playerY);
         this.drawPlayer(playerX, playerY);
@@ -167,45 +226,91 @@ export default class MapEditionScene extends Phaser.Scene {
         });
     }
 
-    paintTiles(x: number, y: number) {
-        this.applyToTiles(x, y, (px, py) => {
-            if (!this.currentMap.isFilled(px, py)) {
-                this.currentMap.add(px, py);
-                const sprite = this.add.tileSprite(
-                    px,
-                    py,
-                    this.currentMap.minTileSize,
-                    this.currentMap.minTileSize,
-                    RessourceKeys.Ground
-                ).setOrigin(0);
-                const index = this.currentMap.getIndex(px, py);
-                this.tiles[index] = sprite;
+    addCapturePoint(x: number, y: number) {
+        const capturePointX = Math.floor(x / EDITION_TILE_SIZE) * EDITION_TILE_SIZE;
+        const capturePointY = Math.floor(y / EDITION_TILE_SIZE) * EDITION_TILE_SIZE;
+
+        this.currentMap.addCapturePointPosition(capturePointX, capturePointY);
+        this.drawCapturePoint(capturePointX, capturePointY);
+    }
+
+    drawCapturePoint(x: number, y: number) {
+        const sprite = this.add.image(x, y, RessourceKeys.CapturePoint)
+            .setOrigin(0)
+            .setDisplaySize(CAPTURE_POINT_CONST.RADIUS * 2, CAPTURE_POINT_CONST.RADIUS * 2);
+
+        this.capturePointSprites.push(sprite);
+
+        sprite.setInteractive();
+        sprite.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+            if (this.capturePointPlacementMode && pointer.rightButtonDown()) {
+                this.currentMap.removeCapturePointPosition(sprite.x, sprite.y);
+                this.capturePointSprites.splice(this.capturePointSprites.indexOf(sprite), 1);
+
+                sprite.destroy();
             }
         });
     }
 
+    removeCapturePoint(x: number, y: number) {
+        const capturePointX = Math.floor(x / EDITION_TILE_SIZE) * EDITION_TILE_SIZE;
+        const capturePointY = Math.floor(y / EDITION_TILE_SIZE) * EDITION_TILE_SIZE;
+
+        this.currentMap.removeCapturePointPosition(capturePointX, capturePointY);
+
+        const sprite = this.capturePointSprites.find(candidate => candidate.x === capturePointX && candidate.y === capturePointY);
+        if (sprite) {
+            this.capturePointSprites.splice(this.capturePointSprites.indexOf(sprite), 1);
+            sprite.destroy();
+        }
+    }
+
+    paintTiles(x: number, y: number) {
+        this.applyToTiles(x, y, (px, py) => {
+            const index = this.generateIndex(px, py);
+            if (!this.isFilled(index)) {
+                const sprite = this.add.tileSprite(
+                    px,
+                    py,
+                    EDITION_TILE_SIZE,
+                    EDITION_TILE_SIZE,
+                    RessourceKeys.Ground
+                ).setOrigin(0);
+                this.tiles.set(index, sprite);
+            }
+        });
+    }
+
+    private isFilled(index: string): boolean {
+        return this.tiles.has(index);
+    }
+
+    private generateIndex(x: number, y: number): string {
+        return `${x}_${y}`;
+    }
+
     eraseTiles(x: number, y: number) {
         this.applyToTiles(x, y, (px, py) => {
-            if (this.currentMap.isFilled(px, py)) {
-                this.currentMap.remove(px, py);
-                const index = this.currentMap.getIndex(px, py);
-                const tile = this.tiles[index];
+            const index = this.generateIndex(px, py);
+
+            if (this.isFilled(index)) {
+                const tile = this.tiles.get(index);
                 if (tile) {
                     tile.destroy();
-                    delete this.tiles[index];
+                    this.tiles.delete(index);
                 }
             }
         });
     }
 
     applyToTiles(x: number, y: number, action: (px: number, py: number) => void) {
-        const tileX = Math.floor(x / this.currentMap.minTileSize);
-        const tileY = Math.floor(y / this.currentMap.minTileSize);
+        const tileX = Math.floor(x / EDITION_TILE_SIZE);
+        const tileY = Math.floor(y / EDITION_TILE_SIZE);
 
         for (let dy = 0; dy < this.brushSize; dy++) {
             for (let dx = 0; dx < this.brushSize; dx++) {
-                const px = (tileX + dx) * this.currentMap.minTileSize;
-                const py = (tileY + dy) * this.currentMap.minTileSize;
+                const px = (tileX + dx) * EDITION_TILE_SIZE;
+                const py = (tileY + dy) * EDITION_TILE_SIZE;
 
                 action(px, py);
 
@@ -218,9 +323,10 @@ export default class MapEditionScene extends Phaser.Scene {
     }
 
     updateBrushPreview(pointer: Phaser.Input.Pointer) {
-        const tileSize = this.currentMap.minTileSize;
-        const snappedX = Math.floor(pointer.x / tileSize) * tileSize;
-        const snappedY = Math.floor(pointer.y / tileSize) * tileSize;
+        const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+        const tileSize = EDITION_TILE_SIZE;
+        const snappedX = Math.floor(worldPoint.x / tileSize) * tileSize;
+        const snappedY = Math.floor(worldPoint.y / tileSize) * tileSize;
 
         this.brushPreview
             .setPosition(snappedX, snappedY)
@@ -233,11 +339,14 @@ export default class MapEditionScene extends Phaser.Scene {
         this.playerSprites.forEach(playerSprite => playerSprite.destroy());
         this.playerSprites = [];
 
-        for (let i = 0; i < this.tiles.length; i++) {
-            this.tiles[i]?.destroy();
-            delete this.tiles[i];
+        this.capturePointSprites.forEach(capturePointSprite => capturePointSprite.destroy());
+        this.capturePointSprites = [];
+
+        for (const [key, tile] of this.tiles.entries()) {
+            tile.destroy();
+            this.tiles.delete(key);
         }
-        this.currentMap = PrimitiveMap.createEmptyMap(GAME_WIDTH, GAME_HEIGHT, EDITION_TILE_SIZE);
+        this.currentMap = PrimitiveMap.createEmptyMap();
     }
 
     drawNewMap() {
@@ -245,25 +354,67 @@ export default class MapEditionScene extends Phaser.Scene {
             this.drawPlayer(playerPosition.x, playerPosition.y);
         });
 
-        for (let i = 0; i < this.currentMap.rowSize * this.currentMap.columnSize; i++) {
+        this.currentMap.capturePoints.forEach(capturePoint => {
+            this.drawCapturePoint(capturePoint.x, capturePoint.y);
+        });
+
+        const { rowSize, columnSize } = this.currentMap.getDimensions();
+        const minX = this.currentMap.bounds.x.min;
+        const minY = this.currentMap.bounds.y.min;
+
+        for (let i = 0; i < rowSize * columnSize; i++) {
             if (this.currentMap.grid[i] === 1) {
-                const x = (i % this.currentMap.rowSize) * this.currentMap.minTileSize;
-                const y = Math.floor(i / this.currentMap.rowSize) * this.currentMap.minTileSize;
+                const x = minX + (i % rowSize) * EDITION_TILE_SIZE;
+                const y = minY + Math.floor(i / rowSize) * EDITION_TILE_SIZE;
 
-                const sprite = this.add.tileSprite(
-                    x,
-                    y,
-                    this.currentMap.minTileSize,
-                    this.currentMap.minTileSize,
-                    RessourceKeys.Ground
-                ).setOrigin(0);
-
-                this.tiles[i] = sprite;
+                const sprite = this.add.tileSprite(x, y, EDITION_TILE_SIZE, EDITION_TILE_SIZE, RessourceKeys.Ground).setOrigin(0);
+                this.tiles.set(this.generateIndex(x, y), sprite);
             }
         }
     }
 
+    generateBounds() {
+        const keys = this.tiles.keys();
+
+        let currentIndex = keys.next().value!;
+        let splittedIndex = currentIndex.split("_");
+        let x = parseInt(splittedIndex[0]);
+        let y = parseInt(splittedIndex[1]);
+
+        const bounds = {
+            x: { min: x, max: x },
+            y: { min: y, max: y }
+        }
+
+        for (const key of keys) {
+            currentIndex = key;
+            splittedIndex = currentIndex.split("_");
+            x = parseInt(splittedIndex[0]);
+            y = parseInt(splittedIndex[1]);
+
+            if (x < bounds.x.min) {
+                bounds.x.min = x;
+            }
+            if (x > bounds.x.max) {
+                bounds.x.max = x;
+            }
+            if (y > bounds.y.max) {
+                bounds.y.max = y;
+            }
+            if (y < bounds.y.min) {
+                bounds.y.min = y;
+            }
+        }
+
+        return bounds;
+    }
+
     saveMap() {
+        const bounds = this.generateBounds();
+        this.currentMap.setBounds(bounds);
+
+        this.currentMap.generateGrid(this.tiles.keys());
+
         const json = this.currentMap.serialize();
         const blob = new Blob([json], { type: "application/json" });
         const url = URL.createObjectURL(blob);
@@ -288,10 +439,17 @@ export default class MapEditionScene extends Phaser.Scene {
             const jsonData = JSON.parse(text);
 
             const primitiveData = jsonData.primitive;
-            const playerPositions = jsonData.playerPositions;
+            const bounds = jsonData.bounds;
+            const playerPositions = jsonData.playerPositions ?? [];
+            const capturePoints = jsonData.capturePoints ?? [];
 
             this.clear();
-            this.currentMap = new PrimitiveMap(primitiveData.grid, primitiveData.rowSize, primitiveData.columnSize, primitiveData.minTileSize, playerPositions);
+            this.currentMap = new PrimitiveMap(
+                primitiveData.grid,
+                bounds,
+                playerPositions,
+                capturePoints
+            );
             this.drawNewMap();
         });
 

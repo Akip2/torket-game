@@ -2,6 +2,7 @@ import type Phase from "./data/phases/Phase";
 import type PrimitiveMap from "./data/PrimitiveMap";
 import type { Depths } from "./enums/Depths.enum";
 import type { RequestTypes } from "./enums/RequestTypes.enum";
+import { Team } from "./enums/Team.enum.ts";
 
 export type InputPayload = {
     up: boolean,
@@ -24,6 +25,11 @@ export type ShootInfo = {
     targetY: number
 }
 
+export type CaptureInfo = {
+    id: number;
+    newOwningTeam: Team;
+}
+
 export type ExplosionInfo = {
     explosionSize: number;
     explosionPushCoef: number;
@@ -38,9 +44,24 @@ export type PendingExplosion = {
     damage?: number;
 }
 
+export type CapturePoint = {
+    x: number;
+    y: number;
+
+    owningTeam: Team | null;
+}
+
 export type FullSynchroInfo = {
     terrain: QuadBlockType,
+    capturePoints: CapturePoint[],
     phase: Phase
+}
+
+export type FirstSynchroInfo = {
+    terrain: QuadBlockType,
+    capturePoints: CapturePoint[],
+    phase: Phase,
+    bounds: Bounds
 }
 
 export type QuadBlockType = {
@@ -89,8 +110,10 @@ export type UIButtonStyle = {
 };
 
 export type GameMap = {
+    capturePoints: Position[],
     playerPositions: Position[],
-    quadTree: QuadBlockType
+    quadTree: QuadBlockType,
+    bounds: Bounds
 }
 
 export type PlayerStartingPosition = {
@@ -176,4 +199,26 @@ export type ParameterChangeCoef = -3 | -2 | -1 | 1 | 2 | 3;
 export type PowerUpdateData = {
     id?: string;
     powerName: string;
+}
+
+export type Bounds = {
+    x: { min: number, max: number },
+    y: { min: number, max: number }
+}
+
+export type CameraManagerOptions = {
+    initialZoom?: number;
+    zoomSensitivity?: number;
+    zoomFollowStrength?: number;
+    uiCamera?: Phaser.Cameras.Scene2D.Camera;
+    worldBounds?: {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+    };
+    initialCenter?: {
+        x: number;
+        y: number;
+    };
 }

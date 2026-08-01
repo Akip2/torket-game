@@ -3,6 +3,7 @@ import { EXPLOSION_CONST, PLAYER_CONST } from "../const";
 import Vector from "../data/Vector";
 import type { IPlayer } from "../interfaces/Player.interface";
 import type { InputPayload, PendingExplosion } from "../types";
+import { wait } from "../utils";
 
 export function movePlayerFromInputs(player: IPlayer, inputPayload: InputPayload, instantly: boolean = false) {
     if (!canPlayerMove(player)) return;
@@ -20,15 +21,30 @@ export function movePlayerFromInputs(player: IPlayer, inputPayload: InputPayload
         immobilizePlayer(player);
     }
 
-    if (inputPayload.up && canPlayerJump(player) && !instantly) {
-        player.isOnGround = false;
-        player.setVelocityY(PLAYER_CONST.JUMP);
-        player.decreaseMovementLeft(20);
+    if (inputPayload.up) {
+        if (canPlayerJump(player) && !instantly) {
+            player.isOnGround = false;
+            player.decreaseMovementLeft(player.getJumpCost());
+            player.increaseJumpCost();
+            player.setVelocityY(PLAYER_CONST.JUMP);
+        }
+
+        player.setJumpKeyPressed(true);
+    } else {
+        player.setJumpKeyPressed(false);
     }
 }
 
-export function immobilizePlayer(player: IPlayer) {
+export async function immobilizePlayer(player: IPlayer) {
     player.isMoving = false;
+
+    if (!player.hasMovementLeft() && !player.isOnGround) {
+        const velX = player.getVelocity().x
+        while (!player.isOnGround) {
+            player.setVelocityX(velX);
+            await wait(100);
+        }
+    }
     player.setVelocityX(0);
 }
 
@@ -37,17 +53,37 @@ export function canPlayerMove(player: IPlayer) {
     return player.hasMovementLeft() && (playerState === PlayerState.Moving || playerState === PlayerState.Free);
 }
 
+export function canPlayerReload(player: IPlayer) {
+    return !player.hasMaxBulletCount();
+}
+
 export function canPlayerShoot(player: IPlayer) {
     const playerState = player.getState();
-    return playerState === PlayerState.Shooting || playerState === PlayerState.Free;
+    return (playerState === PlayerState.Shooting || playerState === PlayerState.Free) && player.hasBullets();
 }
 
 export function canPlayerJump(player: IPlayer) {
-    return Math.abs(player.getVelocity().y) < 0.1 && player.isOnGround;
+    return !player.isJumpKeyPressed();//Math.abs(player.getVelocity().y) < 0.1 && player.isOnGround;
 }
 
 export function isPlayerInRadius(player: IPlayer, cx: number, cy: number, radius: number) {
     return getPlayerDistanceFromPoint(player, cx, cy) <= radius * 0.9;
+}
+
+export function calculateExplosionDamage(baseDamage: number, directHit: boolean, distanceToExplosion?: number, explosionRadius?: number) {
+    if (directHit) {
+        return Math.max(0, Math.round(baseDamage * 1.5));
+    }
+
+    if (typeof distanceToExplosion !== "number" || typeof explosionRadius !== "number" || explosionRadius <= 0) {
+        return Math.max(0, Math.round(baseDamage));
+    }
+
+    const clampedDistance = Math.min(Math.max(distanceToExplosion, 0), explosionRadius);
+    const normalizedDistance = clampedDistance / explosionRadius;
+    const damageRatio = Math.max(0, 1 - Math.pow(normalizedDistance, 2.2));
+
+    return Math.max(0, Math.round(baseDamage * damageRatio));
 }
 
 export function playerReactToExplosion(player: IPlayer, pendingExplosion: PendingExplosion) {

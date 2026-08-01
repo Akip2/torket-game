@@ -2,7 +2,7 @@ import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import type { IPlayer } from "@shared/interfaces/Player.interface";
 import type GameScene from "../scenes/GameScene";
 import Gun from "./Gun";
-import { CLIENT_PREDICTION, PLAYER_CONST } from "@shared/const";
+import { CLIENT_PREDICTION, FREE_ROAM, PLAYER_CONST } from "@shared/const";
 import { BarStyle, TextStyle } from "../ui/ui-styles";
 import type { Position } from "@shared/types";
 import { Depths } from "@shared/enums/Depths.enum.ts";
@@ -13,6 +13,9 @@ import HealthBar from "../ui/bars/HealthBar";
 import Bar from "../ui/bars/Bar";
 import PowerManager from "@shared/data/power/PowerManager";
 import { Parameter } from "@shared/enums/Parameter.enum";
+import PlayerFace from "../ui/PlayerFace";
+import { FaceExpression } from "@shared/enums/FaceExpression.enum";
+import BulletReserve from "../ui/BulletReserve";
 
 export default class PlayerClient extends Phaser.Physics.Matter.Sprite implements IPlayer {
     state: PlayerState = PlayerState.Inactive;
@@ -26,11 +29,19 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
 
     gun: Gun;
     healthBar: HealthBar;
+    bulletReserve: BulletReserve;
     movementBar: Bar;
     nameTag: NameTag;
+    face: PlayerFace;
 
     maxMovement: number;
     movementLeft: number;
+
+    jumpCostCoef: number;
+    jumpKeyPressed: boolean;
+
+    maxBulletCount: number;
+    bulletCount: number;
 
     powerManager: PowerManager;
 
@@ -39,9 +50,9 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     constructor(scene: GameScene, name: string, x: number, y: number, self: boolean = true) {
         super(scene.matter.world, x, y, self ? RessourceKeys.Player : RessourceKeys.PlayerEnnemy);
 
-        scene.add.existing(this);
+        scene.worldContainer.add(this);
         (this.body as MatterJS.BodyType).label = RessourceKeys.Player;
-        this.setDepth(Depths.Third)
+        this.setDepth(Depths.PlayerUi)
         this.setFixedRotation();
 
         if (CLIENT_PREDICTION) {
@@ -49,7 +60,6 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         } else { // disable physics
             this.setIgnoreGravity(true);
             this.setStatic(true);
-            this.setFixedRotation();
             this.setFriction(0, 0, 0);
             (this.body as MatterJS.BodyType).isSensor = true;
         }
@@ -63,6 +73,12 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.maxHp = PLAYER_CONST.BASE_MAX_HP;
         this.hp = this.maxHp;
 
+        this.jumpCostCoef = 1;
+        this.jumpKeyPressed = false;
+
+        this.maxBulletCount = PLAYER_CONST.BASE_MAX_BULLET_COUNT;
+        this.bulletCount = 0;
+
         this.maxMovement = PLAYER_CONST.BASE_MAX_MOVEMENT;
         this.movementLeft = this.maxMovement;
 
@@ -72,6 +88,8 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.movementBar = new Bar(scene, this.x, this.y, 1, BarStyle.Movement);
         this.movementBar.hide();
         this.nameTag = new NameTag(scene, name, x, y, TextStyle.NameTag);
+        this.face = new PlayerFace(scene, x, y, TextStyle.PlayerFace);
+        this.bulletReserve = new BulletReserve(scene, x, y);
 
         this.generateDeathParticles = (x: number, y: number) => {
             const emmiter = scene.add.particles(x, y, RessourceKeys.DeathParticle, {
@@ -83,10 +101,53 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
                 gravityY: 50,
                 blendMode: 'ADD',
                 emitting: false
-            }).setDepth(Depths.First);
+            }).setDepth(Depths.Player);
 
             emmiter.explode(50);
         }
+    }
+    
+    setBulletCount(bulletCount: number) {
+        if ((bulletCount === this.bulletCount) || (bulletCount > this.maxBulletCount) || (bulletCount < 0)) return;
+
+        this.bulletCount = bulletCount;
+        this.bulletReserve.updateBulletCount(bulletCount);
+    }
+
+    hasBullets(): boolean {
+        return this.bulletCount > 0;
+    }
+
+    hasMaxBulletCount(): boolean {
+        return this.bulletCount === this.maxBulletCount;
+    }
+
+    decreaseBulletCount(): void {
+        this.setBulletCount(this.bulletCount - 1);
+    }
+
+    reload(): void {
+        this.setBulletCount(this.bulletCount + 1);
+    }
+
+    setJumpKeyPressed(pressed: boolean): void {
+        this.jumpKeyPressed = pressed;
+    }
+
+    isJumpKeyPressed(): boolean {
+        return this.jumpKeyPressed;
+    }
+
+    increaseJumpCost() {
+        this.jumpCostCoef += 1;
+    }
+
+    resetJumpCost(): void {
+        this.jumpCostCoef = 1;
+    }
+
+    getJumpCost(): number {
+        return PLAYER_CONST.BASE_JUMP_COST * this.jumpCostCoef;
     }
 
     addForceX(x: number): void {
@@ -139,7 +200,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     }
 
     updateGunPlacement(targetPosition: Position) {
-        if (this.state !== PlayerState.Shooting) {
+        if (!this.isAlive || (this.state !== PlayerState.Shooting && !FREE_ROAM)) {
             this.gun.setVisible(false);
             return;
         }
@@ -147,22 +208,15 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.gun.setVisible(true);
         const dx = targetPosition.x - this.x;
         const dy = targetPosition.y - this.y;
-        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-
-        if (Math.abs(angle) > 90) {
-            this.gun.setScale(Math.abs(this.gun.scaleX), -Math.abs(this.gun.scaleY));
-        } else {
-            this.gun.setScale(Math.abs(this.gun.scaleX), Math.abs(this.gun.scaleY));
-        }
-
-        this.gun.setPosition(this.x, this.y);
-        this.gun.setAngle(angle);
+        this.gun.updateDisplay(this.x, this.y, dx, dy);
     }
 
     updateUI() {
         this.healthBar.updateGraphics(this.x, this.y, this.hp / this.maxHp);
         this.movementBar.updateGraphics(this.x, this.y, this.movementLeft / this.maxMovement);
         this.nameTag.updatePlacement(this.x, this.y);
+        this.face.updatePlacement(this.x, this.y);
+        this.bulletReserve.updatePlacement(this.x, this.y);
     }
 
     setDead() {
@@ -239,23 +293,37 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.healthBar.destroy(fromScene);
         this.movementBar.destroy(fromScene);
         this.nameTag.destroy(fromScene);
+        this.face.destroy(fromScene);
+        this.bulletReserve.destroy(fromScene);
     }
 
     setPlayerState(state: PlayerState) {
         this.state = state;
 
-        if (state === PlayerState.Shooting) SoundManager.play(RessourceKeys.Reloading);
+        if (state === PlayerState.Shooting) SoundManager.play(RessourceKeys.DrawingGun);
     }
 
     hasMovementLeft(): boolean {
         return this.movementLeft > 0;
     }
 
+    stopHorizontalMovement(): void {
+        this.setVelocityX(0);
+    }
+
     decreaseMovementLeft(amount: number): void {
-        this.movementLeft -= amount;
+        this.movementLeft = Math.max(0, this.movementLeft - amount);
+
+        if (!this.hasMovementLeft() && this.isOnGround) {
+            this.stopHorizontalMovement();
+        }
     }
 
     fillMovementLeft() {
         this.movementLeft = this.maxMovement;
+    }
+
+    damageCallback() {
+        this.face.changeFace(FaceExpression.Unpleased, 500);
     }
 }

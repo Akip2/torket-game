@@ -1,8 +1,6 @@
 import { GRAVITY } from "@shared/const";
-import { Border } from "@shared/enums/Border.enum";
 import { Body, Engine, World } from "matter-js";
 import GameBody from "../bodies/GameBody";
-import SimulationBorderServer from "../bodies/SimulationBorderServer";
 
 export default class PhysicsManager {
     engine: Engine;
@@ -11,15 +9,6 @@ export default class PhysicsManager {
         this.engine = Engine.create({
             gravity: { x: 0, y: GRAVITY }
         });
-
-        this.generateBorders();
-    }
-
-    private generateBorders() {
-        this.add(new SimulationBorderServer(Border.Top));
-        this.add(new SimulationBorderServer(Border.Bottom));
-        this.add(new SimulationBorderServer(Border.Right));
-        this.add(new SimulationBorderServer(Border.Left));
     }
 
     update(deltaTime: number) {

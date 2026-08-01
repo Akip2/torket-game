@@ -1,12 +1,15 @@
-import { MapSchema, Schema, type } from "@colyseus/schema";
+import { ArraySchema, MapSchema, Schema, type } from "@colyseus/schema";
 import { FREE_ROAM, PLAYER_CONST } from "@shared/const";
+import { CaptureStatus } from "@shared/enums/CaptureStatus.enum";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
+import { Team } from "@shared/enums/Team.enum.ts";
 import { InputPayload } from "@shared/types";
 
 export class Player extends Schema {
   inputQueue: InputPayload[] = [];
 
   @type("string") pseudo: string = "Player";
+  @type("string") team: Team = Team.Blue;
 
   @type("number") x: number = 0;
   @type("number") y: number = 0;
@@ -16,6 +19,8 @@ export class Player extends Schema {
 
   @type("boolean") isAlive: boolean = true;
   @type("number") hp: number = PLAYER_CONST.BASE_MAX_HP;
+
+  @type("number") bulletCount: number = 0;
 
   @type("number") movementLeft: number = PLAYER_CONST.BASE_MAX_MOVEMENT;
   

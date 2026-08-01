@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { GAME_HEIGHT, GAME_WIDTH, GRAVITY } from "@shared/const";
+import { GRAVITY, HUD_HEIGHT } from "@shared/const";
 import GameScene from "./scenes/GameScene";
 import MapEditionScene from "./scenes/MapEditionScene";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
@@ -9,15 +9,17 @@ const startSceneName = import.meta.env.VITE_START_SCENE;
 
 const config = {
     type: Phaser.AUTO,
-    width: GAME_WIDTH,
-    height: GAME_HEIGHT,
+    width: window.innerWidth,
+    height: window.innerHeight - HUD_HEIGHT,
     parent: 'game-container',
     backgroundColor: 'rgb(0,14,27)',
     resolution: window.devicePixelRatio,
 
     scale: {
-        mode: Phaser.Scale.FIT,
+        mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: window.innerWidth,
+        height: window.innerHeight - HUD_HEIGHT,
         resolution: window.devicePixelRatio,
     },
 
@@ -31,7 +33,7 @@ const config = {
 
     render: {
         antialias: true,
-        roundPixels: false,
+        roundPixels: true,
         pixelArt: false
     },
 };

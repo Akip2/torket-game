@@ -7,11 +7,17 @@ import UiButton from "../buttons/UiButton";
 import { ButtonStyle } from "../ui-styles";
 import { ServerError } from "colyseus.js";
 import RoomManager from "../../managers/RoomManager";
+import type { WinCondition } from "@shared/enums/WinCondition.enum";
 
 export type GameEndScreenConfig = {
     isWin: boolean;
-    winnerName?: string;
+    winnerNames?: string[];
+    winCondition: WinCondition;
 };
+
+function convertToSecondPerso(winCondition: WinCondition) {
+    return winCondition.replaceAll("their", "your");
+}
 
 export default class GameEndScreen extends Phaser.GameObjects.Container {
     background: Phaser.GameObjects.Rectangle;
@@ -25,11 +31,15 @@ export default class GameEndScreen extends Phaser.GameObjects.Container {
         this.setDepth(Depths.First + 1);
         this.setScrollFactor(0);
 
+        const viewportCenter = scene.cameraManager.getUiViewportCenter();
+        const viewportWidth = scene.cameraManager.getUiViewportWidth();
+        const viewportHeight = scene.cameraManager.getUiViewportHeight();
+
         this.background = scene.add.rectangle(
-            scene.cameras.main.centerX,
-            scene.cameras.main.centerY,
-            scene.cameras.main.width,
-            scene.cameras.main.height,
+            viewportCenter.x,
+            viewportCenter.y,
+            viewportWidth,
+            viewportHeight,
             0x000000,
             0.825
         );
@@ -38,8 +48,8 @@ export default class GameEndScreen extends Phaser.GameObjects.Container {
 
         // Message principal (vide au départ)
         this.messageText = scene.add.text(
-            scene.cameras.main.centerX,
-            scene.cameras.main.centerY - 60,
+            viewportCenter.x,
+            viewportCenter.y - 60,
             "",
             {
                 fontSize: "64px",
@@ -53,8 +63,8 @@ export default class GameEndScreen extends Phaser.GameObjects.Container {
 
         // Détail (vide)
         this.detailText = scene.add.text(
-            scene.cameras.main.centerX,
-            scene.cameras.main.centerY + 40,
+            viewportCenter.x,
+            viewportCenter.y + 40,
             "",
             {
                 fontSize: "24px",
@@ -68,20 +78,22 @@ export default class GameEndScreen extends Phaser.GameObjects.Container {
         // Boutons (inchangés)
         const backButton = new UiButton(
             scene,
-            scene.cameras.main.centerX - 120,
-            scene.cameras.main.centerY + 130,
+            viewportCenter.x - 120,
+            viewportCenter.y + 130,
             "BACK TO MENU",
             () => {
+                scene.scene.stop(SceneNames.Game);
                 scene.scene.start(SceneNames.TitleScreen);
             },
             ButtonStyle.GameEndButton
         );
+        
         this.add(backButton);
 
         const playAgainButton = new UiButton(
             scene,
-            scene.cameras.main.centerX + 120,
-            scene.cameras.main.centerY + 130,
+            viewportCenter.x + 120,
+            viewportCenter.y + 130,
             "PLAY AGAIN",
             () => {
                 this.playAgain(scene);
@@ -100,9 +112,11 @@ export default class GameEndScreen extends Phaser.GameObjects.Container {
         this.messageText.setText(messageText);
         this.messageText.setColor(messageColor);
 
+        const winners = config.winnerNames?.join(" and ");
+
         const detailTextContent = config.isWin
-            ? `Congratulations ${config.winnerName}!`
-            : `${config.winnerName} won the game...`;
+            ? `Congratulations ${winners}! You ${convertToSecondPerso(config.winCondition)}`
+            : `${winners} ${config.winCondition}`;
 
         this.detailText.setText(detailTextContent);
     }
@@ -113,6 +127,7 @@ export default class GameEndScreen extends Phaser.GameObjects.Container {
             const messageBuffer = await RoomManager.quickPlay(scene.playerData.name);
 
             // Start a new game
+            scene.scene.stop(SceneNames.Game);
             scene.scene.start(SceneNames.Game, {
                 playerData: { name: scene.playerData.name },
                 messageBuffer

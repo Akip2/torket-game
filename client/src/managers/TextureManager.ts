@@ -1,4 +1,4 @@
-import { BULLET_CONST, PLAYER_CONST } from "@shared/const";
+import { BULLET_CONST, BULLET_RESERVE_CONST, CAPTURE_POINT_CONST, PLAYER_CONST } from "@shared/const";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { darkenHexColor } from "../client-utils";
 
@@ -14,22 +14,43 @@ export default class TextureManager {
         this.generatePlayerTexture(false);
         this.generateBulletTexture();
         this.generateGunTexture();
+        this.generateCapturePointTexture();
+        this.generateAmmoTexture();
     }
 
-    generatePlayerTexture(self: boolean = true, size = 32) {
+    generatePlayerTexture(self: boolean = true, size = PLAYER_CONST.BASE_WIDTH) {
         const g = this.factory.graphics();
 
-        const baseColor = self ? PLAYER_CONST.SELF_COLOR : PLAYER_CONST.ENNEMY_COLOR;
+        const baseColor = self
+            ? PLAYER_CONST.SELF_COLOR
+            : PLAYER_CONST.ENNEMY_COLOR;
+
         const borderColor = darkenHexColor(baseColor, 25);
-        const key = self ? RessourceKeys.Player : RessourceKeys.PlayerEnnemy; 
 
+        const radius = 7.5;
+        const borderWidth = size / 12;
+
+        // fill
         g.fillStyle(baseColor, 1);
-        g.fillRect(0, 0, size, size);
+        g.fillRoundedRect(
+            borderWidth / 2,
+            borderWidth / 2,
+            size - borderWidth,
+            size - borderWidth,
+            radius
+        );
 
-        g.lineStyle(size / 4, borderColor, 1);
-        g.strokeRect(0, 0, size, size);
+        // border
+        g.lineStyle(borderWidth, borderColor, 1);
+        g.strokeRoundedRect(
+            borderWidth / 2,
+            borderWidth / 2,
+            size - borderWidth,
+            size - borderWidth,
+            radius
+        );
 
-        g.generateTexture(key, size, size);
+        g.generateTexture(self ? RessourceKeys.Player : RessourceKeys.PlayerEnnemy, size, size);
         g.destroy();
     }
 
@@ -43,15 +64,41 @@ export default class TextureManager {
         g.destroy();
     }
 
+    generateCapturePointTexture(radius = CAPTURE_POINT_CONST.RADIUS) {
+        const g = this.factory.graphics();
+        const size = radius * 2;
+        const cx = radius;
+        const cy = radius;
+
+        g.fillStyle(0x555555, 1);
+        g.fillCircle(cx, cy, radius);
+
+        // Outer ring
+        g.lineStyle(3, 0xFFFFFF, 0.9);
+        g.strokeCircle(cx, cy, radius - 2);
+
+        // Center dot
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillCircle(cx, cy, 4);
+
+        // Cross lines
+        g.lineStyle(3, 0xFFFFFF, 0.6);
+        g.lineBetween(cx - radius + 4, cy, cx + radius - 4, cy);
+        g.lineBetween(cx, cy - radius + 4, cx, cy + radius - 4);
+
+        g.generateTexture(RessourceKeys.CapturePoint, size, size);
+        g.destroy();
+    }
+
     generateGunTexture(size = 35) {
         const g = this.factory.graphics();
 
         const tubeLength = size * 1.1;
         const tubeHeight = size * 0.25;
         const barrelY = size * 0.4;
-        const muzzleLength = size * 0.15;
-        const gripWidth = size * 0.15;
-        const gripHeight = size * 0.18;
+        const muzzleLength = size * 0.125;
+        const gripWidth = size * 0.2;
+        const gripHeight = size * 0.25;
 
         const lightBody = 0x5d6d7e;
         const muzzleColor = 0x34495e;
@@ -82,5 +129,25 @@ export default class TextureManager {
         const totalWidth = tubeLength + muzzleLength + size * 0.2;
         g.generateTexture(RessourceKeys.Gun, totalWidth, size);
         g.destroy();
+    }
+
+    generateAmmoTexture(radius = BULLET_RESERVE_CONST.RADIUS) {
+        const gFull = this.factory.graphics();
+
+        // Full
+        gFull.fillStyle(BULLET_RESERVE_CONST.COLOR.FULL, 1);
+        gFull.fillCircle(radius, radius, radius);
+        gFull.lineStyle(1.5, darkenHexColor(BULLET_RESERVE_CONST.COLOR.FULL, 30), 1);
+        gFull.strokeCircle(radius, radius, radius);
+
+        gFull.generateTexture(RessourceKeys.AmmoFull, radius * 2, radius * 2);
+        gFull.destroy();
+
+        // Empty
+        const gEmpty = this.factory.graphics();
+        gEmpty.lineStyle(1.5, BULLET_RESERVE_CONST.COLOR.EMPTY, 1);
+        gEmpty.strokeCircle(radius, radius, radius - 1);
+        gEmpty.generateTexture(RessourceKeys.AmmoEmpty, radius * 2, radius * 2);
+        gEmpty.destroy();
     }
 }

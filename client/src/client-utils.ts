@@ -107,3 +107,47 @@ export function mountWithTransition(root: HTMLElement, html: string) {
 
     requestAnimationFrame(() => popup.classList.add("popup--visible"));
 }
+
+export async function loadFont(name: string, url: string): Promise<void> {
+    const newFont = new FontFace(name, `url(${url})`);
+
+    try {
+        const loaded = await newFont.load();
+        document.fonts.add(loaded);
+    } catch (error) {
+        throw error;
+    }
+}
+
+export function displayHud() {
+    const hud = document.getElementById("hud-top");
+    const gameCanvas = document.getElementById("game-container");
+
+    if (!hud || !gameCanvas) return;
+    hud.style.display = "flex";
+    gameCanvas.style.top = "var(--hud-height)";
+    gameCanvas.style.height = "calc(100% - var(--hud-height))";
+}
+
+export function removeHud() {
+    const hud = document.getElementById("hud-top");
+    const gameCanvas = document.getElementById("game-container");
+
+    if (!hud || !gameCanvas) return;
+    hud.style.display = "none";
+    gameCanvas.style.top = "0";
+    gameCanvas.style.height = "100%";
+}
+
+export function showEndTurnButton(enabled: boolean) {
+    const btn = document.getElementById("end-turn-btn") as HTMLButtonElement;
+    if (!btn) return;
+    btn.style.display = "block";
+    btn.disabled = !enabled;
+}
+
+export function hideEndTurnButton() {
+    const btn = document.getElementById("end-turn-btn") as HTMLButtonElement;
+    if (!btn) return;
+    btn.style.display = "none";
+}

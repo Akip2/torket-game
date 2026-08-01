@@ -8,22 +8,26 @@ import { Position } from "@shared/types";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
 import PowerManager from "@shared/data/power/PowerManager";
 import { Parameter } from "@shared/enums/Parameter.enum";
+import { calculateExplosionDamage } from "@shared/logics/player-logic";
 
 export default class PlayerServer extends GameBody implements IPlayer {
     isMoving: boolean = false;
     isOnGround: boolean = false;
     playerRef: Player;
     sessionId: string;
-    onDamage: (hp: number) => void;
+    onDamage: (hp: number, damage?: number, directHit?: boolean) => void;
     lastProcessedTimeStamp: number = 0;
     powerManager: PowerManager;
 
     maxHp: number;
     maxMovement: number;
 
+    jumpCostCoef: number = 1;
+    jumpKeyPressed: boolean;
+
     currentScale: number;
 
-    constructor(playerRef: Player, sessionId: string, onDamage: (hp: number) => void, size: number = PLAYER_CONST.BASE_WIDTH) {
+    constructor(playerRef: Player, sessionId: string, onDamage: (hp: number, damage?: number, directHit?: boolean) => void, size: number = PLAYER_CONST.BASE_WIDTH) {
         const body = Bodies.rectangle(playerRef.x, playerRef.y, size, size, {
             friction: 0,
             frictionAir: 0.05,
@@ -40,23 +44,73 @@ export default class PlayerServer extends GameBody implements IPlayer {
         this.onDamage = onDamage;
         this.sessionId = sessionId;
         this.powerManager = new PowerManager();
+        this.jumpKeyPressed = false;
 
         this.maxHp = PLAYER_CONST.BASE_MAX_HP;
         this.maxMovement = PLAYER_CONST.BASE_MAX_MOVEMENT;
 
         this.currentScale = 1;
     }
+    hasBullets(): boolean {
+        return this.playerRef.bulletCount > 0;
+    }
+
+    hasMaxBulletCount(): boolean {
+        return this.playerRef.bulletCount === PLAYER_CONST.BASE_MAX_BULLET_COUNT;
+    }
+    decreaseBulletCount(): void {
+        this.playerRef.bulletCount -= 1;
+
+        if (!this.hasBullets() && this.getState() === PlayerState.Shooting) {
+            this.setState(PlayerState.Inactive);
+        }
+    }
+
+    setBulletCount(bulletCount: number) {
+        this.playerRef.bulletCount = bulletCount;
+    }
+
+    reload(): void {
+        if(this.playerRef.bulletCount < PLAYER_CONST.BASE_MAX_BULLET_COUNT) this.playerRef.bulletCount++;
+    }
+
+    getPseudo() {
+        return this.playerRef.pseudo;
+    }
+
+    isJumpKeyPressed(): boolean {
+        return this.jumpKeyPressed;
+    }
+    setJumpKeyPressed(pressed: boolean): void {
+        this.jumpKeyPressed = pressed;
+    }
+    resetJumpCost(): void {
+        this.jumpCostCoef = 1;
+    }
+    increaseJumpCost(): void {
+        this.jumpCostCoef += 1;
+    }
+    getJumpCost(): number {
+        return PLAYER_CONST.BASE_JUMP_COST * this.jumpCostCoef;
+    }
 
     hasMovementLeft(): boolean {
         return this.playerRef.movementLeft > 0;
     }
 
+    stopHorizontalMovement(): void {
+        this.setVelocityX(0);
+    }
+
     decreaseMovementLeft(amount: number): void {
-        this.playerRef.movementLeft -= amount;
+        this.playerRef.movementLeft = Math.max(0, this.playerRef.movementLeft - amount);
 
         if (!this.hasMovementLeft()) {
-            //this.setVelocityX(0);
             this.isMoving = false;
+
+            if (this.isOnGround) {
+                this.stopHorizontalMovement();
+            }
         }
     }
 
@@ -81,8 +135,8 @@ export default class PlayerServer extends GameBody implements IPlayer {
         Body.setMass(this.body, 1);
     }
 
-    applyDamage(damage: number, directHit: boolean) {
-        const actualDamage = Math.round(damage * (directHit ? 1.5 : 1) + (Math.random() * 5));
+    applyDamage(damage: number, directHit: boolean, distanceToExplosion?: number, explosionRadius?: number) {
+        const actualDamage = calculateExplosionDamage(damage, directHit, distanceToExplosion, explosionRadius);
 
         this.playerRef.hp -= actualDamage;
 
@@ -90,12 +144,16 @@ export default class PlayerServer extends GameBody implements IPlayer {
             this.die();
         }
 
-        this.onDamage(this.playerRef.hp);
+        this.onDamage(this.playerRef.hp, actualDamage, directHit);
     }
 
     instantDeath() {
         this.die();
         this.onDamage(this.playerRef.hp);
+    }
+
+    getTeam() {
+        return this.playerRef.team;
     }
 
     getState() {

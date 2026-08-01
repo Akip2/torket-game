@@ -1,4 +1,4 @@
-import { DEBUG, EXPLOSION_CONST, GAME_HEIGHT, GAME_WIDTH, GROUND_TYPE, TEXTURE_SIZE, TILE_SIZE, TIME_STEP } from "@shared/const";
+import { AUDIO_RESSOURCE_KEYS, DEBUG, EXPLOSION_CONST, GROUND_TYPE, TEXTURE_SIZE, TILE_SIZE, TIME_STEP } from "@shared/const";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import BulletClient from "../game-objects/BulletClient";
 import PlayerClient from "../game-objects/PlayerClient";
@@ -10,25 +10,26 @@ import ShotManager from "../managers/ShotManager";
 import PlayerManagerClient from "../managers/PlayerManagerClient";
 import EffectsManager from "../managers/EffectsManager";
 import { SceneNames } from "@shared/enums/SceneNames.enum";
-import type { ExplosionInfo, FullSynchroInfo, InitData, PlayerData, Position, PowerUpdateData, ShootInfo } from "@shared/types";
+import type { CaptureInfo, ExplosionInfo, FirstSynchroInfo, FullSynchroInfo, InitData, PlayerData, Position, PowerUpdateData, ShootInfo } from "@shared/types";
 import { Depths } from "@shared/enums/Depths.enum.ts";
 import PhaseManagerClient from "../managers/PhaseManagerClient";
-import PhaseDisplayer from "../ui/PhaseDisplayer";
-import { TextStyle } from "../ui/ui-styles";
 import UiText from "../ui/UiText";
 import { canPlayerShoot } from "@shared/logics/player-logic";
 import ActionChoicePanel from "../ui/containers/ActionChoicePanel";
 import UiButton from "../ui/buttons/UiButton";
 import type Phase from "@shared/data/phases/Phase";
-import ActionPhase from "@shared/data/phases/ActionPhase";
-import SimulationBorderClient from "../game-objects/SimulationBorderClient";
-import { Border } from "@shared/enums/Border.enum";
-import { getExplosionSpriteScale, getServerUrl, showToast } from "../client-utils";
+import { displayHud, getExplosionSpriteScale, getServerUrl, hideEndTurnButton, loadFont, showEndTurnButton, showToast } from "../client-utils";
 import GameEndScreen from "../ui/containers/GameEndScreen";
 import SoundManager from "../managers/SoundManager";
 import { setCookie } from "typescript-cookie";
 import RoomManager from "../managers/RoomManager";
-import EndTurnButton from "../ui/buttons/EndTurnButton";
+import CapturePointClient from "../game-objects/CapturePointClient";
+import CapturePointManagerClient from "../managers/CapturePointManagerClient";
+import CameraManager from "../managers/CameraManager";
+import type QuadBlock from "@shared/data/QuadBlock";
+import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
+import type ReloadPhase from "@shared/data/phases/ReloadPhase";
+import ActionPhase from "@shared/data/phases/ActionPhase";
 
 export default class GameScene extends Phaser.Scene {
     active: boolean = true;
@@ -49,6 +50,8 @@ export default class GameScene extends Phaser.Scene {
     shotManager!: ShotManager;
     phaseManager!: PhaseManagerClient;
     effectsManager!: EffectsManager;
+    capturePointManager!: CapturePointManagerClient;
+    cameraManager!: CameraManager;
 
     worldContainer!: Phaser.GameObjects.Container;
     uiContainer!: Phaser.GameObjects.Container;
@@ -58,9 +61,7 @@ export default class GameScene extends Phaser.Scene {
     playerData!: PlayerData; // data related to the current player, sent to the server on connection
 
     //UI
-    phaseDisplayer!: PhaseDisplayer;
     actionChoicePanel!: ActionChoicePanel;
-    endTurnButton!: EndTurnButton;
     gameEndScreen!: GameEndScreen;
 
     constructor() {
@@ -97,13 +98,14 @@ export default class GameScene extends Phaser.Scene {
         this.load.image(RessourceKeys.ExplosionParticle, 'assets/particles/explosion-particle.png');
         this.load.image(RessourceKeys.DeathParticle, 'assets/particles/death-particle.png');
 
-        this.load.audio(RessourceKeys.Explosion, 'assets/sounds/explosion.wav');
-        this.load.audio(RessourceKeys.Death, 'assets/sounds/death.wav');
-        this.load.audio(RessourceKeys.Reloading, 'assets/sounds/reloading.wav');
-        this.load.audio(RessourceKeys.Shot, 'assets/sounds/shot.wav');
+        AUDIO_RESSOURCE_KEYS.forEach(audioKey => {
+            this.load.audio(audioKey, `assets/sounds/${audioKey as string}.wav`);
+        });
     }
 
     async create() {
+        await loadFont("JetBrainsMono", "assets/fonts/JetBrainsMono-Medium.ttf");
+
         SoundManager.init(this);
 
         this.worldContainer = this.add.container();
@@ -113,12 +115,11 @@ export default class GameScene extends Phaser.Scene {
         new TextureManager(this.add).generateTextures();
 
         this.terrainManager = new TerrainManagerClient(this);
-        this.terrainManager.drawTerrain();
-        this.terrainManager.createTerrainColliders();
-
         this.shotManager = new ShotManager(this);
         this.effectsManager = new EffectsManager(this);
+        this.capturePointManager = new CapturePointManagerClient(this);
         this.phaseManager = new PhaseManagerClient();
+        this.cameraManager = new CameraManager(this.cameras.main);
 
         this.playerManager = new PlayerManagerClient(this.room);
         this.playerManager.setupPlayerListeners(this);
@@ -129,48 +130,90 @@ export default class GameScene extends Phaser.Scene {
 
         this.setupCollisionEvents();
         this.setupPointerEvents();
+        this.setupCameraControls();
         this.setupVisibilityHandler();
         this.setupUi();
-        this.setupBorders();
+        //this.setupBorders();
 
         this.setupRoomMessages();
 
         this.input.keyboard!.on("keydown-ONE", () => { this.debugFunction() });
+        this.input.keyboard!.on("keydown-TWO", () => { this.room.send(RequestTypes.Debug) });
+        displayHud();
+        this.setupEndTurnButtonEvent();
+    }
+
+    private setupEndTurnButtonEvent() {
+        const btn = document.getElementById("end-turn-btn") as HTMLButtonElement;
+        if (!btn) return;
+
+        btn.removeEventListener("click", this.onEndTurnClick);
+        btn.addEventListener("click", this.onEndTurnClick);
+    }
+
+    private onEndTurnClick = () => {
+        this.room.send(RequestTypes.EndTurn);
+    }
+
+    private terrainSynchro(quadBlock: QuadBlock) {
+        console.log("TERRAIN SYNC");
+
+        this.terrainManager.constructQuadBlock(quadBlock);
+        this.terrainManager.redrawTerrain();
+    }
+
+    private phaseSynchro(phase: Phase) {
+        console.log("PHASE SYNC");
+
+        this.phaseManager.setCurrentPhase(phase);
+
+        if (!ActionPhase.TYPES.includes(phase.type)) {
+            hideEndTurnButton();
+            this.actionChoicePanel.hide();
+
+            if (phase.type === PhaseTypes.Reload) {
+                SoundManager.play(RessourceKeys.Reloading);
+
+                const concernedPlayer = this.playerManager.getPlayer((phase as ReloadPhase).playerId);
+                this.effectsManager.floatingText(concernedPlayer.x, concernedPlayer.y, "+1 bullet");
+            }
+            return;
+        }
+
+        const isConcerned = this.phaseManager.isConcerned(this.room.sessionId);
+
+        if (this.phaseManager.isActionChoicePhase()) {
+            hideEndTurnButton()
+            isConcerned ? this.actionChoicePanel.show() : this.actionChoicePanel.hide();
+        } else {
+            this.actionChoicePanel.hide();
+            showEndTurnButton(isConcerned)
+        }
+    }
+
+    private fullSynchro(synchroInfo: FullSynchroInfo) {
+        console.log("FULL SYNC");
+
+        this.terrainManager.constructQuadBlock(synchroInfo.terrain);
+        this.terrainManager.redrawTerrain();
+
+        this.capturePointManager.syncCapturePoints(synchroInfo.capturePoints);
+    }
+
+    private firstSynchro(synchroInfo: FirstSynchroInfo) {
+        this.terrainManager.constructQuadBlock(synchroInfo.terrain);
+        this.terrainManager.redrawTerrain();
+
+        this.capturePointManager.syncCapturePoints(synchroInfo.capturePoints);
+        this.terrainManager.createBorders(synchroInfo.bounds);
     }
 
     async setupRoomMessages() {
-        this.room.onMessage(RequestTypes.TerrainSynchro, (quadBlock) => {
-            this.terrainManager.constructQuadBlock(quadBlock);
-            this.terrainManager.redrawTerrain();
-        });
+        this.room.onMessage(RequestTypes.TerrainSynchro, (quadBlock) => { this.terrainSynchro(quadBlock) });
+        this.room.onMessage(RequestTypes.PhaseSynchro, (phase: Phase) => { this.phaseSynchro(phase) });
 
-        this.room.onMessage(RequestTypes.PhaseSynchro, (phase: Phase) => {
-            this.phaseManager.setCurrentPhase(phase);
-
-            if (!ActionPhase.TYPES.includes(phase.type)) {
-                this.endTurnButton.hide();
-                this.actionChoicePanel.hide();
-                return;
-            }
-
-            const isConcerned = this.phaseManager.isConcerned(this.room.sessionId);
-
-            if (this.phaseManager.isActionChoicePhase()) {
-                this.endTurnButton.hide();
-                isConcerned ? this.actionChoicePanel.show() : this.actionChoicePanel.hide();
-            } else {
-                this.actionChoicePanel.hide();
-                this.endTurnButton.show();
-                isConcerned ? this.endTurnButton.enable() : this.endTurnButton.disable();
-            }
-        });
-
-        this.room.onMessage(RequestTypes.FullSynchro, (synchroInfo: FullSynchroInfo) => {
-            this.terrainManager.constructQuadBlock(synchroInfo.terrain);
-            this.terrainManager.redrawTerrain();
-
-            this.phaseManager.setCurrentPhase(synchroInfo.phase);
-        });
+        this.room.onMessage(RequestTypes.FullSynchro, (synchroInfo: FullSynchroInfo) => { this.fullSynchro(synchroInfo) });
+        this.room.onMessage(RequestTypes.FirstSynchro, (synchroInfo: FirstSynchroInfo) => { this.firstSynchro(synchroInfo) });
 
         this.room.onMessage(RequestTypes.Shoot, (data: { shootInfo: ShootInfo, explosionInfo: ExplosionInfo }) => {
             if (this.active) this.shotManager.shootBulletFromInfo(data.shootInfo, data.explosionInfo);
@@ -178,7 +221,24 @@ export default class GameScene extends Phaser.Scene {
 
         this.room.onMessage(RequestTypes.HealthUpdate, (healthUpdateInfo) => {
             const playerObject = this.playerManager.getPlayer(healthUpdateInfo.playerId);
-            playerObject.hp = healthUpdateInfo.hp;
+            if (!playerObject) return;
+            const previousHp = playerObject.hp;
+            const newHp = healthUpdateInfo.hp;
+            const damage = healthUpdateInfo.damage ?? Math.max(0, previousHp - newHp);
+            const directHit = healthUpdateInfo.directHit ?? false;
+            playerObject.hp = newHp;
+
+            if (damage > 0) {
+                const textY = playerObject.y - playerObject.height * 0.75;
+                const isCrit = directHit || damage >= 12;
+                this.effectsManager.damageNumber(playerObject.x, textY, damage, isCrit);
+
+                playerObject.damageCallback();
+
+                if (directHit) {
+                    this.effectsManager.hitFlash(playerObject, 0xff4444, 160);
+                }
+            }
 
             if (playerObject.hp <= 0) {
                 playerObject.setDead();
@@ -189,17 +249,24 @@ export default class GameScene extends Phaser.Scene {
             if (this.isOver) return;
             this.isOver = true;
 
-            const winnerId = gameEndInfo.winnerId;
-            const winner = this.playerManager.getPlayer(winnerId);
-            const isPlayerWinner = winnerId === this.room.sessionId;
+            const winnerIds = gameEndInfo.winnerIds;
+            const winners = winnerIds.map((id: string) => this.playerManager.getPlayer(id));
+            const isPlayerWinner = winnerIds.includes(this.room.sessionId);
 
             this.gameEndScreen.setConfig({
                 isWin: isPlayerWinner,
-                winnerName: winner.getName()
+                winnerNames: winners.map((p: PlayerClient) => p.getName()),
+                winCondition: gameEndInfo.winCondition
             });
 
+            if (isPlayerWinner) SoundManager.playWinningSound(gameEndInfo.winCondition);
             this.gameEndScreen.appear(this);
         });
+
+        this.room.onMessage(RequestTypes.Capture, (captureInfo: CaptureInfo) => {
+            console.log("CAPTURE")
+            this.capturePointManager.updateCapturePoint(captureInfo.id, captureInfo.newOwningTeam);
+        })
 
         this.room.onMessage(RequestTypes.PowerUpdate, (powerUpdateData: PowerUpdateData) => {
             if (!powerUpdateData.id) return;
@@ -209,6 +276,7 @@ export default class GameScene extends Phaser.Scene {
 
         this.room.onLeave(() => {
             if (!this.isOver) {
+                this.scene.stop(SceneNames.Game);
                 this.scene.start(SceneNames.TitleScreen);
                 showToast("Disconnected from the game");
             }
@@ -216,16 +284,16 @@ export default class GameScene extends Phaser.Scene {
 
         for (const { type, data } of this.messageBuffer ?? []) {
             if (type === RequestTypes.FullSynchro) {
-                this.terrainManager.constructQuadBlock(data.terrain);
-                this.terrainManager.redrawTerrain();
-                this.phaseManager.setCurrentPhase(data.phase);
+                //this.fullSynchro(data);
             }
-            if (type === RequestTypes.TerrainSynchro) {
-                this.terrainManager.constructQuadBlock(data);
-                this.terrainManager.redrawTerrain();
+            else if (type === RequestTypes.TerrainSynchro) {
+                this.terrainSynchro(data);
+
             }
-            if (type === RequestTypes.PhaseSynchro) {
-                this.phaseManager.setCurrentPhase(data);
+            else if (type === RequestTypes.PhaseSynchro) {
+                this.phaseSynchro(data);
+            } else if (type === RequestTypes.FirstSynchro) {
+                this.firstSynchro(data);
             }
         }
 
@@ -233,9 +301,16 @@ export default class GameScene extends Phaser.Scene {
     }
 
     setupPointerEvents() {
+        this.input.mouse?.disableContextMenu();
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => this.pointerDownEvent(pointer));
         this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => this.pointerUpEvent(pointer));
         this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => this.pointerMoveEvent(pointer));
+    }
+
+    setupCameraControls() {
+        this.input.on('wheel', (pointer: Phaser.Input.Pointer, _gameObjects: Phaser.GameObjects.GameObject[], _deltaX: number, deltaY: number) => {
+            this.cameraManager.handleWheel(pointer, deltaY);
+        });
     }
 
     setupVisibilityHandler() {
@@ -244,34 +319,20 @@ export default class GameScene extends Phaser.Scene {
                 this.active = false;
             } else {
                 this.active = true;
-                this.room.send(RequestTypes.TerrainSynchro);
+                this.room.send(RequestTypes.FullSynchro);
             }
         });
     }
 
     setupUi() {
-        const uiCam = this.cameras.add(0, 0, GAME_WIDTH, GAME_HEIGHT);
+        const uiCam = this.cameras.add(0, 0, this.scale.gameSize.width, this.scale.gameSize.height);
         uiCam.setScroll(0, 0);
 
         this.cameras.main.ignore(this.uiContainer);
         uiCam.ignore(this.worldContainer);
+        this.cameraManager.setUiCamera(uiCam);
 
-        this.phaseDisplayer = new PhaseDisplayer(this, this.phaseManager, TextStyle.PhaseDisplayer);
-        this.actionChoicePanel = new ActionChoicePanel(this);
-
-        this.endTurnButton = new EndTurnButton(
-            this,
-            GAME_WIDTH / 2,
-            GAME_HEIGHT - 20,
-            () => { this.room.send(RequestTypes.EndTurn) }
-        );
-    }
-
-    setupBorders() {
-        new SimulationBorderClient(this, Border.Top);
-        new SimulationBorderClient(this, Border.Bottom);
-        new SimulationBorderClient(this, Border.Right);
-        new SimulationBorderClient(this, Border.Left);
+        this.actionChoicePanel = new ActionChoicePanel(this, this.playerManager.currentPlayer);
     }
 
     fixedTick() {
@@ -291,7 +352,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     update(_time: number, delta: number): void {
-        if (!this.playerManager || !this.playerManager.currentPlayer) { return; }
+        if (!this.playerManager || !this.playerManager.currentPlayer || !this.playerManager.currentPlayer.body) { return; }
 
         this.elapsedTime += delta;
 
@@ -301,7 +362,7 @@ export default class GameScene extends Phaser.Scene {
         }
 
         this.playerManager.updatePlayers();
-        this.phaseDisplayer.update();
+        this.phaseManager.updateDisplay();
     }
 
     setupCollisionEvents() {
@@ -364,32 +425,43 @@ export default class GameScene extends Phaser.Scene {
         this.playerManager.reactToExplosion(bullet);
     }
 
+    private getWorldPointerPosition(pointer: Phaser.Input.Pointer): Position {
+        const worldPoint = this.cameraManager.getWorldPoint(pointer);
+        return { x: worldPoint.x, y: worldPoint.y };
+    }
+
     pointerDownEvent(pointer: Phaser.Input.Pointer) {
+        if (!this.cameraManager.handlePointerDown(pointer)) return;
         if (!canPlayerShoot(this.playerManager.currentPlayer)) return;
 
-        this.shotManager.setTargetPosition(pointer.x, pointer.y);
+        const worldPosition = this.getWorldPointerPosition(pointer);
+        this.shotManager.setTargetPosition(worldPosition.x, worldPosition.y);
         this.shotManager.setStartingPosition(this.playerManager.currentPlayer.x, this.playerManager.currentPlayer.y);
 
         this.shotManager.chargeShot();
     }
 
     pointerUpEvent(pointer: Phaser.Input.Pointer) {
+        if (!this.cameraManager.handlePointerUp()) return;
+
+
         if (!canPlayerShoot(this.playerManager.currentPlayer)) return;
 
-        this.shotManager.setTargetPosition(pointer.x, pointer.y);
+        const worldPosition = this.getWorldPointerPosition(pointer);
+        this.shotManager.setTargetPosition(worldPosition.x, worldPosition.y);
         this.shotManager.setStartingPosition(this.playerManager.currentPlayer.x, this.playerManager.currentPlayer.y);
 
         this.shotManager.releaseShot();
     }
 
     pointerMoveEvent(pointer: Phaser.Input.Pointer) {
-        this.shotManager.setTargetPosition(pointer.x, pointer.y);
+        if (this.cameraManager.handlePointerMove(pointer)) return;
+
+        const worldPosition = this.getWorldPointerPosition(pointer);
+        this.shotManager.setTargetPosition(worldPosition.x, worldPosition.y);
         this.shotManager.setStartingPosition(this.playerManager.currentPlayer.x, this.playerManager.currentPlayer.y);
 
-        this.currentMousePosition = {
-            x: pointer.x,
-            y: pointer.y
-        }
+        this.currentMousePosition = worldPosition;
     }
 
     getMovementInput() {
@@ -440,10 +512,14 @@ export default class GameScene extends Phaser.Scene {
     debugFunction() {
         if (!DEBUG) return;
 
+        /*
         const self = this.playerManager.getPlayer(this.room.sessionId);
         const powerName = "Fatso";
 
         self.addPower(powerName);
         this.room.send(RequestTypes.PowerUpdate, { powerName: powerName })
+        */
+
+        new CapturePointClient(this, 400, 400);
     }
 }

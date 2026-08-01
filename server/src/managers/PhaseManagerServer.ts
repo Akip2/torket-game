@@ -14,6 +14,9 @@ import { PlayerState } from "@shared/enums/PlayerState.enum";
 import GameEndPhase from "@shared/data/phases/GameEndPhase";
 import { FREE_ROAM } from "@shared/const";
 import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
+import { immobilizePlayer } from "@shared/logics/player-logic";
+import ReloadPhase from "@shared/data/phases/ReloadPhase";
+import ActionPhase from "@shared/data/phases/ActionPhase";
 
 export default class PhaseManagerServer {
     currentIndex: number = -1;
@@ -63,10 +66,14 @@ export default class PhaseManagerServer {
             (phase as TimedPhase).setStartTime(Date.now());
             this.timeOut = setTimeout(
                 () => {
-                    this.next()
-                    if(phase instanceof StartingPhase) this.onGameStart();
+                    let transitionDelay = 0;
+                    if (phase instanceof StartingPhase) {
+                        this.onGameStart();
+                        transitionDelay = 150;
+                    }
+                    this.next(transitionDelay);
                 },
-                (phase as TimedPhase).duration * 1000 + 1250
+                (phase as TimedPhase).duration * 1000 + 200
             );
         }
 
@@ -105,7 +112,8 @@ export default class PhaseManagerServer {
     }
 
     async endTurn(playerId: string) {
-        if (playerId !== this.concernedPlayerId) return;
+        if (!ActionPhase.TYPES.includes(this.currentPhase.type) || playerId !== this.concernedPlayerId) return;
+        this.concernedPlayerId = null;
 
         clearTimeout(this.timeOut);
         await wait(250);
@@ -125,6 +133,13 @@ export default class PhaseManagerServer {
         } else if (action === Action.Shoot) {
             this.setCurrentPhase(new ShootingPhase(Date.now(), {
                 pseudo: player?.playerRef.pseudo,
+                playerId: playerId
+            }));
+        } else if (action === Action.Reload) {
+            player.reload();
+
+            this.setCurrentPhase(new ReloadPhase(Date.now(), {
+                pseudo: player.getPseudo(),
                 playerId: playerId
             }));
         }
@@ -174,8 +189,9 @@ export default class PhaseManagerServer {
             } else if (!concernedPlayer.hasMovementLeft()) {
                 clearInterval(loop);
                 concernedPlayer.enableMass();
+                immobilizePlayer(concernedPlayer);
                 this.next(500);
             }
-        }, 500)
+        }, 50)
     }
 }

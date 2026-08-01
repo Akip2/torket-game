@@ -4,7 +4,7 @@ import roomCreationHtml from "../dom-ui/room-creation.html?raw";
 import roomListHtml from "../dom-ui/room-list.html?raw";
 import passwordFormHtml from "../dom-ui/password-form.html?raw";
 import mapSelectionHtml from "../dom-ui/map-selection.html?raw";
-import { clearDomUi, clearSecondaryUiRoot, getCloseButton, getPrimaryUiRoot, getSecondaryUiRoot, getServerUrl, mountWithTransition, setButtonLoading, showToast } from "../client-utils";
+import { clearDomUi, clearSecondaryUiRoot, getCloseButton, getPrimaryUiRoot, getSecondaryUiRoot, getServerUrl, mountWithTransition, removeHud, setButtonLoading, showToast } from "../client-utils";
 import { generateDefaultRoomName } from "@shared/utils";
 import { generateMapCard, generateRoomComponent, setupMapCard } from "../dom-ui/component-generator";
 import type { AvailableRoomData, MapPreviewData, RoomJoiningData } from "@shared/types";
@@ -281,6 +281,7 @@ export default class TitleScreenScene extends Phaser.Scene {
     }
 
     async create() {
+        removeHud();
         this.showTitleScreen();
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => clearDomUi());
     }

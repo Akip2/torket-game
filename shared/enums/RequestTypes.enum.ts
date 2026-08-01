@@ -3,10 +3,13 @@ export enum RequestTypes {
     Shoot = "shoot",
     TerrainSynchro = "terrain-synchro",
     PhaseSynchro = "phase-synchro",
+    FirstSynchro = "first-synchro",
     FullSynchro = "full-synchro",
     HealthUpdate = "health-update",
     SelectAction = "select-action",
     EndTurn = "end-turn",
     GameEnd = "game-end",
     PowerUpdate = "power-update",
+    Capture = "capture",
+    Debug = "debug",
 }

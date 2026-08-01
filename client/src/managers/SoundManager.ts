@@ -1,5 +1,6 @@
-import type { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
+import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import type GameScene from "../scenes/GameScene";
+import { WinCondition } from "@shared/enums/WinCondition.enum";
 
 export default class SoundManager {
     private static sound: Phaser.Sound.NoAudioSoundManager | Phaser.Sound.HTML5AudioSoundManager | Phaser.Sound.WebAudioSoundManager;
@@ -10,5 +11,11 @@ export default class SoundManager {
 
     static play(key: RessourceKeys, extra: Phaser.Types.Sound.SoundConfig = {}) {
         SoundManager.sound.play(key, extra);
+    }
+
+    static playWinningSound(winCondition: WinCondition) {
+        if (winCondition === WinCondition.Capture) {
+            SoundManager.play(RessourceKeys.CaptureVictory);
+        }
     }
 }
