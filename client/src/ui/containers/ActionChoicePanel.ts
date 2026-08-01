@@ -13,6 +13,7 @@ export default class ActionChoicePanel {
     private actionButtons: ActionButton[];
     private mainPlayer: IPlayer;
     private validityCallbacks: (() => boolean)[];
+    private disabledMessages: string[];
 
     constructor(scene: GameScene, mainPlayer: IPlayer) {
         this.scene = scene;
@@ -80,6 +81,12 @@ export default class ActionChoicePanel {
             () => this.mainPlayer.hasBullets() // Shoot is valid if player has bullets
         ]
 
+        this.disabledMessages = [
+            "",
+            "Already at max bullets.",
+            "No bullets to shoot."
+        ]
+
         this.hideInstantly();
     }
 
@@ -144,7 +151,7 @@ export default class ActionChoicePanel {
             if (this.validityCallbacks[id]()) {
                 b.enable();
             } else {
-                b.disable();
+                b.disable(this.disabledMessages[id]);
             }
         });
 

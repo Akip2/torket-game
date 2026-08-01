@@ -1,6 +1,7 @@
 import type { UIButtonStyle } from "@shared/types";
 import type GameScene from "../../scenes/GameScene";
 import { lightenHexColor } from "../../client-utils";
+import Tooltip from "../ToolTip";
 
 export default class UiButton extends Phaser.GameObjects.Container {
     private bg: Phaser.GameObjects.Rectangle;
@@ -18,6 +19,7 @@ export default class UiButton extends Phaser.GameObjects.Container {
     private isPointerOver: boolean = false;
     private disabledLine?: Phaser.GameObjects.Graphics
     private style: UIButtonStyle;
+    private tooltip: Tooltip | null;
 
     constructor(
         scene: GameScene,
@@ -32,6 +34,7 @@ export default class UiButton extends Phaser.GameObjects.Container {
         this.baseColor = style.backgroundColor;
         this.borderColor = style.borderColor || 0xffffff;
         this.style = style;
+        this.tooltip = null;
 
         this.shadowBg = scene.add.rectangle(
             3,
@@ -79,7 +82,10 @@ export default class UiButton extends Phaser.GameObjects.Container {
 
         // Setup hover effects with glow
         this.bg.on('pointerover', () => {
-            if (!this.isEnabled) return;
+            if (!this.isEnabled) {
+                this.tooltip?.setVisible(true);
+                return;
+            }
 
             this.isPointerOver = true;
 
@@ -105,7 +111,10 @@ export default class UiButton extends Phaser.GameObjects.Container {
         });
 
         this.bg.on('pointerout', () => {
-            if (!this.isEnabled) return;
+            if (!this.isEnabled) {
+                this.tooltip?.setVisible(false);
+                return;
+            }
 
             this.isPointerOver = false;
             this.bg.setFillStyle(this.baseColor);
@@ -200,19 +209,14 @@ export default class UiButton extends Phaser.GameObjects.Container {
         });
     }
 
-    public disable() {
+    public disable(reason?: string) {
         this.isEnabled = false;
-        this.bg.disableInteractive();
 
-        // Grise complètement le bouton
         this.bg.setFillStyle(0x2a2a2a);
         this.bg.setStrokeStyle(this.style.borderThickness, 0x444444);
-
-        // Texte grisé
         this.label.setColor("#666666");
         this.label.setStyle({ fontStyle: "normal" });
 
-        // Barre diagonale "interdit"
         if (!this.disabledLine) {
             this.disabledLine = this.scene.add.graphics();
             this.add(this.disabledLine);
@@ -225,6 +229,19 @@ export default class UiButton extends Phaser.GameObjects.Container {
 
         if (this.glowTween) this.glowTween.stop();
         if (this.glowBg) this.glowBg.setAlpha(0);
+
+        if (reason) {
+            this.tooltip?.destroy();
+            this.tooltip = new Tooltip(
+                this.scene as GameScene,
+                0,
+                -this.style.height / 2 - 24,
+                reason
+            );
+
+            this.tooltip.setVisible(false);
+            this.add(this.tooltip);
+        }
     }
 
     public enable() {
@@ -235,6 +252,8 @@ export default class UiButton extends Phaser.GameObjects.Container {
         this.label.setColor(this.style.text.color!);
         this.label.setStyle({ fontStyle: this.style.text.fontStyle });
         this.disabledLine?.clear();
+        this.tooltip?.destroy();
+        this.tooltip = null;
     }
 
     public setLoading(loading: boolean) {
