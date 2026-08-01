@@ -1,6 +1,6 @@
 import type { UIButtonStyle } from "@shared/types";
 import type GameScene from "../../scenes/GameScene";
-import { lightenHexColor, darkenHexColor } from "../../client-utils";
+import { lightenHexColor } from "../../client-utils";
 
 export default class UiButton extends Phaser.GameObjects.Container {
     private bg: Phaser.GameObjects.Rectangle;
@@ -16,6 +16,8 @@ export default class UiButton extends Phaser.GameObjects.Container {
     protected isEnabled: boolean = true;
     private glowTween?: Phaser.Tweens.Tween;
     private isPointerOver: boolean = false;
+    private disabledLine?: Phaser.GameObjects.Graphics
+    private style: UIButtonStyle;
 
     constructor(
         scene: GameScene,
@@ -29,6 +31,7 @@ export default class UiButton extends Phaser.GameObjects.Container {
 
         this.baseColor = style.backgroundColor;
         this.borderColor = style.borderColor || 0xffffff;
+        this.style = style;
 
         this.shadowBg = scene.add.rectangle(
             3,
@@ -77,12 +80,12 @@ export default class UiButton extends Phaser.GameObjects.Container {
         // Setup hover effects with glow
         this.bg.on('pointerover', () => {
             if (!this.isEnabled) return;
-            
+
             this.isPointerOver = true;
 
             console.log(this.baseColor);
             this.bg.setFillStyle(lightenHexColor(this.baseColor));
-            
+
             // Glow animation
             if (this.glowTween) this.glowTween.stop();
             this.glowTween = (this.scene as GameScene).tweens.add({
@@ -103,10 +106,10 @@ export default class UiButton extends Phaser.GameObjects.Container {
 
         this.bg.on('pointerout', () => {
             if (!this.isEnabled) return;
-            
+
             this.isPointerOver = false;
             this.bg.setFillStyle(this.baseColor);
-            
+
             // Fade glow
             if (this.glowTween) this.glowTween.stop();
             this.glowTween = (this.scene as GameScene).tweens.add({
@@ -156,7 +159,7 @@ export default class UiButton extends Phaser.GameObjects.Container {
         });
 
         scene.add.existing(this);
-        
+
         // Subtle idle pulse animation
         this.createIdlePulse(scene);
     }
@@ -199,18 +202,39 @@ export default class UiButton extends Phaser.GameObjects.Container {
 
     public disable() {
         this.isEnabled = false;
-        this.setAlpha(0.4);
         this.bg.disableInteractive();
-        this.bg.setFillStyle(darkenHexColor(this.baseColor));
+
+        // Grise complètement le bouton
+        this.bg.setFillStyle(0x2a2a2a);
+        this.bg.setStrokeStyle(this.style.borderThickness, 0x444444);
+
+        // Texte grisé
+        this.label.setColor("#666666");
+        this.label.setStyle({ fontStyle: "normal" });
+
+        // Barre diagonale "interdit"
+        if (!this.disabledLine) {
+            this.disabledLine = this.scene.add.graphics();
+            this.add(this.disabledLine);
+        }
+        const w = this.style.width;
+        const h = this.style.height;
+        this.disabledLine.lineStyle(2, 0x666666, 0.6);
+        this.disabledLine.lineBetween(-w / 2 + 10, -h / 2 + 10, w / 2 - 10, h / 2 - 10);
+        this.disabledLine.lineBetween(w / 2 - 10, -h / 2 + 10, -w / 2 + 10, h / 2 - 10);
+
         if (this.glowTween) this.glowTween.stop();
         if (this.glowBg) this.glowBg.setAlpha(0);
     }
 
     public enable() {
         this.isEnabled = true;
-        this.setAlpha(1);
-        this.bg.setInteractive({ useHandCursor: true });
+        this.bg.setInteractive();
         this.bg.setFillStyle(this.baseColor);
+        this.bg.setStrokeStyle(this.style.borderThickness, this.style.borderColor);
+        this.label.setColor(this.style.text.color!);
+        this.label.setStyle({ fontStyle: this.style.text.fontStyle });
+        this.disabledLine?.clear();
     }
 
     public setLoading(loading: boolean) {

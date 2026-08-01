@@ -10,4 +10,29 @@ export default class ActionButton extends UiButton {
 
         super(scene, x, y, text, onClick, style);
     }
+
+    appear(scene: GameScene, delay: number) {
+        this.setScale(0);
+        this.setAlpha(0);
+
+        scene.tweens.add({
+            targets: this,
+            scale: 1,
+            alpha: 1,
+            duration: 400,
+            delay: delay,
+            ease: 'Back.easeOut'
+        });
+    }
+
+    disappear(scene: GameScene, delay: number) {
+        scene.tweens.add({
+            targets: this,
+            scale: 0.5,
+            alpha: 0,
+            duration: 250,
+            ease: 'Quad.easeIn',
+            delay: delay
+        });
+    }
 }

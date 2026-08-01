@@ -332,7 +332,7 @@ export default class GameScene extends Phaser.Scene {
         uiCam.ignore(this.worldContainer);
         this.cameraManager.setUiCamera(uiCam);
 
-        this.actionChoicePanel = new ActionChoicePanel(this);
+        this.actionChoicePanel = new ActionChoicePanel(this, this.playerManager.currentPlayer);
     }
 
     fixedTick() {

@@ -66,8 +66,12 @@ export default class PhaseManagerServer {
             (phase as TimedPhase).setStartTime(Date.now());
             this.timeOut = setTimeout(
                 () => {
-                    this.next()
-                    if (phase instanceof StartingPhase) this.onGameStart();
+                    let transitionDelay = 0;
+                    if (phase instanceof StartingPhase) {
+                        this.onGameStart();
+                        transitionDelay = 150;
+                    }
+                    this.next(transitionDelay);
                 },
                 (phase as TimedPhase).duration * 1000 + 200
             );

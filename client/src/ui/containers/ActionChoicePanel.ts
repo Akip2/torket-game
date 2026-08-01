@@ -4,15 +4,19 @@ import { TextStyle } from "../ui-styles";
 import { Action } from "@shared/enums/Action.enum";
 import type { Room } from "colyseus.js";
 import ActionButton from "../buttons/ActionButton";
+import type { IPlayer } from "@shared/interfaces/Player.interface";
 
 export default class ActionChoicePanel {
     container: Phaser.GameObjects.Container;
     private scene: GameScene;
     private titleText: Phaser.GameObjects.Text;
     private actionButtons: ActionButton[];
+    private mainPlayer: IPlayer;
+    private validityCallbacks: (() => boolean)[];
 
-    constructor(scene: GameScene) {
+    constructor(scene: GameScene, mainPlayer: IPlayer) {
         this.scene = scene;
+        this.mainPlayer = mainPlayer;
         this.container = scene.add.container(0, 0);
         scene.uiContainer.add(this.container);
 
@@ -69,6 +73,12 @@ export default class ActionChoicePanel {
             this.actionButtons.push(button);
             this.container.add(button);
         }
+
+        this.validityCallbacks = [
+            () => true, // Move is always valid
+            () => this.mainPlayer.hasMaxBulletCount() === false, // Reload is valid if not at max bullets
+            () => this.mainPlayer.hasBullets() // Shoot is valid if player has bullets
+        ]
 
         this.hideInstantly();
     }
@@ -129,14 +139,13 @@ export default class ActionChoicePanel {
 
         // Stagger animations for buttons
         this.actionButtons.forEach((b, id) => {
-            this.scene.tweens.add({
-                targets: b,
-                scale: 1,
-                alpha: 1,
-                duration: 400,
-                delay: 100 + id * 75,
-                ease: 'Back.easeOut'
-            });
+            b.appear(this.scene, 100 + id * 75);
+
+            if (this.validityCallbacks[id]()) {
+                b.enable();
+            } else {
+                b.disable();
+            }
         });
 
         // Add wiggle animation to buttons after they appear
@@ -154,14 +163,7 @@ export default class ActionChoicePanel {
 
     hide() {
         this.actionButtons.forEach((b, id) => {
-            this.scene.tweens.add({
-                targets: b,
-                scale: 0.5,
-                alpha: 0,
-                duration: 250,
-                ease: 'Quad.easeIn',
-                delay: id * 25
-            });
+            b.disappear(this.scene, id * 50);
         });
 
         setTimeout(() => {
