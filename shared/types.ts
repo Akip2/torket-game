@@ -1,5 +1,4 @@
 import type Phase from "./data/phases/Phase";
-import type PrimitiveMap from "./data/PrimitiveMap";
 import type { Depths } from "./enums/Depths.enum";
 import type { RequestTypes } from "./enums/RequestTypes.enum";
 import { Team } from "./enums/Team.enum.ts";
@@ -190,8 +189,15 @@ export type MapPreviewData = {
     id: string;
     name: string;
     maxPlayers: number;
-    primitive: PrimitiveMap;
+    primitive: PrimitiveMapData;
     playerPositions: Position[];
+}
+
+export type PrimitiveMapData = {
+    rowSize: number;
+    columnSize: number;
+    minTileSize: number;
+    grid: Uint8Array;
 }
 
 export type ParameterChangeCoef = -3 | -2 | -1 | 1 | 2 | 3;
