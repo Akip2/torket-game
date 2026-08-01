@@ -216,7 +216,7 @@ export type CameraManagerOptions = {
     initialZoom?: number;
     zoomSensitivity?: number;
     zoomFollowStrength?: number;
-    uiCamera?: Phaser.Cameras.Scene2D.Camera;
+    uiCamera?: any;
     worldBounds?: {
         x: number;
         y: number;
