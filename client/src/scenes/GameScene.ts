@@ -23,7 +23,6 @@ import GameEndScreen from "../ui/containers/GameEndScreen";
 import SoundManager from "../managers/SoundManager";
 import { setCookie } from "typescript-cookie";
 import RoomManager from "../managers/RoomManager";
-import CapturePointClient from "../game-objects/CapturePointClient";
 import CapturePointManagerClient from "../managers/CapturePointManagerClient";
 import CameraManager from "../managers/CameraManager";
 import type QuadBlock from "@shared/data/QuadBlock";
@@ -79,6 +78,8 @@ export default class GameScene extends Phaser.Scene {
     }
 
     preload() {
+        this.events.on('shutdown', () => { this.shutDown() });
+
         this.keys = this.input.keyboard!.addKeys({
             W: Phaser.Input.Keyboard.KeyCodes.W,
             A: Phaser.Input.Keyboard.KeyCodes.A,
@@ -511,15 +512,10 @@ export default class GameScene extends Phaser.Scene {
 
     debugFunction() {
         if (!DEBUG) return;
+    }
 
-        /*
-        const self = this.playerManager.getPlayer(this.room.sessionId);
-        const powerName = "Fatso";
-
-        self.addPower(powerName);
-        this.room.send(RequestTypes.PowerUpdate, { powerName: powerName })
-        */
-
-        new CapturePointClient(this, 400, 400);
+    shutDown() {
+        this.input.keyboard?.clearCaptures()
+        this.input.keyboard?.destroy()
     }
 }
