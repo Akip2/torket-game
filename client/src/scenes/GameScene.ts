@@ -2,7 +2,7 @@ import { AUDIO_RESSOURCE_KEYS, DEBUG, EXPLOSION_CONST, GROUND_TYPE, TEXTURE_SIZE
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import BulletClient from "../game-objects/BulletClient";
 import PlayerClient from "../game-objects/PlayerClient";
-import { Client, Room } from "colyseus.js";
+import { Room } from "colyseus.js";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import TextureManager from "../managers/TextureManager";
 import TerrainManagerClient from "../managers/TerrainManagerClient";
@@ -18,7 +18,7 @@ import { canPlayerShoot } from "@shared/logics/player-logic";
 import ActionChoicePanel from "../ui/containers/ActionChoicePanel";
 import UiButton from "../ui/buttons/UiButton";
 import type Phase from "@shared/data/phases/Phase";
-import { displayHud, getExplosionSpriteScale, getServerUrl, hideEndTurnButton, loadFont, showEndTurnButton, showToast } from "../client-utils";
+import { displayHud, getExplosionSpriteScale, hideEndTurnButton, loadFont, showEndTurnButton, showToast } from "../client-utils";
 import GameEndScreen from "../ui/containers/GameEndScreen";
 import SoundManager from "../managers/SoundManager";
 import { setCookie } from "typescript-cookie";
@@ -31,9 +31,8 @@ import type ReloadPhase from "@shared/data/phases/ReloadPhase";
 import ActionPhase from "@shared/data/phases/ActionPhase";
 
 export default class GameScene extends Phaser.Scene {
-    active: boolean = true;
-    isOver: boolean = false;
-    client = new Client(getServerUrl());
+    active!: boolean;
+    isOver!: boolean;
     room!: Room;
     messageBuffer: { type: RequestTypes, data: any }[] = [];
 
@@ -80,6 +79,20 @@ export default class GameScene extends Phaser.Scene {
     preload() {
         this.events.on('shutdown', () => { this.shutDown() });
 
+        this.load.image(RessourceKeys.Ground, `assets/ground/${GROUND_TYPE}_${TEXTURE_SIZE}.png`);
+        this.load.image(RessourceKeys.ExplosionParticle, 'assets/particles/explosion-particle.png');
+        this.load.image(RessourceKeys.DeathParticle, 'assets/particles/death-particle.png');
+
+        AUDIO_RESSOURCE_KEYS.forEach(audioKey => {
+            this.load.audio(audioKey, `assets/sounds/${audioKey as string}.wav`);
+        });
+    }
+
+    async create() {
+        await loadFont("JetBrainsMono", "assets/fonts/JetBrainsMono-Medium.ttf");
+
+        SoundManager.init(this);
+
         this.keys = this.input.keyboard!.addKeys({
             W: Phaser.Input.Keyboard.KeyCodes.W,
             A: Phaser.Input.Keyboard.KeyCodes.A,
@@ -94,20 +107,6 @@ export default class GameScene extends Phaser.Scene {
             LEFT: Phaser.Input.Keyboard.KeyCodes.LEFT,
             RIGHT: Phaser.Input.Keyboard.KeyCodes.RIGHT
         }) as { [key: string]: Phaser.Input.Keyboard.Key };
-
-        this.load.image(RessourceKeys.Ground, `assets/ground/${GROUND_TYPE}_${TEXTURE_SIZE}.png`);
-        this.load.image(RessourceKeys.ExplosionParticle, 'assets/particles/explosion-particle.png');
-        this.load.image(RessourceKeys.DeathParticle, 'assets/particles/death-particle.png');
-
-        AUDIO_RESSOURCE_KEYS.forEach(audioKey => {
-            this.load.audio(audioKey, `assets/sounds/${audioKey as string}.wav`);
-        });
-    }
-
-    async create() {
-        await loadFont("JetBrainsMono", "assets/fonts/JetBrainsMono-Medium.ttf");
-
-        SoundManager.init(this);
 
         this.worldContainer = this.add.container();
         this.uiContainer = this.add.container();
@@ -515,7 +514,6 @@ export default class GameScene extends Phaser.Scene {
     }
 
     shutDown() {
-        this.input.keyboard?.clearCaptures()
-        this.input.keyboard?.destroy()
+        this.input.keyboard?.clearCaptures();
     }
 }
