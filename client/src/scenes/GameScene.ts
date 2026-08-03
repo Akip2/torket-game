@@ -2,7 +2,7 @@ import { AUDIO_RESSOURCE_KEYS, DEBUG, EXPLOSION_CONST, GROUND_TYPE, TEXTURE_SIZE
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import BulletClient from "../game-objects/BulletClient";
 import PlayerClient from "../game-objects/PlayerClient";
-import { Client, Room } from "colyseus.js";
+import { Room } from "colyseus.js";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import TextureManager from "../managers/TextureManager";
 import TerrainManagerClient from "../managers/TerrainManagerClient";
@@ -18,12 +18,11 @@ import { canPlayerShoot } from "@shared/logics/player-logic";
 import ActionChoicePanel from "../ui/containers/ActionChoicePanel";
 import UiButton from "../ui/buttons/UiButton";
 import type Phase from "@shared/data/phases/Phase";
-import { displayHud, getExplosionSpriteScale, getServerUrl, hideEndTurnButton, loadFont, showEndTurnButton, showToast } from "../client-utils";
+import { displayHud, getExplosionSpriteScale, hideEndTurnButton, loadFont, showEndTurnButton, showToast } from "../client-utils";
 import GameEndScreen from "../ui/containers/GameEndScreen";
 import SoundManager from "../managers/SoundManager";
 import { setCookie } from "typescript-cookie";
 import RoomManager from "../managers/RoomManager";
-import CapturePointClient from "../game-objects/CapturePointClient";
 import CapturePointManagerClient from "../managers/CapturePointManagerClient";
 import CameraManager from "../managers/CameraManager";
 import type QuadBlock from "@shared/data/QuadBlock";
@@ -32,9 +31,8 @@ import type ReloadPhase from "@shared/data/phases/ReloadPhase";
 import ActionPhase from "@shared/data/phases/ActionPhase";
 
 export default class GameScene extends Phaser.Scene {
-    active: boolean = true;
-    isOver: boolean = false;
-    client = new Client(getServerUrl());
+    active!: boolean;
+    isOver!: boolean;
     room!: Room;
     messageBuffer: { type: RequestTypes, data: any }[] = [];
 
@@ -79,20 +77,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     preload() {
-        this.keys = this.input.keyboard!.addKeys({
-            W: Phaser.Input.Keyboard.KeyCodes.W,
-            A: Phaser.Input.Keyboard.KeyCodes.A,
-            S: Phaser.Input.Keyboard.KeyCodes.S,
-            D: Phaser.Input.Keyboard.KeyCodes.D,
-
-            Z: Phaser.Input.Keyboard.KeyCodes.Z,
-            Q: Phaser.Input.Keyboard.KeyCodes.Q,
-
-            UP: Phaser.Input.Keyboard.KeyCodes.UP,
-            DOWN: Phaser.Input.Keyboard.KeyCodes.DOWN,
-            LEFT: Phaser.Input.Keyboard.KeyCodes.LEFT,
-            RIGHT: Phaser.Input.Keyboard.KeyCodes.RIGHT
-        }) as { [key: string]: Phaser.Input.Keyboard.Key };
+        this.events.on('shutdown', () => { this.shutDown() });
 
         this.load.image(RessourceKeys.Ground, `assets/ground/${GROUND_TYPE}_${TEXTURE_SIZE}.png`);
         this.load.image(RessourceKeys.ExplosionParticle, 'assets/particles/explosion-particle.png');
@@ -107,6 +92,21 @@ export default class GameScene extends Phaser.Scene {
         await loadFont("JetBrainsMono", "assets/fonts/JetBrainsMono-Medium.ttf");
 
         SoundManager.init(this);
+
+        this.keys = this.input.keyboard!.addKeys({
+            W: Phaser.Input.Keyboard.KeyCodes.W,
+            A: Phaser.Input.Keyboard.KeyCodes.A,
+            S: Phaser.Input.Keyboard.KeyCodes.S,
+            D: Phaser.Input.Keyboard.KeyCodes.D,
+
+            Z: Phaser.Input.Keyboard.KeyCodes.Z,
+            Q: Phaser.Input.Keyboard.KeyCodes.Q,
+
+            UP: Phaser.Input.Keyboard.KeyCodes.UP,
+            DOWN: Phaser.Input.Keyboard.KeyCodes.DOWN,
+            LEFT: Phaser.Input.Keyboard.KeyCodes.LEFT,
+            RIGHT: Phaser.Input.Keyboard.KeyCodes.RIGHT
+        }) as { [key: string]: Phaser.Input.Keyboard.Key };
 
         this.worldContainer = this.add.container();
         this.uiContainer = this.add.container();
@@ -511,15 +511,9 @@ export default class GameScene extends Phaser.Scene {
 
     debugFunction() {
         if (!DEBUG) return;
+    }
 
-        /*
-        const self = this.playerManager.getPlayer(this.room.sessionId);
-        const powerName = "Fatso";
-
-        self.addPower(powerName);
-        this.room.send(RequestTypes.PowerUpdate, { powerName: powerName })
-        */
-
-        new CapturePointClient(this, 400, 400);
+    shutDown() {
+        this.input.keyboard?.clearCaptures();
     }
 }
