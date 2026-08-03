@@ -96,6 +96,7 @@ export default class GameEndScreen extends Phaser.GameObjects.Container {
             viewportCenter.y + 130,
             "PLAY AGAIN",
             () => {
+                playAgainButton.disable();
                 this.playAgain(scene);
             },
             ButtonStyle.GameEndButton
