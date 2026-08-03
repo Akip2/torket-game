@@ -84,7 +84,7 @@ export class MyRoom extends Room<MyRoomState> {
     }
 
     getRandomMapId() {
-        const maps = ["mirrorhold", "floating_isles", "squares", "cave", "depths"];
+        const maps = ["mirrorhold", "floating_isles", "temple", "cave"];
         return maps[Math.floor(Math.random() * maps.length)];
     }
 
