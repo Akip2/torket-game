@@ -18,6 +18,7 @@ const MAPS = fs.readdirSync(MAPS_DIR)
             name: convertMapIdToName(path.basename(file, ".json")),
             maxPlayers: map.playerPositions.length,
             playerPositions: map.playerPositions,
+            bounds: map.bounds,
             primitive: map.primitive
         };
     });
