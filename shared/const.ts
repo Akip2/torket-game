@@ -7,7 +7,8 @@ export const DEBUG = false;
 export const FREE_ROAM = false;
 export const CLIENT_PREDICTION = false;
 
-export const DEFAULT_MAP_ID = "mirrorhold";
+export const DEFAULT_MAP_ID = "temple";
+export const QUICKPLAY_MAPS = ["temple", "floating_isles", "sun", "mirrorhold"];
 
 export const DISPLAY_CAPTURE_POINTS = false;
 
