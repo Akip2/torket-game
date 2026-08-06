@@ -1,6 +1,6 @@
 import { Room, Client } from "@colyseus/core";
 import { MyRoomState, Player } from "./schema/MyRoomState";
-import { BULLET_CONST, DEBUG, DEFAULT_MAP_ID, EXPLOSION_CONST, PLAYER_CONST, TILE_SIZE, TIME_STEP } from "@shared/const";
+import { BULLET_CONST, DEBUG, DEFAULT_MAP_ID, EXPLOSION_CONST, PLAYER_CONST, QUICKPLAY_MAPS, TILE_SIZE, TIME_STEP } from "@shared/const";
 import Matter, { Body } from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { InputPayload, GameMap, PlayerStartingPosition, ShootInfo, RoomJoinOptions, RoomCreationOptions, PowerUpdateData, ExplosionInfo, PendingExplosion } from "@shared/types";
@@ -84,8 +84,7 @@ export class MyRoom extends Room<MyRoomState> {
     }
 
     getRandomMapId() {
-        const maps = ["mirrorhold", "floating_isles", "temple", "cave"];
-        return maps[Math.floor(Math.random() * maps.length)];
+        return QUICKPLAY_MAPS[Math.floor(Math.random() * QUICKPLAY_MAPS.length)];
     }
 
     onJoin(client: Client, options: RoomJoinOptions) {

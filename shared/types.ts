@@ -191,6 +191,7 @@ export type MapPreviewData = {
     maxPlayers: number;
     primitive: PrimitiveMapData;
     playerPositions: Position[];
+    bounds: Bounds;
 }
 
 export type PrimitiveMapData = {

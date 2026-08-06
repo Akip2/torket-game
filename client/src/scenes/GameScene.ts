@@ -29,6 +29,7 @@ import type QuadBlock from "@shared/data/QuadBlock";
 import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
 import type ReloadPhase from "@shared/data/phases/ReloadPhase";
 import ActionPhase from "@shared/data/phases/ActionPhase";
+import { wait } from "@shared/utils";
 
 export default class GameScene extends Phaser.Scene {
     active!: boolean;
@@ -324,13 +325,18 @@ export default class GameScene extends Phaser.Scene {
         });
     }
 
-    setupUi() {
+    async setupUi() {
         const uiCam = this.cameras.add(0, 0, this.scale.gameSize.width, this.scale.gameSize.height);
         uiCam.setScroll(0, 0);
 
         this.cameras.main.ignore(this.uiContainer);
         uiCam.ignore(this.worldContainer);
         this.cameraManager.setUiCamera(uiCam);
+
+        while (!this.playerManager.currentPlayer) {
+            await wait(100);
+            console.log("waiting for playermanager to setup action panel");
+        }
 
         this.actionChoicePanel = new ActionChoicePanel(this, this.playerManager.currentPlayer);
     }

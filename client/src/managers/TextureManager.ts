@@ -16,6 +16,7 @@ export default class TextureManager {
         this.generateGunTexture();
         this.generateCapturePointTexture();
         this.generateAmmoTexture();
+        this.generateGlowTexture();
     }
 
     generatePlayerTexture(self: boolean = true, size = PLAYER_CONST.BASE_WIDTH) {
@@ -149,5 +150,30 @@ export default class TextureManager {
         gEmpty.strokeCircle(radius, radius, radius - 1);
         gEmpty.generateTexture(RessourceKeys.AmmoEmpty, radius * 2, radius * 2);
         gEmpty.destroy();
+    }
+
+    generateGlowTexture(radius = PLAYER_CONST.BASE_WIDTH) {
+        const g = this.factory.graphics();
+
+        const steps = 20;
+
+        for (let i = steps; i > 0; i--) {
+            const t = i / steps;
+
+            g.fillStyle(0xffffff, 0.02 + 0.05 * t * t);
+            g.fillCircle(
+                radius,
+                radius,
+                radius * t
+            );
+        }
+
+        g.generateTexture(
+            RessourceKeys.Glow,
+            radius * 2,
+            radius * 2
+        );
+
+        g.destroy();
     }
 }
