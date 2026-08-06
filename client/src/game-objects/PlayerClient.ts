@@ -16,7 +16,7 @@ import { Parameter } from "@shared/enums/Parameter.enum";
 import PlayerFace from "../ui/PlayerFace";
 import { FaceExpression } from "@shared/enums/FaceExpression.enum";
 import BulletReserve from "../ui/BulletReserve";
-import { Glow } from "../effects/glow";
+import { Glow } from "../effects/Glow";
 import { DeathParticles } from "../effects/DeathParticles";
 
 export default class PlayerClient extends Phaser.Physics.Matter.Sprite implements IPlayer {
