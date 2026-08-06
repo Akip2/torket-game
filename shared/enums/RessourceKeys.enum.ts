@@ -10,6 +10,7 @@ export enum RessourceKeys {
     CapturePoint = "capture-point",
     AmmoEmpty = "ammo-empty",
     AmmoFull = "ammo-full",
+    Glow = "glow",
 
     //SOUNDS
     Explosion = "explosion",

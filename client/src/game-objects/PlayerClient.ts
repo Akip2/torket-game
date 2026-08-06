@@ -16,6 +16,8 @@ import { Parameter } from "@shared/enums/Parameter.enum";
 import PlayerFace from "../ui/PlayerFace";
 import { FaceExpression } from "@shared/enums/FaceExpression.enum";
 import BulletReserve from "../ui/BulletReserve";
+import { Glow } from "../effects/glow";
+import { DeathParticles } from "../effects/DeathParticles";
 
 export default class PlayerClient extends Phaser.Physics.Matter.Sprite implements IPlayer {
     state: PlayerState = PlayerState.Inactive;
@@ -34,6 +36,9 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     nameTag: NameTag;
     face: PlayerFace;
 
+    glow: Glow;
+    deathParticles: DeathParticles;
+
     maxMovement: number;
     movementLeft: number;
 
@@ -44,8 +49,6 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     bulletCount: number;
 
     powerManager: PowerManager;
-
-    generateDeathParticles: (x: number, y: number) => void;
 
     constructor(scene: GameScene, name: string, x: number, y: number, self: boolean = true) {
         super(scene.matter.world, x, y, self ? RessourceKeys.Player : RessourceKeys.PlayerEnnemy);
@@ -90,23 +93,11 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.nameTag = new NameTag(scene, name, x, y, TextStyle.NameTag);
         this.face = new PlayerFace(scene, x, y, TextStyle.PlayerFace);
         this.bulletReserve = new BulletReserve(scene, x, y);
-
-        this.generateDeathParticles = (x: number, y: number) => {
-            const emmiter = scene.add.particles(x, y, RessourceKeys.DeathParticle, {
-                lifespan: 500,
-                speed: { min: 80, max: 700 },
-                angle: { min: 0, max: 360 },
-                scale: { start: 1.125, end: 0 },
-                quantity: 500,
-                gravityY: 50,
-                blendMode: 'ADD',
-                emitting: false
-            }).setDepth(Depths.Player);
-
-            emmiter.explode(50);
-        }
+        
+        this.glow = new Glow(scene, x, y, self);
+        this.deathParticles = new DeathParticles(scene);
     }
-    
+
     setBulletCount(bulletCount: number) {
         if ((bulletCount === this.bulletCount) || (bulletCount > this.maxBulletCount) || (bulletCount < 0)) return;
 
@@ -159,7 +150,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     }
 
     addForce(x: number, y: number): void {
-        this.applyForce(new Phaser.Math.Vector2(x=x, y=y));
+        this.applyForce(new Phaser.Math.Vector2(x = x, y = y));
     }
 
     addPower(powerName: string) {
@@ -217,6 +208,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.nameTag.updatePlacement(this.x, this.y);
         this.face.updatePlacement(this.x, this.y);
         this.bulletReserve.updatePlacement(this.x, this.y);
+        this.glow.setPosition(this.x, this.y)
     }
 
     setDead() {
@@ -230,7 +222,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.destroyComponents();
         this.setVisible(false);
 
-        this.generateDeathParticles(this.x, this.y);
+        this.deathParticles.activate(this.x, this.y);
     }
 
     getPosition(): Position {
@@ -295,6 +287,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
         this.nameTag.destroy(fromScene);
         this.face.destroy(fromScene);
         this.bulletReserve.destroy(fromScene);
+        this.glow.destroy(fromScene);
     }
 
     setPlayerState(state: PlayerState) {
