@@ -17,16 +17,18 @@ import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
 import { immobilizePlayer } from "@shared/logics/player-logic";
 import ReloadPhase from "@shared/data/phases/ReloadPhase";
 import ActionPhase from "@shared/data/phases/ActionPhase";
+import Bot from "../bodies/Bot";
+import { isBotId } from "../server-utils";
 
 export default class PhaseManagerServer {
-    currentIndex: number = -1;
-    currentPhase: Phase = new WaitingPhase();
-    phases: Phase[] = [];
-    playerManager: PlayerManagerServer;
-    timeOut?: NodeJS.Timeout;
-    concernedPlayerId: string | null = null;
-    onPhaseChange: (phase: Phase) => void;
-    onGameStart: () => void;
+    private currentIndex: number = -1;
+    private currentPhase: Phase = new WaitingPhase();
+    private phases: Phase[] = [];
+    private playerManager: PlayerManagerServer;
+    private timeOut?: NodeJS.Timeout;
+    private concernedPlayerId: string | null = null;
+    private onPhaseChange: (phase: Phase) => void;
+    private onGameStart: () => void;
 
     constructor(playerManager: PlayerManagerServer, onGameStart: () => void, onPhaseChange: (phase: Phase) => void) {
         this.playerManager = playerManager;
@@ -83,7 +85,7 @@ export default class PhaseManagerServer {
             this.concernedPlayerId = null;
         }
 
-        if (!FREE_ROAM) this.playerManager.handlePlayersState(phase);
+        if (!FREE_ROAM) this.playerManager.handlePlayersState(phase, this.concernedPlayerId);
 
         this.currentPhase = phase;
         this.onPhaseChange(phase);
@@ -168,6 +170,10 @@ export default class PhaseManagerServer {
     }
 
     phaseStartEvent() {
+        if (this.concernedPlayerId && isBotId(this.concernedPlayerId)) {
+            (this.playerManager.getPlayer(this.concernedPlayerId) as Bot).runAlgo();
+        }
+
         switch (this.currentPhase.type) {
             case PhaseTypes.Moving:
                 this.movingPhaseStartEvent();
@@ -193,5 +199,13 @@ export default class PhaseManagerServer {
                 this.next(500);
             }
         }, 50)
+    }
+
+    getCurrentPhase() {
+        return this.currentPhase;
+    }
+
+    getConcernedPlayerId() {
+        return this.concernedPlayerId;
     }
 }

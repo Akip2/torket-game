@@ -11,5 +11,6 @@ export enum RequestTypes {
     GameEnd = "game-end",
     PowerUpdate = "power-update",
     Capture = "capture",
+    AddBots = "add-bots",
     Debug = "debug",
 }

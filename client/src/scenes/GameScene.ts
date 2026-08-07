@@ -517,6 +517,8 @@ export default class GameScene extends Phaser.Scene {
 
     debugFunction() {
         if (!DEBUG) return;
+
+        this.room.send(RequestTypes.AddBots);
     }
 
     shutDown() {

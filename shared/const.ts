@@ -150,3 +150,5 @@ export const AUDIO_RESSOURCE_KEYS = [
     RessourceKeys.Uncapture,
     RessourceKeys.CaptureVictory,
 ];
+
+export const BOT_ID = "bot";

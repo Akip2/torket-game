@@ -1,9 +1,9 @@
 import { Room, Client } from "@colyseus/core";
 import { MyRoomState, Player } from "./schema/MyRoomState";
-import { BULLET_CONST, DEBUG, DEFAULT_MAP_ID, EXPLOSION_CONST, PLAYER_CONST, QUICKPLAY_MAPS, TILE_SIZE, TIME_STEP } from "@shared/const";
+import { BULLET_CONST, DEBUG, DEFAULT_MAP_ID, PLAYER_CONST, QUICKPLAY_MAPS, TILE_SIZE, TIME_STEP } from "@shared/const";
 import Matter, { Body } from "matter-js";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
-import { InputPayload, GameMap, PlayerStartingPosition, ShootInfo, RoomJoinOptions, RoomCreationOptions, PowerUpdateData, ExplosionInfo, PendingExplosion } from "@shared/types";
+import { InputPayload, GameMap, PlayerStartingPosition, ShootInfo, RoomJoinOptions, RoomCreationOptions, PowerUpdateData, ExplosionInfo, PendingExplosion, PlayerData } from "@shared/types";
 import QuadBlock from "@shared/data/QuadBlock";
 import { generateBulletOriginPosition, shoot } from "@shared/logics/bullet-logic";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
@@ -28,6 +28,9 @@ import { CapturePointManagerServer } from "../managers/CapturePointManagerServer
 import { Team } from "@shared/enums/Team.enum.ts";
 import { WinCondition } from "@shared/enums/WinCondition.enum";
 import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
+import HumanPlayer from "../bodies/HumanPlayer";
+import Bot from "../bodies/Bot";
+import BotPerception from "../bot-intelligence/BotPerception";
 
 dotenv.config();
 
@@ -90,34 +93,14 @@ export class MyRoom extends Room<MyRoomState> {
     onJoin(client: Client, options: RoomJoinOptions) {
         if (this.password && options.password !== this.password) throw new Error(ServerErrorCode.IncorrectPassword);
 
-        const player = new Player();
-
-        const startingPosition = this.playerStartingPositions.find((p) => p.playerId == null)
-        if (!startingPosition) return;
-
-        startingPosition.playerId = client.sessionId;
-
-        player.pseudo = cleanPlayerName(options.playerData.name);
-        player.x = startingPosition.x + PLAYER_CONST.BASE_WIDTH / 2;
-        player.y = startingPosition.y;
-        player.timeStamp = 0;
-        player.hp = PLAYER_CONST.BASE_MAX_HP;
-        player.team = (this.playerManager.getPlayerNb() % 2 == 0) ? Team.Blue : Team.Red;
-
-        this.playerManager.addPlayer(client.sessionId, player, (hp: number, damage?: number, directHit?: boolean) => this.onPlayerDamage(client.sessionId, hp, damage, directHit), this.physicsManager)
-        this.state.players.set(client.sessionId, player);
-
+        this.instantiatePlayer(client.sessionId, options.playerData, false);
         this.firstSynchronization(client);
-
-        if (this.playerManager.getPlayerNb() === this.maxClients) { // if enough players we start the game
-            this.phaseManager.start();
-        }
     }
 
     onLeave(client: Client, consented: boolean) {
         if (this.playerManager.getPlayerNb() === 0) {
             this.phaseManager.stop();
-        } else if (this.phaseManager.currentPhase instanceof StartingPhase || this.phaseManager.currentPhase instanceof WaitingPhase) {
+        } else if (this.phaseManager.getCurrentPhase() instanceof StartingPhase || this.phaseManager.getCurrentPhase() instanceof WaitingPhase) {
             this.phaseManager.reset();
             const playerStartingPosition = this.playerStartingPositions.find((p) => p.playerId === client.sessionId);
             if (playerStartingPosition) playerStartingPosition.playerId = null
@@ -218,6 +201,10 @@ export class MyRoom extends Room<MyRoomState> {
                 id: client.sessionId,
                 powerName: powerUpdateData.powerName
             }, { except: client });
+        });
+
+        this.onMessage(RequestTypes.AddBots, (client) => {
+            this.instantiatePlayer("bot", { name: "Bob" }, true);
         });
     }
 
@@ -330,8 +317,8 @@ export class MyRoom extends Room<MyRoomState> {
     explode(bullet: BulletServer, minSize: number = TILE_SIZE) {
         this.terrainManager.explodeTerrain(bullet, minSize);
 
-        if (this.phaseManager.currentPhase.type === PhaseTypes.Shooting && this.phaseManager.concernedPlayerId) {
-            const concernedPlayer = this.playerManager.getPlayer(this.phaseManager.concernedPlayerId);
+        if (this.phaseManager.getCurrentPhase().type === PhaseTypes.Shooting && this.phaseManager.getConcernedPlayerId()) {
+            const concernedPlayer = this.playerManager.getPlayer(this.phaseManager.getConcernedPlayerId()!);
             if (concernedPlayer && !canPlayerShoot(concernedPlayer)) {
                 this.phaseManager.next(500);
             }
@@ -366,7 +353,7 @@ export class MyRoom extends Room<MyRoomState> {
         const content = {
             terrain: this.terrainManager.root,
             capturePoints: this.capturePointManager.getSerializedCapturePoints(),
-            phase: this.phaseManager.currentPhase
+            phase: this.phaseManager.getCurrentPhase()
         };
 
         if (client) {
@@ -380,7 +367,7 @@ export class MyRoom extends Room<MyRoomState> {
         const content = {
             terrain: this.terrainManager.root,
             capturePoints: this.capturePointManager.getSerializedCapturePoints(),
-            phase: this.phaseManager.currentPhase,
+            phase: this.phaseManager.getCurrentPhase(),
             bounds: this.terrainManager.bounds
         };
 
@@ -415,9 +402,43 @@ export class MyRoom extends Room<MyRoomState> {
         });
     }
 
+    instantiatePlayer(sessionId: string, playerData: PlayerData, bot: boolean = false) {
+        if (this.playerManager.getPlayerNb() === this.maxClients) return;
+
+        const player = new Player();
+
+        const startingPosition = this.playerStartingPositions.find((p) => p.playerId == null)
+        if (!startingPosition) return;
+
+        startingPosition.playerId = sessionId;
+
+        player.pseudo = cleanPlayerName(playerData.name);
+        player.x = startingPosition.x + PLAYER_CONST.BASE_WIDTH / 2;
+        player.y = startingPosition.y;
+        player.timeStamp = 0;
+        player.hp = PLAYER_CONST.BASE_MAX_HP;
+        player.team = (this.playerManager.getPlayerNb() % 2 == 0) ? Team.Blue : Team.Red;
+
+        let playerBody;
+        if (!bot) {
+            playerBody = new HumanPlayer(player, sessionId, (hp: number, damage?: number, directHit?: boolean) => this.onPlayerDamage(sessionId, hp, damage, directHit));
+        } else {
+            const botPerception = new BotPerception(this.playerManager.getPlayersAlive()[0], this.phaseManager);
+            playerBody = new Bot(player, sessionId, (hp: number, damage?: number, directHit?: boolean) => this.onPlayerDamage(sessionId, hp, damage, directHit), botPerception);
+        }
+
+        this.playerManager.addPlayer(sessionId, playerBody);
+        this.state.players.set(sessionId, player);
+        this.physicsManager.add(playerBody);
+
+        if (this.playerManager.getPlayerNb() === this.maxClients) { // if enough players we start the game
+            this.phaseManager.start();
+        }
+    }
+
     async debugFunction() {
         if (!DEBUG) return;
-        
+
         for (let i = 0; i < this.capturePointManager.getCapturePointsNb(); i++) {
             this.capturePointManager.manageContact(i, Team.Blue, true);
             await wait(500);

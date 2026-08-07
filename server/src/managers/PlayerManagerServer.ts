@@ -1,14 +1,11 @@
-import { getPlayerDistanceFromPoint, immobilizePlayer, isPlayerInRadius, movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
+import { getPlayerDistanceFromPoint, isPlayerInRadius, movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
 import { InputPayload, PendingExplosion } from "@shared/types";
 import PlayerServer from "../bodies/PlayerServer";
-import { Player } from "../rooms/schema/MyRoomState";
-import PhysicsManager from "./PhysicsManager";
 import Phase from "@shared/data/phases/Phase";
 import SoloActionPhase from "@shared/data/phases/SoloActionPhase";
 import { PlayerState } from "@shared/enums/PlayerState.enum";
 import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
-import { EXPLOSION_CONST, PLAYER_CONST } from "@shared/const";
-import { Body } from "matter-js";
+import { PLAYER_CONST } from "@shared/const";
 import { Team } from "@shared/enums/Team.enum.ts";
 
 export default class PlayerManagerServer {
@@ -18,10 +15,8 @@ export default class PlayerManagerServer {
         this.playerBodies = new Map();
     }
 
-    addPlayer(sessionId: string, player: Player, onDamage: (hp: number, damage?: number, directHit?: boolean) => void, physicsManager: PhysicsManager) {
-        const playerBody = new PlayerServer(player, sessionId, (hp: number, damage?: number, directHit?: boolean) => onDamage(hp, damage, directHit));
+    addPlayer(sessionId: string, playerBody: PlayerServer) {
         this.playerBodies.set(sessionId, playerBody);
-        physicsManager.add(playerBody);
     }
 
     updateRefsPosition() {
@@ -30,8 +25,8 @@ export default class PlayerManagerServer {
         });
     }
 
-    handlePlayersState(phase: Phase) {
-        if (phase instanceof SoloActionPhase) {
+    handlePlayersState(phase: Phase, concernedPlayerId: string | null) {
+        if (concernedPlayerId) { // is a solo phase
             const actionPhase = phase as SoloActionPhase;
             const concernedPlayerId = actionPhase.playerId;
 
