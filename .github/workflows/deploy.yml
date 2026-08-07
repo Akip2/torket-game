@@ -1,15 +1,16 @@
-name: Deploy to GitHub Pages
+name: Deploy Pages Emergency
 
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     defaults:
       run:
