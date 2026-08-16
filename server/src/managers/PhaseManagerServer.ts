@@ -65,7 +65,7 @@ export default class PhaseManagerServer {
         clearTimeout(this.timeOut);
 
         if (phase instanceof TimedPhase) {
-            (phase as TimedPhase).setStartTime(Date.now());
+            phase.setStartTime(Date.now());
             this.timeOut = setTimeout(
                 () => {
                     let transitionDelay = 0;
@@ -170,14 +170,14 @@ export default class PhaseManagerServer {
     }
 
     phaseStartEvent() {
-        if (this.concernedPlayerId && isBotId(this.concernedPlayerId)) {
-            (this.playerManager.getPlayer(this.concernedPlayerId) as Bot).runAlgo();
-        }
-
         switch (this.currentPhase.type) {
             case PhaseTypes.Moving:
                 this.movingPhaseStartEvent();
                 break;
+        }
+
+        if (this.concernedPlayerId && isBotId(this.concernedPlayerId)) {
+            (this.playerManager.getPlayer(this.concernedPlayerId) as Bot).runAlgo();
         }
     }
 
@@ -194,6 +194,7 @@ export default class PhaseManagerServer {
                 concernedPlayer.enableMass();
             } else if (!concernedPlayer.hasMovementLeft()) {
                 clearInterval(loop);
+                this.disableAction(concernedPlayer);
                 concernedPlayer.enableMass();
                 immobilizePlayer(concernedPlayer);
                 this.next(500);
