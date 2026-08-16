@@ -7,10 +7,12 @@ import { MyRoom } from "../rooms/MyRoom";
 import BotIntelligence from "../bot-intelligence/BotIntelligence";
 import TreeNode from "../bot-intelligence/decision-tree/TreeNode";
 import { createActionChoiceDecisionTree, createMovingDecisionTree, createShootingDecisionTree } from "../bot-intelligence/decision-tree/tree-creator";
+import TreeRunner from "../bot-intelligence/decision-tree/TreeRunner";
 
 export default class Bot extends PlayerServer {
     currentInputs!: InputPayload;
     private phaseToDecisionTree: Map<PhaseTypes, TreeNode>;
+    private treeRunner: TreeRunner;
 
     constructor(
         playerRef: Player,
@@ -28,6 +30,8 @@ export default class Bot extends PlayerServer {
             [PhaseTypes.Moving, createMovingDecisionTree(botIntelligence)],
         ]);
 
+        this.treeRunner = new TreeRunner();
+
         this.resetInputs();
     }
 
@@ -44,6 +48,7 @@ export default class Bot extends PlayerServer {
     }
 
     async runAlgo(currentPhaseType: PhaseTypes) {
-        this.phaseToDecisionTree.get(currentPhaseType)?.execute();
+        const tree = this.phaseToDecisionTree.get(currentPhaseType);
+        if (tree) this.treeRunner.run(tree);
     }
 }

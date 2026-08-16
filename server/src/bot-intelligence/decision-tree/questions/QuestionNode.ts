@@ -31,6 +31,6 @@ export default abstract class QuestionNode implements TreeNode {
     protected abstract evaluate(): boolean;
 
     execute() {
-        this.getNext().execute();
+
     }
 }
