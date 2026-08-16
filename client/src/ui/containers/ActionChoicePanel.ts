@@ -8,6 +8,8 @@ import type { IPlayer } from "@shared/interfaces/Player.interface";
 
 export default class ActionChoicePanel {
     container: Phaser.GameObjects.Container;
+
+    private active: boolean;
     private scene: GameScene;
     private titleText: Phaser.GameObjects.Text;
     private actionButtons: ActionButton[];
@@ -17,6 +19,7 @@ export default class ActionChoicePanel {
 
     constructor(scene: GameScene, mainPlayer: IPlayer) {
         this.scene = scene;
+        this.active = false;
         this.mainPlayer = mainPlayer;
         this.container = scene.add.container(0, 0);
         scene.uiContainer.add(this.container);
@@ -142,6 +145,8 @@ export default class ActionChoicePanel {
     }
 
     show() {
+        this.active = true;
+
         this.container.setVisible(true);
 
         // Stagger animations for buttons
@@ -157,6 +162,8 @@ export default class ActionChoicePanel {
 
         // Add wiggle animation to buttons after they appear
         setTimeout(() => {
+            if (!this.active) return;
+            
             this.scene.tweens.add({
                 targets: this.actionButtons,
                 angle: 3,
@@ -169,12 +176,13 @@ export default class ActionChoicePanel {
     }
 
     hide() {
+        this.active = false;
         this.actionButtons.forEach((b, id) => {
             b.disappear(this.scene, id * 50);
         });
 
         setTimeout(() => {
-            this.hideInstantly();
+            if(!this.active) this.hideInstantly();
         }, 300);
     }
 
