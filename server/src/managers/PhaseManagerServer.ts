@@ -177,7 +177,7 @@ export default class PhaseManagerServer {
         }
 
         if (this.concernedPlayerId && isBotId(this.concernedPlayerId)) {
-            (this.playerManager.getPlayer(this.concernedPlayerId) as Bot).runAlgo();
+            (this.playerManager.getPlayer(this.concernedPlayerId) as Bot).runAlgo(this.currentPhase.type);
         }
     }
 

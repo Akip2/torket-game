@@ -52,11 +52,11 @@ export default class PlayerServer extends GameBody implements IPlayer {
         this.currentScale = 1;
     }
     hasBullets(): boolean {
-        return this.playerRef.bulletCount > 0;
+        return this.getBulletCount() > 0;
     }
 
     hasMaxBulletCount(): boolean {
-        return this.playerRef.bulletCount === PLAYER_CONST.BASE_MAX_BULLET_COUNT;
+        return this.getBulletCount() === PLAYER_CONST.BASE_MAX_BULLET_COUNT;
     }
     decreaseBulletCount(): void {
         this.playerRef.bulletCount -= 1;
@@ -125,6 +125,10 @@ export default class PlayerServer extends GameBody implements IPlayer {
                 y: 0
             });
         }
+    }
+
+    getBulletCount(): number {
+        return this.playerRef.bulletCount;
     }
 
     enableMass() {

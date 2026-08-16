@@ -29,6 +29,24 @@ export default class BotGameAction extends BasicGameAction {
         this.handleActionChoice(this.bot.sessionId, action);
     }
 
+    moveHorizontally(right: boolean) {
+        if (right) {
+            this.bot.currentInputs.right = true;
+            this.bot.currentInputs.left = false;
+        } else {
+            this.bot.currentInputs.left = true;
+            this.bot.currentInputs.right = false;
+        }
+    }
+
+    jump() {
+        this.bot.currentInputs.up = true;
+    }
+
+    stopJumping() {
+        this.bot.currentInputs.up = false;
+    }
+
     async listenToInputs() {
         if (this.isListeningToInputs) return; // already listening
 

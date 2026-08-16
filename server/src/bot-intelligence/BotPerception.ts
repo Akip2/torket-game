@@ -1,14 +1,21 @@
-import Phase from "@shared/data/phases/Phase";
 import PlayerServer from "../bodies/PlayerServer";
 import PhaseManagerServer from "../managers/PhaseManagerServer";
 import { Position } from "@shared/types";
+import Bot from "../bodies/Bot";
+import { MyRoom } from "../rooms/MyRoom";
 
 export default class BotPerception {
-    constructor(
-        private readonly otherPlayer: PlayerServer,
-        private readonly phaseManager: PhaseManagerServer
-    ) {
+    private readonly otherPlayer: PlayerServer;
+    private readonly phaseManager: PhaseManagerServer;
+    private readonly self: Bot;
 
+    constructor(
+        room: MyRoom,
+        bot: Bot
+    ) {
+        this.otherPlayer = room.playerManager.getPlayersAlive()[0];
+        this.phaseManager = room.phaseManager;
+        this.self = bot;
     }
 
     get currentPhase() {
@@ -17,5 +24,13 @@ export default class BotPerception {
 
     get otherPlayerPosition(): Position {
         return this.otherPlayer.getPosition();
+    }
+
+    get selfPosition(): Position {
+        return this.self.getPosition();
+    }
+
+    get selfBulletCount(): number {
+        return this.self.getBulletCount();
     }
 }
