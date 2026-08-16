@@ -3,7 +3,7 @@ import { Parameter } from "./enums/Parameter.enum";
 import { RessourceKeys } from "./enums/RessourceKeys.enum";
 import type { ParameterChangeCoef } from "./types";
 
-export const DEBUG = false;
+export const DEBUG = true;
 export const FREE_ROAM = false;
 export const CLIENT_PREDICTION = false;
 

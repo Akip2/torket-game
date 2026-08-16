@@ -29,7 +29,7 @@ import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
 import HumanPlayer from "../bodies/HumanPlayer";
 import Bot from "../bodies/Bot";
 import BotPerception from "../bot-intelligence/BotPerception";
-import GameActionManager from "../managers/GameActionManager";
+import BasicGameAction from "../game-action/BasicGameAction";
 
 dotenv.config();
 
@@ -45,7 +45,7 @@ export class MyRoom extends Room<MyRoomState> {
     physicsManager: PhysicsManager = new PhysicsManager();
     playerManager: PlayerManagerServer = new PlayerManagerServer();
     capturePointManager!: CapturePointManagerServer;
-    gameActionManager!: GameActionManager;
+    gameActionManager!: BasicGameAction;
 
     bullets: BulletServer[] = [];
 
@@ -76,7 +76,7 @@ export class MyRoom extends Room<MyRoomState> {
         this.setupMessages();
         this.setupCollisionEvents();
         this.phaseManager = new PhaseManagerServer(this.playerManager, () => { this.onGameStart() }, (phase) => this.broadcastPhase(phase));
-        this.gameActionManager = new GameActionManager(this);
+        this.gameActionManager = new BasicGameAction(this);
 
         const mapId = options.mapId ?? this.getRandomMapId();
         await this.setupTerrain(mapId);
@@ -132,7 +132,7 @@ export class MyRoom extends Room<MyRoomState> {
     setupMessages() {
         this.onMessage(RequestTypes.Move, (client, inputPayload: InputPayload) => {
             const player = this.state.players.get(client.sessionId);
-            player?.inputQueue.push(inputPayload);
+            this.gameActionManager.handleInputs(player!, inputPayload);
         });
 
         this.onMessage(RequestTypes.Shoot, (client, shootInfo: ShootInfo) => {
@@ -388,8 +388,7 @@ export class MyRoom extends Room<MyRoomState> {
         if (!bot) {
             playerBody = new HumanPlayer(player, sessionId, (hp: number, damage?: number, directHit?: boolean) => this.onPlayerDamage(sessionId, hp, damage, directHit));
         } else {
-            const botPerception = new BotPerception(this.playerManager.getPlayersAlive()[0], this.phaseManager);
-            playerBody = new Bot(player, sessionId, (hp: number, damage?: number, directHit?: boolean) => this.onPlayerDamage(sessionId, hp, damage, directHit), botPerception, this.gameActionManager);
+            playerBody = new Bot(player, sessionId, this, (hp: number, damage?: number, directHit?: boolean) => this.onPlayerDamage(sessionId, hp, damage, directHit));
         }
 
         this.playerManager.addPlayer(sessionId, playerBody);

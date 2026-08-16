@@ -1,5 +1,5 @@
 import { Action } from "@shared/enums/Action.enum";
-import { ExplosionInfo, ShootInfo } from "@shared/types";
+import { ExplosionInfo, InputPayload, ShootInfo } from "@shared/types";
 import { MyRoom } from "../rooms/MyRoom";
 import { canPlayerShoot } from "@shared/logics/player-logic";
 import { generateBulletOriginPosition, shoot } from "@shared/logics/bullet-logic";
@@ -8,13 +8,19 @@ import { BULLET_CONST } from "@shared/const";
 import { Parameter } from "@shared/enums/Parameter.enum";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import { Client } from "colyseus";
+import { Player } from "../rooms/schema/MyRoomState";
 
-export default class GameActionManager {
+export default class BasicGameAction {
     handleShoot: (sessionId: string, shootInfo: ShootInfo, client?: Client) => void
+    handleInputs: (player: Player, inputPayload: InputPayload) => void
     handleActionChoice: (sessionId: string, action: Action) => void
     handleEndTurn: (sessionId: string) => void
 
     constructor(room: MyRoom) {
+        this.handleInputs = (player: Player, inputPayload: InputPayload) => {
+            player?.inputQueue.push(inputPayload);
+        }
+
         this.handleEndTurn = (sessionId: string) => {
             room.phaseManager.endTurn(sessionId);
         }
