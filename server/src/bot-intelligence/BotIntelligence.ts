@@ -6,7 +6,7 @@ import BotPerception from "./BotPerception";
 
 export default class BotIntelligence {
     private botAction: BotGameAction;
-    private botPerception: BotPerception;
+    botPerception: BotPerception;
 
     constructor(room: MyRoom, bot: Bot) {
         this.botAction = new BotGameAction(room, bot);

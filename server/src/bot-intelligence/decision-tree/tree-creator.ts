@@ -5,22 +5,38 @@ import BotIntelligence from "../BotIntelligence";
 import ProbaNode from "./questions/ProbaNode";
 import EndNode from "./EndNode";
 import EndTurnNode from "./actions/EndTurnNode";
+import ValueComparisonNode from "./questions/ValueComparisonNode";
+import PerceptionValue from "./value-getters/PerceptionValue";
+import { BotPerceptionKey } from "@shared/enums/BotPerceptionKey.enum";
+import StaticValue from "./value-getters/StaticValue";
+import { Operation } from "@shared/enums/Operation.enum";
+import ActionChoiceNode from "./actions/ActionChoiceNode";
 
 const END = new EndNode();
 
 export function createActionChoiceDecisionTree(botIntelligence: BotIntelligence): TreeNode {
-    const probaChoice = new ProbaNode(0.75);
+    const hasMunitions = new ValueComparisonNode(
+        new PerceptionValue(botIntelligence.botPerception, BotPerceptionKey.SelfBulletCount),
+        new StaticValue(0),
+        Operation.SUP
+    );
 
-    const moveActionChoice = new ActionNode(botIntelligence, Action.Move);
-    const shootActionChoice = new ActionNode(botIntelligence, Action.Shoot);
+    const probaNoMunitions = new ProbaNode(0.7);
 
-    probaChoice.setFalseNode(shootActionChoice);
-    probaChoice.setTrueNode(moveActionChoice);
-    
-    moveActionChoice.setNextNode(END);
-    shootActionChoice.setNextNode(END);
+    const chooseReload = new ActionChoiceNode(botIntelligence, Action.Reload);
+    const chooseMove = new ActionChoiceNode(botIntelligence, Action.Move);
+    const chooseShoot = new ActionChoiceNode(botIntelligence, Action.Shoot);
 
-    return probaChoice;
+    hasMunitions.setTrueNode(chooseShoot); // TODO
+    hasMunitions.setFalseNode(probaNoMunitions);
+
+    probaNoMunitions.setTrueNode(chooseReload);
+    probaNoMunitions.setFalseNode(chooseMove);
+
+    chooseMove.setNextNode(END);
+    chooseReload.setNextNode(END);
+
+    return hasMunitions;
 }
 
 export function createMovingDecisionTree(botIntelligence: BotIntelligence): TreeNode {
