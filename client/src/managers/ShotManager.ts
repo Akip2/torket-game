@@ -1,11 +1,10 @@
 import type { ExplosionInfo, Position, ShootInfo } from "@shared/types";
 import BulletClient from "../game-objects/BulletClient";
-import { generateBulletOriginPosition, shoot } from "@shared/logics/bullet-logic";
+import { generateBulletOriginPosition, shoot, simulateShot } from "@shared/logics/bullet-logic";
 import type GameScene from "../scenes/GameScene";
 import { RequestTypes } from "@shared/enums/RequestTypes.enum";
 import { wait } from "@shared/utils";
-import { BULLET_CONST, GRAVITY, TIME_STEP, SHOT_CONST } from "@shared/const";
-import Vector from "@shared/data/Vector";
+import { TIME_STEP, SHOT_CONST } from "@shared/const";
 import { Depths } from "@shared/enums/Depths.enum.ts";
 import SoundManager from "./SoundManager";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
@@ -112,33 +111,13 @@ export default class ShotManager {
         }
 
         this.trajectoryDrawer.clear();
-        //this.trajectoryDrawer = this.scene.add.graphics();
         this.trajectoryDrawer.fillStyle(0xffffff, 0.9);
 
-        const gravityStep = GRAVITY * 0.001 * TIME_STEP * TIME_STEP * BULLET_CONST.GRAVITY_SCALE;
-        const frictionFactor = 1 - BULLET_CONST.AIR_FRICTION;
-
-        let x = shootInfo.originX;
-        let y = shootInfo.originY;
-
-        const normalizedVector = new Vector(
-            shootInfo.targetX - x,
-            shootInfo.targetY - y
-        ).getNormalizedVector();
-
-        let vx = normalizedVector.x * shootInfo.force;
-        let vy = normalizedVector.y * shootInfo.force;
-
-        const maxSteps = 100;
-        for (let i = 0; i < maxSteps; i++) {
-            vx = vx * frictionFactor;
-            x += vx;
-            y += vy;
-
-            vy = vy * frictionFactor + gravityStep;
-
-            this.trajectoryDrawer.fillCircle(x, y, 2);
-        }
+        simulateShot(
+            shootInfo,
+            (x: number, y: number) => { this.trajectoryDrawer?.fillCircle(x, y, 2) },
+            100
+        )
     }
 
     generateShotInfo() {
