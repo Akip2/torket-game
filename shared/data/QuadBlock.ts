@@ -163,6 +163,23 @@ export default class QuadBlock {
         return res;
     }
 
+    collidesWithCircle(cx: number, cy: number, radius: number): boolean {
+        if (!circleIntersectsRectangle(
+            cx, cy, radius,
+            this.x, this.y, this.width, this.height
+        )) {
+            return false;
+        }
+
+        if (!this.hasChildren()) {
+            return this.filled;
+        }
+
+        return this.children.some(child =>
+            child.collidesWithCircle(cx, cy, radius)
+        );
+    }
+
     static mergeAdjacentBlocks(blocks: QuadBlock[]): Rectangle[] {
         if (blocks.length === 0) return [];
 

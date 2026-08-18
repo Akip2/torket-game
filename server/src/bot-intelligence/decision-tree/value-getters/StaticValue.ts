@@ -1,11 +1,12 @@
+import { ComparableValue } from "@shared/types";
 import { ValueGetter } from "./ValueGetter";
 
 export default class StaticValue implements ValueGetter {
-    constructor(private value: number) {
+    constructor(private value: ComparableValue) {
 
     }
 
-    getValue(): number {
+    getValue(): ComparableValue {
         return this.value;
     }    
 }

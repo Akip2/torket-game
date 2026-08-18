@@ -24,6 +24,15 @@ export type ShootInfo = {
     targetY: number
 }
 
+export type CalculatedTrajectory = {
+    hitTarget: boolean;
+    collisionNumber: number;
+    shootInfo: ShootInfo;
+    useful: boolean;
+}
+
+export type ComparableValue = number | boolean;
+
 export type CaptureInfo = {
     id: number;
     newOwningTeam: Team;
