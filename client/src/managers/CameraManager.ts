@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { GAME_HEIGHT, GAME_WIDTH, ZOOM_CONST } from "@shared/const";
-import type { CameraManagerOptions } from "@shared/types";
+import type { Bounds, CameraManagerOptions } from "@shared/types";
 
 export default class CameraManager {
     private readonly camera: Phaser.Cameras.Scene2D.Camera;
@@ -42,6 +42,31 @@ export default class CameraManager {
 
     setUiCamera(camera: Phaser.Cameras.Scene2D.Camera) {
         this.uiCamera = camera;
+        this.syncUiCamera();
+    }
+
+    fitBounds(bounds: Bounds, padding: number = 50) {
+        const width = bounds.x.max - bounds.x.min;
+        const height = bounds.y.max - bounds.y.min;
+
+        const zoomX = this.camera.width / (width + padding * 2);
+        const zoomY = this.camera.height / (height + padding * 2);
+
+        const zoom = Phaser.Math.Clamp(
+            Math.min(zoomX, zoomY),
+            ZOOM_CONST.MIN_ZOOM,
+            ZOOM_CONST.MAX_ZOOM
+        );
+
+        this.camera.setZoom(zoom);
+
+        this.camera.preRender();
+
+        this.camera.centerOn(
+            (bounds.x.min + bounds.x.max) / 2,
+            (bounds.y.min + bounds.y.max) / 2
+        );
+
         this.syncUiCamera();
     }
 

@@ -207,6 +207,7 @@ export default class GameScene extends Phaser.Scene {
 
         this.capturePointManager.syncCapturePoints(synchroInfo.capturePoints);
         this.terrainManager.createBorders(synchroInfo.bounds);
+        this.cameraManager.fitBounds(synchroInfo.bounds);
     }
 
     async setupRoomMessages() {
