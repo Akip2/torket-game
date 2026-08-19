@@ -2,31 +2,37 @@ import { BULLET_CONST, EXPLOSION_CONST, PLAYER_CONST, SHOT_CONST } from "@shared
 import { generateBulletOriginPosition, simulateShot } from "@shared/logics/bullet-logic";
 import { CalculatedTrajectory, Position, ShootInfo } from "@shared/types";
 import QuadBlock from "@shared/data/QuadBlock";
+import { HitType } from "@shared/enums/HitType.enum";
 
 export default class TrajectoryCalculator {
     private currentTrajectory!: CalculatedTrajectory;
 
-    private playerPositionInRadius(x: number, y: number, playerPos: Position) {
+    private playerPositionInRadius(x: number, y: number, playerPos: Position, radius: number) {
         const dist = Math.sqrt(
             (x - playerPos.x) ** 2
             +
             (y - playerPos.y) ** 2
         );
 
-        return dist < BULLET_CONST.RADIUS + (PLAYER_CONST.BASE_WIDTH / 1.25);
+        return dist < radius + (PLAYER_CONST.BASE_WIDTH / Math.min(1.8, Math.random() * 2.2));
     }
 
     private shotStepCallback(x: number, y: number, playerPos: Position, terrain: QuadBlock, bulletCount: number) {
-        const endCondition = this.currentTrajectory.hitTarget || (this.currentTrajectory.collisionNumber >= bulletCount);
+        const endCondition = this.currentTrajectory.hitType === HitType.Direct || (this.currentTrajectory.collisionNumber >= bulletCount);
         if (endCondition) return;
 
-        if (this.playerPositionInRadius(x, y, playerPos)) { // hits player
-            this.currentTrajectory.hitTarget = true;
+        if (this.playerPositionInRadius(x, y, playerPos, BULLET_CONST.RADIUS)) { // direct hhit
+            this.currentTrajectory.hitType = HitType.Direct;
             this.currentTrajectory.useful = true;
         }
 
         if (terrain.collidesWithCircle(x, y, BULLET_CONST.RADIUS)) {
             this.currentTrajectory.collisionNumber += 1;
+
+            if (this.currentTrajectory.hitType === HitType.None && this.playerPositionInRadius(x, y, playerPos, EXPLOSION_CONST.BASE_RADIUS)) {
+                this.currentTrajectory.hitType = HitType.Explosion;
+                this.currentTrajectory.useful = true;
+            }
         }
     }
 
@@ -44,7 +50,7 @@ export default class TrajectoryCalculator {
                 targetY: 0
             },
             collisionNumber: 0,
-            hitTarget: false,
+            hitType: HitType.None,
             useful: false,
         }
     }
@@ -66,8 +72,10 @@ export default class TrajectoryCalculator {
             currentAngle <= baseAngle + angleRange;
             currentAngle += angleStep
         ) {
-            const targetX = playerPos.x + Math.cos(currentAngle);
-            const targetY = playerPos.y + Math.sin(currentAngle);
+            const distance = 1000;
+
+            const targetX = botPos.x + Math.cos(currentAngle) * distance;
+            const targetY = botPos.y + Math.sin(currentAngle) * distance;
 
             const originPos = generateBulletOriginPosition(botPos.x, botPos.y, targetX, targetY);
             const shootInfo: ShootInfo = {
@@ -77,11 +85,11 @@ export default class TrajectoryCalculator {
                 targetX: targetX,
                 targetY: targetY,
 
-                force: SHOT_CONST.MIN_SHOT_FORCE + 10,
+                force: SHOT_CONST.MIN_SHOT_FORCE,
             }
 
             for (
-                let currentForce = SHOT_CONST.MIN_SHOT_FORCE + 10;
+                let currentForce = SHOT_CONST.MIN_SHOT_FORCE;
                 currentForce <= SHOT_CONST.BASE_MAX_SHOT_FORCE;
                 currentForce += forceStep
             ) {
@@ -90,16 +98,14 @@ export default class TrajectoryCalculator {
                 this.resetCurrentTrajectory(shootInfo);
                 simulateShot(shootInfo, (x, y) => { this.shotStepCallback(x, y, playerPos, terrain, bulletCount) });
 
-                if (bestTrajectory) {
-                    if (bestTrajectory.useful) {
-                        if (this.currentTrajectory.useful && this.currentTrajectory.collisionNumber < bestTrajectory.collisionNumber) {
+                if (this.currentTrajectory.useful) {
+                    if (this.currentTrajectory.hitType === bestTrajectory.hitType) {
+                        if (this.currentTrajectory.collisionNumber <= bestTrajectory.collisionNumber) {
                             bestTrajectory = structuredClone(this.currentTrajectory);
                         }
-                    } else if(this.currentTrajectory.useful) {
+                    } else if (this.currentTrajectory.hitType === HitType.Direct) {
                         bestTrajectory = structuredClone(this.currentTrajectory);
                     }
-                } else {
-                    bestTrajectory = structuredClone(this.currentTrajectory);
                 }
             }
         }

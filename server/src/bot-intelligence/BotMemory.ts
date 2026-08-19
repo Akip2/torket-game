@@ -1,3 +1,4 @@
+import { HitType } from "@shared/enums/HitType.enum";
 import { CalculatedTrajectory } from "@shared/types";
 
 export default class BotMemory {
@@ -13,7 +14,7 @@ export default class BotMemory {
                 targetY: 0
             },
             collisionNumber: 0,
-            hitTarget: false,
+            hitType: HitType.None,
             useful: false,
         }
     }
