@@ -1,5 +1,5 @@
-import EndNode from "./EndNode";
-import TreeNode from "./TreeNode";
+import EndNode from "./nodes/EndNode";
+import TreeNode from "./nodes/TreeNode";
 
 export default class TreeRunner {
     private currentNode: TreeNode | null

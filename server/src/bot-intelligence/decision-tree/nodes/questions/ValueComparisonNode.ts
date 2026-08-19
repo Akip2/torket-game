@@ -1,13 +1,14 @@
 import { Operation } from "@shared/enums/Operation.enum";
 import QuestionNode from "./QuestionNode";
-import { ValueGetter } from "../value-getters/ValueGetter";
+import { ComparableValue } from "@shared/types";
+import { ValueGetter } from "../../value-getters/ValueGetter";
 
 const COMPARE = {
-  [Operation.SUP]: (a: number, b: number) => a > b,
-  [Operation.SUP_EQ]: (a: number, b: number) => a >= b,
-  [Operation.EQ]: (a: number, b: number) => a === b,
-  [Operation.INF]: (a: number, b: number) => a < b,
-  [Operation.INF_EQ]: (a: number, b: number) => a <= b,
+  [Operation.SUP]: (a: ComparableValue, b: ComparableValue) => a > b,
+  [Operation.SUP_EQ]: (a: ComparableValue, b: ComparableValue) => a >= b,
+  [Operation.EQ]: (a: ComparableValue, b: ComparableValue) => a === b,
+  [Operation.INF]: (a: ComparableValue, b: ComparableValue) => a < b,
+  [Operation.INF_EQ]: (a: ComparableValue, b: ComparableValue) => a <= b,
 };
 
 export default class ValueComparisonNode extends QuestionNode {

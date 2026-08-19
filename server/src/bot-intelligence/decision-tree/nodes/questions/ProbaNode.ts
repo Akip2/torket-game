@@ -1,4 +1,3 @@
-import TreeNode from "../TreeNode";
 import QuestionNode from "./QuestionNode";
 
 export default class ProbaNode extends QuestionNode {

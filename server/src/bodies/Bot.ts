@@ -5,7 +5,7 @@ import { InputPayload } from "@shared/types";
 import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
 import { MyRoom } from "../rooms/MyRoom";
 import BotIntelligence from "../bot-intelligence/BotIntelligence";
-import TreeNode from "../bot-intelligence/decision-tree/TreeNode";
+import TreeNode from "../bot-intelligence/decision-tree/nodes/TreeNode";
 import { createActionChoiceDecisionTree, createMovingDecisionTree, createShootingDecisionTree } from "../bot-intelligence/decision-tree/tree-creator";
 import TreeRunner from "../bot-intelligence/decision-tree/TreeRunner";
 
