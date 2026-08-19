@@ -13,7 +13,7 @@ export default class TrajectoryCalculator {
             (y - playerPos.y) ** 2
         );
 
-        return dist < EXPLOSION_CONST.BASE_RADIUS + (PLAYER_CONST.BASE_WIDTH / 2);
+        return dist < BULLET_CONST.RADIUS + (PLAYER_CONST.BASE_WIDTH / 1.25);
     }
 
     private shotStepCallback(x: number, y: number, playerPos: Position, terrain: QuadBlock, bulletCount: number) {

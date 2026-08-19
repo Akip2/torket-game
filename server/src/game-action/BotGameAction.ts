@@ -39,6 +39,28 @@ export default class BotGameAction extends BasicGameAction {
         }
     }
 
+    async moveMouse(x: number, y: number) {
+        const startX = this.bot.currentInputs.mousePosition.x;
+        const startY = this.bot.currentInputs.mousePosition.y;
+
+        const dx = x - startX;
+        const dy = y - startY;
+
+        const steps = Math.max(Math.abs(dx), Math.abs(dy)) / (Math.min(18, Math.random() * 45));
+
+        for (let i = 1; i <= steps; i++) {
+            const t = i / steps;
+
+            this.bot.currentInputs.mousePosition.x = Math.round(startX + dx * t);
+            this.bot.currentInputs.mousePosition.y = Math.round(startY + dy * t);
+
+            await wait(TIME_STEP);
+        }
+
+        this.bot.currentInputs.mousePosition.x = x;
+        this.bot.currentInputs.mousePosition.y = y;
+    }
+
     jump() {
         this.bot.currentInputs.up = true;
     }

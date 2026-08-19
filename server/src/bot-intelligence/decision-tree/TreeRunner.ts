@@ -15,7 +15,7 @@ export default class TreeRunner {
         this.currentNode = tree;
 
         while (this.isRunning() && myRunId === this.runId) {
-            this.currentNode.execute();
+            await this.currentNode.execute();
 
             if (this.runId !== myRunId) return;
             this.currentNode = this.currentNode?.getNext();
