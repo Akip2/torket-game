@@ -7,6 +7,7 @@ import TrajectoryCalculator from "./TrajectoryCalculator";
 import BotMemory from "./BotMemory";
 import { wait } from "@shared/utils";
 import { SHOT_CONST, TIME_STEP } from "@shared/const";
+import { Position } from "@shared/types";
 
 export default class BotIntelligence {
     private botAction: BotGameAction;
@@ -49,6 +50,18 @@ export default class BotIntelligence {
 
     listenToInputs() {
         this.botAction.listenToInputs();
+    }
+
+    async moveTowards(pos: Position) {
+        while (this.botPerception.selfMovementLeft > 0) {
+            if (this.botPerception.selfPosition.x < pos.x) {
+                this.botAction.moveRight();
+            } else {
+                this.botAction.moveLeft();
+            }
+            
+            await wait(TIME_STEP);
+        }
     }
 
     memorizeBestTrajectory() {

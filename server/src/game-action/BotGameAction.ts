@@ -29,14 +29,14 @@ export default class BotGameAction extends BasicGameAction {
         this.handleActionChoice(this.bot.sessionId, action);
     }
 
-    moveHorizontally(right: boolean) {
-        if (right) {
-            this.bot.currentInputs.right = true;
-            this.bot.currentInputs.left = false;
-        } else {
-            this.bot.currentInputs.left = true;
-            this.bot.currentInputs.right = false;
-        }
+    moveRight() {
+        this.bot.currentInputs.right = true;
+        this.bot.currentInputs.left = false;
+    }
+
+    moveLeft() {
+        this.bot.currentInputs.left = true;
+        this.bot.currentInputs.right = false;
     }
 
     async moveMouse(x: number, y: number) {
@@ -46,7 +46,7 @@ export default class BotGameAction extends BasicGameAction {
         const dx = x - startX;
         const dy = y - startY;
 
-        const steps = Math.max(Math.abs(dx), Math.abs(dy)) / (Math.min(18, Math.random() * 45));
+        const steps = Math.max(Math.abs(dx), Math.abs(dy)) / (Math.min(18, Math.random() * 32));
 
         for (let i = 1; i <= steps; i++) {
             const t = i / steps;

@@ -37,6 +37,10 @@ export default class BotPerception {
         return this.self.getBulletCount();
     }
 
+    get selfMovementLeft(): number {
+        return this.self.playerRef.movementLeft;
+    }
+
     get terrain(): QuadBlock {
         return this.terrainRoot;
     }

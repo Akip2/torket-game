@@ -18,6 +18,7 @@ import WaitingNode from "./nodes/WaitingNode";
 import MemoryValue from "./value-getters/MemoryValue";
 import PerceptionValue from "./value-getters/PerceptionValue";
 import StaticValue from "./value-getters/StaticValue";
+import MoveTowardsPlayerNode from "./nodes/actions/MoveTowardsPlayerNode";
 
 const END = new EndNode();
 
@@ -71,8 +72,13 @@ export function createActionChoiceDecisionTree(botIntelligence: BotIntelligence)
 }
 
 export function createMovingDecisionTree(botIntelligence: BotIntelligence): TreeNode {
-    //TODO
-    return new EndTurnNode(botIntelligence);
+    const listen = new StartListeningNode(botIntelligence);
+    const moveTowardsPlayer = new MoveTowardsPlayerNode(botIntelligence);
+
+    listen.setNextNode(moveTowardsPlayer);
+    moveTowardsPlayer.setNextNode(END);
+
+    return listen;
 }
 
 export function createShootingDecisionTree(botIntelligence: BotIntelligence): TreeNode {
@@ -101,7 +107,7 @@ export function createShootingDecisionTree(botIntelligence: BotIntelligence): Tr
     shoot.setNextNode(hasMunitions);
 
     hasMunitions.setTrueNode(waitAfterShot);
-    hasMunitions.setFalseNode(endTurn);
+    hasMunitions.setFalseNode(END);
 
     waitAfterShot.setNextNode(calculateBestTrajectory);
 
