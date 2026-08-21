@@ -150,7 +150,7 @@ export const MAP_PREVIEW_HEIGHT = 150;
 export const HUD_HEIGHT = 42;
 
 export const GRID_COLOR = 0x2e2e1b;
-export const GRID_SIZE = 16;
+export const GRID_SIZE = 32;
 
 export const AUDIO_RESSOURCE_KEYS = [
     RessourceKeys.Explosion,
