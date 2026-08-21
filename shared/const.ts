@@ -3,7 +3,7 @@ import { Parameter } from "./enums/Parameter.enum";
 import { RessourceKeys } from "./enums/RessourceKeys.enum";
 import type { ParameterChangeCoef } from "./types";
 
-export const DEBUG = true;
+export const DEBUG = false;
 export const FREE_ROAM = false;
 export const CLIENT_PREDICTION = false;
 
@@ -26,7 +26,7 @@ export const TILE_SIZE = 2;
 export const EDITION_TILE_SIZE = 8;
 
 export const GROUND_TYPE = "stone";
-export const TEXTURE_SIZE = 128;
+export const TEXTURE_SIZE = 256;
 
 export const TIME_STEP = 1000 / 60;
 
@@ -139,6 +139,9 @@ export const PARAM_BASE_VALUE_MAP = new Map<Parameter, number>([
 export const MAP_PREVIEW_WIDTH = 300;
 export const MAP_PREVIEW_HEIGHT = 150;
 export const HUD_HEIGHT = 42;
+
+export const GRID_COLOR = 0x2e2e1b;
+export const GRID_SIZE = 16;
 
 export const AUDIO_RESSOURCE_KEYS = [
     RessourceKeys.Explosion,

@@ -1,4 +1,4 @@
-import { AUDIO_RESSOURCE_KEYS, DEBUG, EXPLOSION_CONST, GROUND_TYPE, TEXTURE_SIZE, TILE_SIZE, TIME_STEP } from "@shared/const";
+import { AUDIO_RESSOURCE_KEYS, DEBUG, EXPLOSION_CONST, GRID_COLOR, GRID_SIZE, GROUND_TYPE, TEXTURE_SIZE, TILE_SIZE, TIME_STEP } from "@shared/const";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import BulletClient from "../game-objects/BulletClient";
 import PlayerClient from "../game-objects/PlayerClient";
@@ -62,6 +62,9 @@ export default class GameScene extends Phaser.Scene {
     //UI
     actionChoicePanel!: ActionChoicePanel;
     gameEndScreen!: GameEndScreen;
+    private gridGraphics!: Phaser.GameObjects.Graphics;
+    private lastGridScroll!: { x: number, y: number };
+    private lastGridZoom!: number;
 
     constructor() {
         super(SceneNames.Game);
@@ -74,6 +77,10 @@ export default class GameScene extends Phaser.Scene {
         this.room = RoomManager.getRoom();
         this.playerData = data.playerData;
         this.messageBuffer = data.messageBuffer ?? [];
+
+        this.lastGridScroll = { x: -1, y: -1 };
+        this.lastGridZoom = -1;
+
         setCookie("playerName", this.playerData.name, { expires: 7 });
     }
 
@@ -134,6 +141,7 @@ export default class GameScene extends Phaser.Scene {
         this.setupCameraControls();
         this.setupVisibilityHandler();
         this.setupUi();
+        this.setupGrid();
         //this.setupBorders();
 
         this.setupRoomMessages();
@@ -356,6 +364,8 @@ export default class GameScene extends Phaser.Scene {
 
         this.matter.world.step(TIME_STEP);
         this.events.emit('fixed-tick');
+
+        this.drawGrid();
     }
 
     update(_time: number, delta: number): void {
@@ -430,6 +440,55 @@ export default class GameScene extends Phaser.Scene {
         this.effectsManager.burstParticles(x, y, 12, 0xff8800);
 
         this.playerManager.reactToExplosion(bullet);
+    }
+
+    private setupGrid(): void {
+        this.gridGraphics = this.add.graphics();
+        this.gridGraphics.setScrollFactor(1);
+        this.worldContainer.add(this.gridGraphics);
+        this.gridGraphics.setDepth(Depths.Grid); // depth la plus basse
+    }
+
+    private drawGrid(): void {
+        if (!this.gridGraphics) return;
+
+        const camera = this.cameras.main;
+
+        if (
+            camera.scrollX === this.lastGridScroll.x &&
+            camera.scrollY === this.lastGridScroll.y &&
+            camera.zoom === this.lastGridZoom
+        ) return;
+
+        this.lastGridScroll = { x: camera.scrollX, y: camera.scrollY };
+        this.lastGridZoom = camera.zoom;
+
+        const view = camera.worldView;
+
+        const startX = Math.floor(view.left / GRID_SIZE) * GRID_SIZE;
+        const startY = Math.floor(view.top / GRID_SIZE) * GRID_SIZE;
+
+        const endX = view.right + GRID_SIZE;
+        const endY = view.bottom + GRID_SIZE;
+
+        const lineWidth = 2 / camera.zoom;
+
+        this.gridGraphics.clear();
+        this.gridGraphics.lineStyle(lineWidth, GRID_COLOR, 0.2);
+
+        this.gridGraphics.beginPath();
+
+        for (let x = startX; x <= endX; x += GRID_SIZE) {
+            this.gridGraphics.moveTo(x, startY);
+            this.gridGraphics.lineTo(x, endY);
+        }
+
+        for (let y = startY; y <= endY; y += GRID_SIZE) {
+            this.gridGraphics.moveTo(startX, y);
+            this.gridGraphics.lineTo(endX, y);
+        }
+
+        this.gridGraphics.strokePath();
     }
 
     private getWorldPointerPosition(pointer: Phaser.Input.Pointer): Position {

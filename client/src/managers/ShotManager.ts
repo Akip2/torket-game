@@ -107,7 +107,7 @@ export default class ShotManager {
             this.trajectoryDrawer = this.scene.add.graphics();
             this.scene.worldContainer.add(this.trajectoryDrawer);
             this.scene.worldContainer.sendToBack(this.trajectoryDrawer);
-            this.trajectoryDrawer.setDepth(Depths.None);
+            this.trajectoryDrawer.setDepth(Depths.ShotPreview);
         }
 
         this.trajectoryDrawer.clear();

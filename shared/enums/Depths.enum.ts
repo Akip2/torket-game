@@ -19,4 +19,7 @@ export enum Depths {
     Gun = 1000,
     Player = 950,
     PlayerUi = 900,
+    Grid = 750,
+    Terrain = 700,
+    ShotPreview = 650,
 }
