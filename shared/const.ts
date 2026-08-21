@@ -115,7 +115,7 @@ export const SHOT_CONST = {
     BASE_DAMAGE: 1,
     BASE_MAX_SHOT_FORCE: 27.5,
     MIN_SHOT_FORCE: 5,
-    BOT_IMPRECISION: 3,
+    BOT_IMPRECISION: 2,
 }
 
 export const BORDER_CONST = {
