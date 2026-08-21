@@ -34,22 +34,30 @@ export const HEALTH_TRANSITION_DURATION = 400;
 
 export const PLAYER_CONST = {
     BASE_WIDTH: 32,
-    SPEED: 4.5,
-    JUMP: -17.5,
-    BASE_MAX_HP: 100,
 
+    SPEED: 4.5,
+
+    ACCELERATION: 0.6,
+    DECELERATION: 1.1,
+
+    AIR_ACCELERATION: 0.8,
+    AIR_DECELERATION: 0.08,
+
+    JUMP: -17.5,
+    MAX_FALL_SPEED: 22,
+
+    BASE_MAX_HP: 100,
     BASE_JUMP_COST: 20,
 
-    BASE_BULLET_COUNT: [
-        1,
-        2
-    ],
+    BASE_BULLET_COUNT: [1, 2],
     BASE_MAX_BULLET_COUNT: 3,
 
     SELF_COLOR: 0x3498db,
     ENNEMY_COLOR: 0xdb3445,
 
-    BASE_MAX_MOVEMENT: FREE_ROAM ? Number.MAX_VALUE : 185,
+    BASE_MAX_MOVEMENT: FREE_ROAM
+        ? Number.MAX_VALUE
+        : 185,
 
     BASE_MASS: 26,
 
@@ -58,7 +66,7 @@ export const PLAYER_CONST = {
     BASE_FRICTION: {
         FRICTION: 0,
         FRICTION_STATIC: 0,
-        FRICTION_AIR: 0.05,
+        FRICTION_AIR: 0,
     },
 
     PUSH_FRICTION: {
@@ -72,7 +80,7 @@ export const PLAYER_CONST = {
         FRICTION_STATIC: 0,
         FRICTION_AIR: 0.05,
     },
-}
+};
 
 export const BULLET_CONST = {
     RADIUS: 4,
@@ -104,7 +112,7 @@ export const EXPLOSION_CONST = {
 }
 
 export const SHOT_CONST = {
-    BASE_DAMAGE: 17,
+    BASE_DAMAGE: 1,
     BASE_MAX_SHOT_FORCE: 27.5,
     MIN_SHOT_FORCE: 5,
     BOT_IMPRECISION: 3,

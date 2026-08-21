@@ -48,6 +48,13 @@ export default class TerrainManagerServer {
 
         const mergedRects = QuadBlock.mergeAdjacentBlocks(filledBlocks);
 
+        console.log(
+            "Terrain colliders:",
+            filledBlocks.length,
+            "=>",
+            mergedRects.length
+        );
+
         for (const rect of mergedRects) {
             const terrainBlock = new TerrainBlock(
                 rect.x + rect.width / 2,

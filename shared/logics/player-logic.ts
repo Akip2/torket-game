@@ -5,20 +5,29 @@ import type { IPlayer } from "../interfaces/Player.interface";
 import type { InputPayload, PendingExplosion } from "../types";
 import { wait } from "../utils";
 
-export function movePlayerFromInputs(player: IPlayer, inputPayload: InputPayload, instantly: boolean = false) {
-    if (!canPlayerMove(player)) return;
+export function movePlayerFromInputs(
+    player: IPlayer,
+    inputPayload: InputPayload,
+    instantly = false
+): void {
+    if (!canPlayerMove(player)) {
+        return;
+    }
 
-    if (inputPayload.right || inputPayload.left) {
+    const movingLeft = inputPayload.left && !inputPayload.right;
+    const movingRight = inputPayload.right && !inputPayload.left;
+
+    if (movingLeft) {
         player.isMoving = true;
-
-        if (inputPayload.left) { //Left
-            player.moveHorizontally(-PLAYER_CONST.SPEED, instantly);
-        } else { //Right
-            player.moveHorizontally(PLAYER_CONST.SPEED, instantly);
-        }
+        player.moveHorizontally(-PLAYER_CONST.SPEED, instantly);
         player.decreaseMovementLeft(1);
-    } else if (player.isMoving) {
-        immobilizePlayer(player);
+    } else if (movingRight) {
+        player.isMoving = true;
+        player.moveHorizontally(PLAYER_CONST.SPEED, instantly);
+        player.decreaseMovementLeft(1);
+    } else {
+        player.isMoving = false;
+        player.moveHorizontally(0, instantly);
     }
 
     if (inputPayload.up) {
@@ -34,7 +43,6 @@ export function movePlayerFromInputs(player: IPlayer, inputPayload: InputPayload
         player.setJumpKeyPressed(false);
     }
 }
-
 export async function immobilizePlayer(player: IPlayer) {
     player.isMoving = false;
 
