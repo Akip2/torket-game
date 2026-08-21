@@ -3,7 +3,7 @@ import { Parameter } from "./enums/Parameter.enum";
 import { RessourceKeys } from "./enums/RessourceKeys.enum";
 import type { ParameterChangeCoef } from "./types";
 
-export const DEBUG = false;
+export const DEBUG = true;
 export const FREE_ROAM = false;
 export const CLIENT_PREDICTION = false;
 
@@ -104,9 +104,10 @@ export const EXPLOSION_CONST = {
 }
 
 export const SHOT_CONST = {
-    BASE_DAMAGE: 20,
+    BASE_DAMAGE: 17,
     BASE_MAX_SHOT_FORCE: 27.5,
     MIN_SHOT_FORCE: 5,
+    BOT_IMPRECISION: 3,
 }
 
 export const BORDER_CONST = {

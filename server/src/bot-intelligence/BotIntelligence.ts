@@ -22,8 +22,17 @@ export default class BotIntelligence {
         this.botMemory = new BotMemory();
     }
 
-    async shootCalculatedTrajectory() {
+    async shootCalculatedTrajectory(forceImprecision: number = 0) {
         const shootInfo = this.botMemory.bestTrajectory.shootInfo;
+
+        // FORCE IMPRECISION
+        const currentForce = shootInfo.force;
+        const sign = Math.random() > 0.5 ? 1 : 0;
+        let newForce = currentForce + sign * forceImprecision
+        if (newForce < SHOT_CONST.MIN_SHOT_FORCE || newForce > SHOT_CONST.BASE_MAX_SHOT_FORCE) {
+            newForce = currentForce -sign * forceImprecision
+        }
+        shootInfo.force = newForce;
         
         await this.botAction.moveMouse(shootInfo.targetX, shootInfo.targetY);
         const chargingTime = (shootInfo.force / (SHOT_CONST.BASE_MAX_SHOT_FORCE / 100)) * TIME_STEP;
