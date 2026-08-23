@@ -180,6 +180,27 @@ export default class QuadBlock {
         );
     }
 
+    collidesWithRect(x: number, y: number, width: number, height: number): boolean {
+        const halfWidth = width / 2;
+        const halfHeight = height / 2;
+
+        const rectMinX = x - halfWidth;
+        const rectMaxX = x + halfWidth;
+        const rectMinY = y - halfHeight;
+        const rectMaxY = y + halfHeight;
+
+        if (rectMaxX < this.x || rectMinX > this.x + this.width ||
+            rectMaxY < this.y || rectMinY > this.y + this.height) {
+            return false;
+        }
+
+        if (this.filled) return true;
+
+        if (!this.children || this.children.length === 0) return false;
+
+        return this.children.some(child => child.collidesWithRect(x, y, width, height));
+    }
+
     static mergeAdjacentBlocks(
         blocks: QuadBlock[]
     ): Rectangle[] {

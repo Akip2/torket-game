@@ -1,8 +1,10 @@
+import { BotMovementAction } from "@shared/enums/BotMovementAction.enum";
 import { HitType } from "@shared/enums/HitType.enum";
 import { CalculatedTrajectory } from "@shared/types";
 
 export default class BotMemory {
     bestTrajectory: CalculatedTrajectory;
+    bestMovements: BotMovementAction[];
 
     constructor() {
         this.bestTrajectory = {
@@ -17,5 +19,7 @@ export default class BotMemory {
             hitType: HitType.None,
             useful: false,
         }
+
+        this.bestMovements = [];
     }
 }

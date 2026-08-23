@@ -131,16 +131,14 @@ export default class PlayerServer extends GameBody implements IPlayer {
         this.playerRef.movementLeft = this.maxMovement;
     }
 
-    moveHorizontally(speed: number, instantly = false): void {
+    moveHorizontally(speed: number): void {
         const currentVelocity = this.body.velocity.x;
+        Body.setVelocity(this.body, {
+            x: speed,
+            y: this.body.velocity.y,
+        });
 
-        if (instantly) {
-            Body.setVelocity(this.body, {
-                x: speed,
-                y: this.body.velocity.y,
-            });
-            return;
-        }
+        /*
 
         const isMoving = speed !== 0;
         const isAirborne = !this.isOnGround;
@@ -166,6 +164,7 @@ export default class PlayerServer extends GameBody implements IPlayer {
             x: nextVelocityX,
             y: this.body.velocity.y,
         });
+        */
     }
 
     getBulletCount(): number {

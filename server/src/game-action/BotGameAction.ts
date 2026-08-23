@@ -65,6 +65,11 @@ export default class BotGameAction extends BasicGameAction {
         this.bot.currentInputs.up = true;
     }
 
+    stopHorizontalMovement() {
+        this.bot.currentInputs.left = false;
+        this.bot.currentInputs.right = false;
+    }
+
     stopJumping() {
         this.bot.currentInputs.up = false;
     }

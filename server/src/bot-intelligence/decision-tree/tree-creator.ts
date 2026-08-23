@@ -19,6 +19,8 @@ import MemoryValue from "./value-getters/MemoryValue";
 import PerceptionValue from "./value-getters/PerceptionValue";
 import StaticValue from "./value-getters/StaticValue";
 import MoveTowardsPlayerNode from "./nodes/actions/MoveTowardsPlayerNode";
+import MovementCalculationNode from "./nodes/actions/MovementCalculattionNode";
+import MoveNode from "./nodes/actions/MoveNode";
 
 const END = new EndNode();
 
@@ -60,7 +62,7 @@ export function createActionChoiceDecisionTree(botIntelligence: BotIntelligence)
     usefulShot.setFalseNode(atMaxMunitions);
 
     atMaxMunitions.setTrueNode(chooseMove);
-    atMaxMunitions.setFalseNode(chooseReload);
+    atMaxMunitions.setFalseNode(chooseReload); 
 
     probaNoMunitions.setTrueNode(chooseReload);
     probaNoMunitions.setFalseNode(chooseMove);
@@ -73,10 +75,20 @@ export function createActionChoiceDecisionTree(botIntelligence: BotIntelligence)
 
 export function createMovingDecisionTree(botIntelligence: BotIntelligence): TreeNode {
     const listen = new StartListeningNode(botIntelligence);
-    const moveTowardsPlayer = new MoveTowardsPlayerNode(botIntelligence);
+    const calculateBestMovements = new MovementCalculationNode(botIntelligence);
+    const move = new MoveNode(botIntelligence);
+    const hasMovementLeft = new ValueComparisonNode(
+        new PerceptionValue(botIntelligence.getBotPerception(), BotPerceptionKey.SelfMovementLeft),
+        new StaticValue(0),
+        Operation.SUP
+    );
+    const endTurn = new EndTurnNode(botIntelligence);
 
-    listen.setNextNode(moveTowardsPlayer);
-    moveTowardsPlayer.setNextNode(END);
+    listen.setNextNode(calculateBestMovements);
+    calculateBestMovements.setNextNode(move);
+    move.setNextNode(hasMovementLeft);
+    hasMovementLeft.setFalseNode(endTurn);
+    hasMovementLeft.setTrueNode(calculateBestMovements);
 
     return listen;
 }

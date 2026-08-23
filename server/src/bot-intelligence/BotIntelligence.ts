@@ -8,17 +8,21 @@ import BotMemory from "./BotMemory";
 import { wait } from "@shared/utils";
 import { SHOT_CONST, TIME_STEP } from "@shared/const";
 import { Position } from "@shared/types";
+import MovementCalculator from "./MovementCalculator";
+import { BotMovementAction } from "@shared/enums/BotMovementAction.enum";
 
 export default class BotIntelligence {
     private botAction: BotGameAction;
     private botPerception: BotPerception;
     private trajectoryCalculator: TrajectoryCalculator;
+    private movementCalculator: MovementCalculator;
     private readonly botMemory: BotMemory;
 
     constructor(room: MyRoom, bot: Bot) {
         this.botAction = new BotGameAction(room, bot);
         this.botPerception = new BotPerception(room, bot);
         this.trajectoryCalculator = new TrajectoryCalculator();
+        this.movementCalculator = new MovementCalculator(bot, room.terrainManager.root);
         this.botMemory = new BotMemory();
     }
 
@@ -30,10 +34,10 @@ export default class BotIntelligence {
         const sign = Math.random() > 0.5 ? 1 : 0;
         let newForce = currentForce + sign * forceImprecision
         if (newForce < SHOT_CONST.MIN_SHOT_FORCE || newForce > SHOT_CONST.BASE_MAX_SHOT_FORCE) {
-            newForce = currentForce -sign * forceImprecision
+            newForce = currentForce - sign * forceImprecision
         }
         shootInfo.force = newForce;
-        
+
         await this.botAction.moveMouse(shootInfo.targetX, shootInfo.targetY);
         const chargingTime = (shootInfo.force / (SHOT_CONST.BASE_MAX_SHOT_FORCE / 100)) * TIME_STEP;
 
@@ -68,7 +72,32 @@ export default class BotIntelligence {
             } else {
                 this.botAction.moveLeft();
             }
-            
+
+            await wait(TIME_STEP);
+        }
+    }
+
+    async playMemorizedMovements() {
+        for (let i = 0; i < this.botMemory.bestMovements.length; i++) {
+            const currentMovement = this.botMemory.bestMovements[i];
+            const wantsleft = currentMovement === BotMovementAction.JumpLeft || currentMovement === BotMovementAction.Left;
+            const wantsRight = currentMovement === BotMovementAction.JumpRight || currentMovement === BotMovementAction.Right;
+            const wantsJump = currentMovement === BotMovementAction.Jump || currentMovement === BotMovementAction.JumpRight || currentMovement === BotMovementAction.JumpLeft;
+
+            if (wantsleft) {
+                this.botAction.moveLeft();
+            } else if (wantsRight) {
+                this.botAction.moveRight();
+            } else {
+                this.botAction.stopHorizontalMovement();
+            }
+
+            if (wantsJump) {
+                this.botAction.jump();
+            } else {
+                this.botAction.stopJumping();
+            }
+
             await wait(TIME_STEP);
         }
     }
@@ -82,5 +111,10 @@ export default class BotIntelligence {
         );
 
         this.botMemory.bestTrajectory = bestTrajectory;
+    }
+
+    memorizeBestMovements() {
+        const bestMovements = this.movementCalculator.findBestMovements();
+        this.botMemory.bestMovements = bestMovements;
     }
 }
