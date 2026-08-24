@@ -5,7 +5,7 @@ import QuadBlock from "@shared/data/QuadBlock";
 import { HitType } from "@shared/enums/HitType.enum";
 
 const ANGLE_RANGE = Math.PI / 4;      // 45°
-const ANGLE_STEP = (Math.PI / 180) * 3;    // 1°
+const ANGLE_STEP = (Math.PI / 180);    // 5°
 
 const FORCE_STEP = 1;
 export default class TrajectoryCalculator {
@@ -82,7 +82,7 @@ export default class TrajectoryCalculator {
             const targetX = startPos.x + Math.cos(currentAngle) * distance;
             const targetY = startPos.y + Math.sin(currentAngle) * distance;
 
-            const originPos = generateBulletOriginPosition(targetPos.x, targetPos.y, targetX, targetY);
+            const originPos = generateBulletOriginPosition(startPos.x, startPos.y, targetX, targetY);
             const shootInfo: ShootInfo = {
                 originX: originPos.x,
                 originY: originPos.y,
