@@ -87,7 +87,7 @@ export function createMovingDecisionTree(botIntelligence: BotIntelligence): Tree
     listen.setNextNode(calculateBestMovements);
     calculateBestMovements.setNextNode(move);
     move.setNextNode(hasMovementLeft);
-    hasMovementLeft.setFalseNode(endTurn);
+    hasMovementLeft.setFalseNode(END); // temporary fix
     hasMovementLeft.setTrueNode(calculateBestMovements);
 
     return listen;

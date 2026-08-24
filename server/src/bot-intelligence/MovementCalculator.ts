@@ -26,12 +26,11 @@ const ACTIONS = [
     BotMovementAction.Right,
     BotMovementAction.Left,
     BotMovementAction.Jump,
-    BotMovementAction.JumpLeft,
-    BotMovementAction.JumpRight,
+    //BotMovementAction.JumpLeft,
+    //BotMovementAction.JumpRight,
 ];
 
 const MAX_STEP = 5;
-
 export default class MovementCalculator {
     constructor(private bot: Bot, private terrain: QuadBlock) {
 
@@ -54,9 +53,13 @@ export default class MovementCalculator {
         return this.simulateStep(startState, BotMovementAction.None).actions;
     }
 
-    private isOnGround(state: BotSimulatedState): boolean {
-        //TODO
-        return true;
+    private isOnGround(x: number, y: number): boolean {
+        return this.terrain.collidesWithRect(
+            x,
+            y + (PLAYER_CONST.BASE_WIDTH / 2),
+            1,
+            1
+        );
     }
 
     private botCollides(x: number, y: number) {
@@ -68,9 +71,11 @@ export default class MovementCalculator {
     }
 
     private simulateStep(currentState: BotSimulatedState, action: BotMovementAction): SimplifiedSimulatedBotState {
-        const nextState = structuredClone(currentState);
-        nextState.actions.push(action);
-        nextState.step++;
+        const nextState: BotSimulatedState = { // copy
+            ...currentState,
+            actions: [...currentState.actions, action],
+            step: currentState.step + 1,
+        };
 
         const wantsLeft =
             action === BotMovementAction.Left ||
@@ -88,7 +93,7 @@ export default class MovementCalculator {
 
         // HORIZONTAL MOVEMENT
         let targetSpeed = 0;
-        let moving = wantsRight || wantsLeft;
+        const moving = wantsRight || wantsLeft;
         if (moving) {
             nextState.movementLeft -= 1;
 
@@ -106,10 +111,15 @@ export default class MovementCalculator {
             nextState.velocityY = PLAYER_CONST.JUMP;
         }
 
-        nextState.velocityY += GRAVITY;
-
         nextState.x += nextState.velocityX;
         nextState.y += nextState.velocityY;
+        if (!this.isOnGround(nextState.x, nextState.y)) {
+            nextState.y += GRAVITY;
+            nextState.jumpCoef = 1;
+        } else if (nextState.velocityY > 0) {
+            nextState.velocityY = 0;
+        }
+
         const currentSimplifiedState = {
             actions: nextState.actions,
             score: this.calculateScore(nextState),
@@ -132,6 +142,10 @@ export default class MovementCalculator {
 
     private calculateScore(state: BotSimulatedState) {
         //TODO
-        return Math.random() * 500;
+        if (this.isOnGround(state.x, state.y)) {
+            return 1 + Math.random();
+        } else {
+            return 0;
+        }
     }
 }
