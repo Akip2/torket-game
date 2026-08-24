@@ -33,6 +33,10 @@ export default class BotPerception {
         return this.self.getPosition();
     }
 
+    get selfVelocity(): Matter.Vector {
+        return this.self.getVelocity();
+    }
+
     get selfBulletCount(): number {
         return this.self.getBulletCount();
     }

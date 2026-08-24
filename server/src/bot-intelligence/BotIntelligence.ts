@@ -22,7 +22,7 @@ export default class BotIntelligence {
         this.botAction = new BotGameAction(room, bot);
         this.botPerception = new BotPerception(room, bot);
         this.trajectoryCalculator = new TrajectoryCalculator();
-        this.movementCalculator = new MovementCalculator(bot, room.terrainManager.root);
+        this.movementCalculator = new MovementCalculator(this.botPerception, room.terrainManager.root, this.trajectoryCalculator);
         this.botMemory = new BotMemory();
     }
 

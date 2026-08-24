@@ -1,7 +1,8 @@
 import QuadBlock from "@shared/data/QuadBlock";
-import Bot from "../bodies/Bot";
 import { BotMovementAction } from "@shared/enums/BotMovementAction.enum";
 import { GRAVITY, PLAYER_CONST } from "@shared/const";
+import TrajectoryCalculator from "./TrajectoryCalculator";
+import BotPerception from "./BotPerception";
 
 type BotSimulatedState = {
     x: number;
@@ -32,19 +33,19 @@ const ACTIONS = [
 
 const MAX_STEP = 5;
 export default class MovementCalculator {
-    constructor(private bot: Bot, private terrain: QuadBlock) {
+    constructor(private botPerception: BotPerception, private terrain: QuadBlock, private trajectoryCalculator: TrajectoryCalculator) {
 
     }
 
     findBestMovements() {
         const startState = {
-            x: this.bot.getX(),
-            y: this.bot.getY(),
+            x: this.botPerception.selfPosition.x,
+            y: this.botPerception.selfPosition.y,
 
-            velocityX: this.bot.getVelocity().x,
-            velocityY: this.bot.getVelocity().y,
+            velocityX: this.botPerception.selfVelocity.x,
+            velocityY: this.botPerception.selfVelocity.y,
 
-            movementLeft: this.bot.playerRef.movementLeft,
+            movementLeft: this.botPerception.selfMovementLeft,
             actions: [],
             jumpCoef: 1,
             step: 0,
@@ -115,9 +116,9 @@ export default class MovementCalculator {
         nextState.y += nextState.velocityY;
         if (!this.isOnGround(nextState.x, nextState.y)) {
             nextState.y += GRAVITY;
-            nextState.jumpCoef = 1;
         } else if (nextState.velocityY > 0) {
             nextState.velocityY = 0;
+            nextState.jumpCoef = 1;
         }
 
         const currentSimplifiedState = {
