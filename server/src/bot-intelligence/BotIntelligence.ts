@@ -22,8 +22,8 @@ export default class BotIntelligence {
         this.botAction = new BotGameAction(room, bot);
         this.botPerception = new BotPerception(room, bot);
         this.trajectoryCalculator = new TrajectoryCalculator();
-        this.movementCalculator = new MovementCalculator(this.botPerception, room.terrainManager.root, this.trajectoryCalculator);
         this.botMemory = new BotMemory();
+        this.movementCalculator = new MovementCalculator(this.botPerception, this.botMemory, room.terrainManager.root, this.trajectoryCalculator);
     }
 
     async shootCalculatedTrajectory(forceImprecision: number = 0) {
@@ -116,5 +116,12 @@ export default class BotIntelligence {
     memorizeBestMovements() {
         const bestMovements = this.movementCalculator.findBestMovements();
         this.botMemory.bestMovements = bestMovements;
+    }
+
+    memorizeBotPosition() {
+        this.botMemory.botPositionTurnStart = {
+            x: this.botPerception.selfPosition.x,
+            y: this.botPerception.selfPosition.y
+        };
     }
 }

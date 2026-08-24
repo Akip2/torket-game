@@ -3,6 +3,7 @@ import { BotMovementAction } from "@shared/enums/BotMovementAction.enum";
 import { GRAVITY, PLAYER_CONST } from "@shared/const";
 import TrajectoryCalculator from "./TrajectoryCalculator";
 import BotPerception from "./BotPerception";
+import BotMemory from "./BotMemory";
 
 type BotSimulatedState = {
     x: number;
@@ -26,14 +27,14 @@ const ACTIONS = [
     //BotMovementAction.None,
     BotMovementAction.Right,
     BotMovementAction.Left,
-    //BotMovementAction.Jump,
+    BotMovementAction.Jump,
     //BotMovementAction.JumpLeft,
     //BotMovementAction.JumpRight,
 ];
 
-const MAX_STEP = 2;
+const MAX_STEP = 7;
 export default class MovementCalculator {
-    constructor(private botPerception: BotPerception, private terrain: QuadBlock, private trajectoryCalculator: TrajectoryCalculator) {
+    constructor(private botPerception: BotPerception, private botMemory: BotMemory, private terrain: QuadBlock, private trajectoryCalculator: TrajectoryCalculator) {
 
     }
 
@@ -60,6 +61,15 @@ export default class MovementCalculator {
             y + (PLAYER_CONST.BASE_WIDTH / 2),
             1,
             1
+        );
+    }
+
+    private fallingToDeath(x: number, y: number): boolean {
+        return !this.terrain.collidesWithRect(
+            x,
+            y + 700 / 2,
+            PLAYER_CONST.BASE_WIDTH / 4,
+            700
         );
     }
 
@@ -144,16 +154,19 @@ export default class MovementCalculator {
     private calculateScore(state: BotSimulatedState) {
         //TODO
         let score = 0;
-                
+
+        if (this.fallingToDeath(state.x, state.y)) {
+            return -20000;
+        }
+
         score += Math.sqrt(
-            (state.x - this.botPerception.selfPosition.x) ** 2
-            +
-            (state.y - this.botPerception.selfPosition.y) ** 2
+            (state.x - this.botMemory.botPositionTurnStart.x) ** 2
         );
-        
-        score += this.botCollides(state.x, state.y) ? -5 : 2;
-        score += this.isOnGround(state.x, state.y) ? 0.5 : 0
-        
+
+        score += this.botCollides(state.x, state.y) ? -200    : 0;
+        score += this.isOnGround(state.x, state.y) ? 0.25 : 0
+        score -= Math.abs(state.velocityY) * 0.2
+
         return score;
     }
 }
