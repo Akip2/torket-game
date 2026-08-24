@@ -31,7 +31,11 @@ export function generateBulletOriginPosition(playerX: number, playerY: number, t
     }
 }
 
-export function simulateShot(shootInfo: ShootInfo, onStep: (x: number, y: number) => void, steps: number = 100) {
+export function simulateShot(
+    shootInfo: ShootInfo,
+    onStep: (x: number, y: number) => boolean = () => false,
+    steps: number = 100
+) {
     const gravityStep = GRAVITY * 0.001 * TIME_STEP * TIME_STEP * BULLET_CONST.GRAVITY_SCALE;
     const frictionFactor = 1 - BULLET_CONST.AIR_FRICTION;
 
@@ -53,6 +57,6 @@ export function simulateShot(shootInfo: ShootInfo, onStep: (x: number, y: number
 
         vy = vy * frictionFactor + gravityStep;
 
-        onStep(x, y);
+        if (onStep(x, y)) break; // if callback returns true, stop
     }
 }

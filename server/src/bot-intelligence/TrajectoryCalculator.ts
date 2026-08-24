@@ -4,6 +4,10 @@ import { CalculatedTrajectory, Position, ShootInfo } from "@shared/types";
 import QuadBlock from "@shared/data/QuadBlock";
 import { HitType } from "@shared/enums/HitType.enum";
 
+const ANGLE_RANGE = Math.PI / 4;      // 45°
+const ANGLE_STEP = (Math.PI / 180) * 3;    // 1°
+
+const FORCE_STEP = 1;
 export default class TrajectoryCalculator {
     private currentTrajectory!: CalculatedTrajectory;
 
@@ -18,9 +22,6 @@ export default class TrajectoryCalculator {
     }
 
     private shotStepCallback(x: number, y: number, playerPos: Position, terrain: QuadBlock, bulletCount: number) {
-        const endCondition = this.currentTrajectory.hitType === HitType.Direct || (this.currentTrajectory.collisionNumber >= bulletCount);
-        if (endCondition) return;
-
         if (this.playerPositionInRadius(x, y, playerPos, BULLET_CONST.RADIUS)) { // direct hhit
             this.currentTrajectory.hitType = HitType.Direct;
             this.currentTrajectory.useful = true;
@@ -34,6 +35,9 @@ export default class TrajectoryCalculator {
                 this.currentTrajectory.useful = true;
             }
         }
+
+        const endCondition = this.currentTrajectory.hitType === HitType.Direct || (this.currentTrajectory.collisionNumber >= bulletCount);
+        return endCondition;
     }
 
     private resetCurrentTrajectory(shootInfo: ShootInfo) {
@@ -55,29 +59,30 @@ export default class TrajectoryCalculator {
         }
     }
 
-    findBestTrajectory(botPos: Position, playerPos: Position, terrain: QuadBlock, bulletCount: number): CalculatedTrajectory {
-        const dx = playerPos.x - botPos.x;
-        const dy = playerPos.y - botPos.y;
-
-        const angleRange = Math.PI / 4;      // 45°
-        const angleStep = Math.PI / 180;    // 1°
-
-        const forceStep = 1;
+    private iterateThroughTrajectories(
+        startPos: Position,
+        targetPos: Position,
+        terrain: QuadBlock,
+        bulletCount: number,
+        stopCondition: (trajectory: CalculatedTrajectory) => boolean = () => false
+    ) {
+        const dx = targetPos.x - startPos.x;
+        const dy = targetPos.y - startPos.y;
 
         const baseAngle = Math.atan2(dy, dx);
 
         let bestTrajectory = this.generateBaseTrajectory();
         for (
-            let currentAngle = baseAngle - angleRange;
-            currentAngle <= baseAngle + angleRange;
-            currentAngle += angleStep
+            let currentAngle = baseAngle - ANGLE_RANGE;
+            currentAngle <= baseAngle + ANGLE_RANGE;
+            currentAngle += ANGLE_STEP
         ) {
             const distance = 1000;
 
-            const targetX = botPos.x + Math.cos(currentAngle) * distance;
-            const targetY = botPos.y + Math.sin(currentAngle) * distance;
+            const targetX = startPos.x + Math.cos(currentAngle) * distance;
+            const targetY = startPos.y + Math.sin(currentAngle) * distance;
 
-            const originPos = generateBulletOriginPosition(botPos.x, botPos.y, targetX, targetY);
+            const originPos = generateBulletOriginPosition(targetPos.x, targetPos.y, targetX, targetY);
             const shootInfo: ShootInfo = {
                 originX: originPos.x,
                 originY: originPos.y,
@@ -91,12 +96,12 @@ export default class TrajectoryCalculator {
             for (
                 let currentForce = SHOT_CONST.MIN_SHOT_FORCE;
                 currentForce <= SHOT_CONST.BASE_MAX_SHOT_FORCE;
-                currentForce += forceStep
+                currentForce += FORCE_STEP
             ) {
                 shootInfo.force = currentForce;
 
                 this.resetCurrentTrajectory(shootInfo);
-                simulateShot(shootInfo, (x, y) => { this.shotStepCallback(x, y, playerPos, terrain, bulletCount) });
+                simulateShot(shootInfo, (x, y) => { return this.shotStepCallback(x, y, targetPos, terrain, bulletCount) });
 
                 if (this.currentTrajectory.useful) {
                     if (this.currentTrajectory.hitType === bestTrajectory.hitType) {
@@ -107,9 +112,31 @@ export default class TrajectoryCalculator {
                         bestTrajectory = structuredClone(this.currentTrajectory);
                     }
                 }
+
+                if (stopCondition(bestTrajectory)) return bestTrajectory;
             }
         }
 
         return bestTrajectory;
+    }
+
+    findBestTrajectory(startPos: Position, targetPos: Position, terrain: QuadBlock, bulletCount: number): CalculatedTrajectory {
+        return this.iterateThroughTrajectories(
+            startPos,
+            targetPos,
+            terrain,
+            bulletCount,
+            (traj) => traj.hitType === HitType.Direct && traj.collisionNumber === 0
+        );
+    }
+
+    isTargetable(startPos: Position, targetPos: Position, terrain: QuadBlock, bulletCount: number): boolean {
+        return this.iterateThroughTrajectories(
+            startPos,
+            targetPos,
+            terrain,
+            bulletCount,
+            (traj) => traj.useful
+        ).useful;
     }
 }

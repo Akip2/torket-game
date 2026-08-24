@@ -23,15 +23,15 @@ type SimplifiedSimulatedBotState = {
 }
 
 const ACTIONS = [
-    BotMovementAction.None,
+    //BotMovementAction.None,
     BotMovementAction.Right,
     BotMovementAction.Left,
-    BotMovementAction.Jump,
+    //BotMovementAction.Jump,
     //BotMovementAction.JumpLeft,
     //BotMovementAction.JumpRight,
 ];
 
-const MAX_STEP = 5;
+const MAX_STEP = 2;
 export default class MovementCalculator {
     constructor(private botPerception: BotPerception, private terrain: QuadBlock, private trajectoryCalculator: TrajectoryCalculator) {
 
@@ -143,10 +143,17 @@ export default class MovementCalculator {
 
     private calculateScore(state: BotSimulatedState) {
         //TODO
-        if (this.isOnGround(state.x, state.y)) {
-            return 1 + Math.random();
-        } else {
-            return 0;
-        }
+        let score = 0;
+                
+        score += Math.sqrt(
+            (state.x - this.botPerception.selfPosition.x) ** 2
+            +
+            (state.y - this.botPerception.selfPosition.y) ** 2
+        );
+        
+        score += this.botCollides(state.x, state.y) ? -5 : 2;
+        score += this.isOnGround(state.x, state.y) ? 0.5 : 0
+        
+        return score;
     }
 }
