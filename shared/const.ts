@@ -164,3 +164,4 @@ export const AUDIO_RESSOURCE_KEYS = [
 ];
 
 export const BOT_ID = "bot";
+export const SIMULATION_STEP_TIME_COEF = 3;

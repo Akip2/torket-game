@@ -6,7 +6,7 @@ import BotPerception from "./BotPerception";
 import TrajectoryCalculator from "./TrajectoryCalculator";
 import BotMemory from "./BotMemory";
 import { wait } from "@shared/utils";
-import { SHOT_CONST, TIME_STEP } from "@shared/const";
+import { SHOT_CONST, SIMULATION_STEP_TIME_COEF, TIME_STEP } from "@shared/const";
 import { Position } from "@shared/types";
 import MovementCalculator from "./MovementCalculator";
 import { BotMovementAction } from "@shared/enums/BotMovementAction.enum";
@@ -84,21 +84,25 @@ export default class BotIntelligence {
             const wantsRight = currentMovement === BotMovementAction.JumpRight || currentMovement === BotMovementAction.Right;
             const wantsJump = currentMovement === BotMovementAction.Jump || currentMovement === BotMovementAction.JumpRight || currentMovement === BotMovementAction.JumpLeft;
 
-            if (wantsleft) {
-                this.botAction.moveLeft();
-            } else if (wantsRight) {
-                this.botAction.moveRight();
-            } else {
-                this.botAction.stopHorizontalMovement();
-            }
 
             if (wantsJump) {
                 this.botAction.jump();
+
+                await wait(TIME_STEP);
             } else {
                 this.botAction.stopJumping();
-            }
 
-            await wait(TIME_STEP);
+                if (wantsleft) {
+                    this.botAction.moveLeft();
+                } else if (wantsRight) {
+                    this.botAction.moveRight();
+                } else {
+                    this.botAction.stopHorizontalMovement();
+                }
+
+
+                await wait(TIME_STEP * SIMULATION_STEP_TIME_COEF);
+            }
         }
     }
 

@@ -1,6 +1,6 @@
 import QuadBlock from "@shared/data/QuadBlock";
 import { BotMovementAction } from "@shared/enums/BotMovementAction.enum";
-import { GRAVITY, PLAYER_CONST } from "@shared/const";
+import { GRAVITY, PLAYER_CONST, SIMULATION_STEP_TIME_COEF, TIME_STEP } from "@shared/const";
 import TrajectoryCalculator from "./TrajectoryCalculator";
 import BotPerception from "./BotPerception";
 import BotMemory from "./BotMemory";
@@ -32,7 +32,7 @@ const ACTIONS = [
     //BotMovementAction.JumpRight,
 ];
 
-const MAX_STEP = 7;
+const MAX_STEP = 8;
 export default class MovementCalculator {
     constructor(private botPerception: BotPerception, private botMemory: BotMemory, private terrain: QuadBlock, private trajectoryCalculator: TrajectoryCalculator) {
 
@@ -74,7 +74,7 @@ export default class MovementCalculator {
     }
 
     private botCollides(x: number, y: number) {
-        return this.terrain.collidesWithRect(x, y, PLAYER_CONST.BASE_WIDTH - 10, PLAYER_CONST.BASE_WIDTH - 10);
+        return this.terrain.collidesWithRect(x, y, PLAYER_CONST.BASE_WIDTH - 8, PLAYER_CONST.BASE_WIDTH - 8);
     }
 
     private getJumpCost(jumpCoef: number) {
@@ -105,31 +105,22 @@ export default class MovementCalculator {
         // HORIZONTAL MOVEMENT
         let targetSpeed = 0;
         const moving = wantsRight || wantsLeft;
-        if (moving) {
-            nextState.movementLeft -= 1;
-
-            if (wantsRight) {
-                targetSpeed = PLAYER_CONST.SPEED;
-            } else {
-                targetSpeed = -PLAYER_CONST.SPEED;
+        let tickNumber = 1;
+        if (wantsJump) {
+            nextState.velocityY = PLAYER_CONST.JUMP;
+        } else {
+            tickNumber = SIMULATION_STEP_TIME_COEF;
+            if (moving) {
+                if (wantsRight) {
+                    targetSpeed = PLAYER_CONST.SPEED;
+                } else {
+                    targetSpeed = -PLAYER_CONST.SPEED;
+                }
             }
         }
         nextState.velocityX = targetSpeed;
 
-        if (wantsJump && nextState.movementLeft > 0) {
-            nextState.movementLeft -= this.getJumpCost(nextState.jumpCoef);
-            nextState.jumpCoef++;
-            nextState.velocityY = PLAYER_CONST.JUMP;
-        }
-
-        nextState.x += nextState.velocityX;
-        nextState.y += nextState.velocityY;
-        if (!this.isOnGround(nextState.x, nextState.y)) {
-            nextState.y += GRAVITY;
-        } else if (nextState.velocityY > 0) {
-            nextState.velocityY = 0;
-            nextState.jumpCoef = 1;
-        }
+        this.simulatePhysics(nextState, tickNumber);
 
         const currentSimplifiedState = {
             actions: nextState.actions,
@@ -151,6 +142,30 @@ export default class MovementCalculator {
         return bestSimplifiedState;
     }
 
+    private simulatePhysics(state: BotSimulatedState, tickNumber: number) {
+        const currentAction = state.actions[state.actions.length - 1];
+        let movementDecrease = 0;
+
+        if (currentAction === BotMovementAction.Left || currentAction === BotMovementAction.Right) {
+            movementDecrease = 1;
+        } else if (currentAction === BotMovementAction.Jump) {
+            movementDecrease = PLAYER_CONST.BASE_JUMP_COST * state.jumpCoef;
+        }
+
+        for (let i = 0; i < tickNumber; i++) {
+            state.x += state.velocityX;
+            state.y += state.velocityY;
+            if (!this.isOnGround(state.x, state.y)) {
+                state.y += GRAVITY;
+            } else if (state.velocityY > 0) {
+                state.velocityY = 0;
+                state.jumpCoef = 1;
+            }
+
+            state.movementLeft -= movementDecrease;
+        }
+    }
+
     private calculateScore(state: BotSimulatedState) {
         //TODO
         let score = 0;
@@ -159,13 +174,25 @@ export default class MovementCalculator {
             return -20000;
         }
 
-        score += Math.sqrt(
-            (state.x - this.botMemory.botPositionTurnStart.x) ** 2
+        if (this.botCollides(state.x, state.y)) {
+            return -10000;
+        }
+        /*
+                score += Math.sqrt(
+                    (state.x - this.botMemory.botPositionTurnStart.x) ** 2
+                );
+                */
+
+        score -= Math.sqrt(
+            (state.x - this.botPerception.otherPlayerPosition.x) ** 2
+            +
+            (state.y - this.botPerception.otherPlayerPosition.y) ** 2
         );
 
-        score += this.botCollides(state.x, state.y) ? -200    : 0;
-        score += this.isOnGround(state.x, state.y) ? 0.25 : 0
-        score -= Math.abs(state.velocityY) * 0.2
+        //score += this.isOnGround(state.x, state.y) ? 0.25 : 0
+        score += Math.min(0, state.velocityY) * 0.2
+       // score -= state.step > 2 ? state.movementLeft / 10 : 2;
+        score += this.isOnGround(state.x, state.y) ? 0.1 : -10 / state.movementLeft 
 
         return score;
     }

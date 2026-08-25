@@ -71,7 +71,7 @@ export function createActionChoiceDecisionTree(botIntelligence: BotIntelligence)
     chooseMove.setNextNode(END);
     chooseReload.setNextNode(END);
 
-    return hasMunitions;
+    return chooseMove;
 }
 
 export function createMovingDecisionTree(botIntelligence: BotIntelligence): TreeNode {
