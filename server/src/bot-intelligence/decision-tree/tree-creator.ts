@@ -18,7 +18,6 @@ import WaitingNode from "./nodes/WaitingNode";
 import MemoryValue from "./value-getters/MemoryValue";
 import PerceptionValue from "./value-getters/PerceptionValue";
 import StaticValue from "./value-getters/StaticValue";
-import MoveTowardsPlayerNode from "./nodes/actions/MoveTowardsPlayerNode";
 import MovementCalculationNode from "./nodes/actions/MovementCalculattionNode";
 import MoveNode from "./nodes/actions/MoveNode";
 import PositionMemorisationNode from "./nodes/actions/PositionMemorisationNode";
@@ -54,8 +53,42 @@ export function createActionChoiceDecisionTree(botIntelligence: BotIntelligence)
         Operation.EQ
     );
 
+    const ennemyHasMunitions = new ValueComparisonNode(
+        new PerceptionValue(perception, BotPerceptionKey.OtherBulletCount),
+        new StaticValue(0),
+        Operation.SUP
+    );
+
+    const calculateBestPlayerTrajectory = new TrajectoryCalculationNode(botIntelligence, false);
+
+    const isInDanger = new ValueComparisonNode(
+        new MemoryValue(memory, BotMemoryKey.UsefulTrajectory),
+        new StaticValue(true),
+        Operation.EQ
+    );
+
+    const monoBulletShot = new ValueComparisonNode(
+        new MemoryValue(memory, BotMemoryKey.TrajectoryCollisionNumber),
+        new StaticValue(1),
+        Operation.INF_EQ
+    );
+
+    const probaChooseMove = new ProbaNode(0.7);
+    const probaChooseMoveIfHasBulletsAndInDanger = new ProbaNode(0.9);
+
     hasMunitions.setTrueNode(calculateBestTrajectory);
-    hasMunitions.setFalseNode(probaNoMunitions);
+    hasMunitions.setFalseNode(ennemyHasMunitions);
+
+    ennemyHasMunitions.setFalseNode(chooseReload); 
+    ennemyHasMunitions.setTrueNode(calculateBestPlayerTrajectory);
+
+    calculateBestPlayerTrajectory.setNextNode(isInDanger);
+
+    isInDanger.setFalseNode(chooseReload);
+    isInDanger.setTrueNode(monoBulletShot);
+
+    monoBulletShot.setTrueNode(chooseMove);
+    monoBulletShot.setFalseNode(probaChooseMove);
 
     calculateBestTrajectory.setNextNode(usefulShot);
 
@@ -63,7 +96,10 @@ export function createActionChoiceDecisionTree(botIntelligence: BotIntelligence)
     usefulShot.setFalseNode(atMaxMunitions);
 
     atMaxMunitions.setTrueNode(chooseMove);
-    atMaxMunitions.setFalseNode(chooseReload); 
+    atMaxMunitions.setFalseNode(probaChooseMoveIfHasBulletsAndInDanger);
+
+    probaChooseMoveIfHasBulletsAndInDanger.setTrueNode(chooseMove);
+    probaChooseMoveIfHasBulletsAndInDanger.setFalseNode(chooseReload);
 
     probaNoMunitions.setTrueNode(chooseReload);
     probaNoMunitions.setFalseNode(chooseMove);
@@ -71,7 +107,7 @@ export function createActionChoiceDecisionTree(botIntelligence: BotIntelligence)
     chooseMove.setNextNode(END);
     chooseReload.setNextNode(END);
 
-    return chooseMove;
+    return hasMunitions;
 }
 
 export function createMovingDecisionTree(botIntelligence: BotIntelligence): TreeNode {

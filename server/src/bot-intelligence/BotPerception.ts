@@ -28,6 +28,10 @@ export default class BotPerception {
     get otherPlayerPosition(): Position {
         return this.otherPlayer.getPosition();
     }
+    
+    get otherBulletCount() {
+        return this.otherPlayer.getBulletCount();
+    }
 
     get selfPosition(): Position {
         return this.self.getPosition();

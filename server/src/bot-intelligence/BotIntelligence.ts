@@ -65,18 +65,6 @@ export default class BotIntelligence {
         this.botAction.listenToInputs();
     }
 
-    async moveTowards(pos: Position) {
-        while (this.botPerception.selfMovementLeft > 0) {
-            if (this.botPerception.selfPosition.x < pos.x) {
-                this.botAction.moveRight();
-            } else {
-                this.botAction.moveLeft();
-            }
-
-            await wait(TIME_STEP);
-        }
-    }
-
     async playMemorizedMovements() {
         for (let i = 0; i < this.botMemory.bestMovements.length; i++) {
             const currentMovement = this.botMemory.bestMovements[i];
@@ -106,10 +94,10 @@ export default class BotIntelligence {
         }
     }
 
-    memorizeBestTrajectory() {
+    memorizeBestTrajectory(origin: Position, target: Position) {
         const bestTrajectory = this.trajectoryCalculator.findBestTrajectory(
-            this.botPerception.selfPosition,
-            this.botPerception.otherPlayerPosition,
+            origin,//this.botPerception.selfPosition,
+            target,//this.botPerception.otherPlayerPosition,
             this.botPerception.terrain,
             this.botPerception.selfBulletCount
         );
