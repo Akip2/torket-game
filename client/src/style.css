@@ -26,11 +26,6 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-input:focus {
-  outline: 2px solid var(--ui-accent) !important;
-  outline-offset: 1px;
-}
-
 input {
   border: 1px solid var(--ui-border);
   box-sizing: border-box;
@@ -191,11 +186,6 @@ button:hover {
 button:not(:disabled):active {
   transform: translateY(3px);
   box-shadow: 0 0 0 #123752, 0 3px 8px rgba(0, 0, 0, 0.22);
-}
-
-button:focus {
-  outline: 2px solid var(--ui-accent);
-  outline-offset: 2px;
 }
 
 #game-container {
@@ -582,18 +572,20 @@ canvas {
   text-align: center;
 }
 
-#end-turn-btn {
-  font-size: 15px;
-  padding: 0.2em 0.5em;
-  min-width: unset;
-  background-color: rgb(30, 90, 120);
-  border: 1px solid rgb(60, 140, 180);
-  border-radius: 6px;
-  color: white;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  transition: background-color 0.15s, box-shadow 0.15s, transform 0.1s;
-  cursor: pointer;
+#hud-top {
+  button {
+    font-size: 15px;
+    padding: 0.2em 0.5em;
+    min-width: unset;
+    background-color: rgb(30, 90, 120);
+    border: 1px solid rgb(60, 140, 180);
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    transition: background-color 0.15s, box-shadow 0.15s, transform 0.1s;
+    cursor: pointer;
+  }
 }
 
 #end-turn-btn:not(:disabled):hover {
@@ -615,4 +607,8 @@ canvas {
 .dots {
   display: inline-block;
   width: 1.2em;
+}
+
+button:focus-visible {
+  outline: none;
 }

@@ -18,7 +18,7 @@ import { canPlayerShoot } from "@shared/logics/player-logic";
 import ActionChoicePanel from "../ui/containers/ActionChoicePanel";
 import UiButton from "../ui/buttons/UiButton";
 import type Phase from "@shared/data/phases/Phase";
-import { displayHud, getExplosionSpriteScale, hideEndTurnButton, loadFont, showEndTurnButton, showToast } from "../client-utils";
+import { displayHud, getExplosionSpriteScale, hideHudButton, loadFont, setupHudButtonCallbacks, showHudButton, showToast } from "../client-utils";
 import GameEndScreen from "../ui/containers/GameEndScreen";
 import SoundManager from "../managers/SoundManager";
 import { setCookie } from "typescript-cookie";
@@ -30,6 +30,7 @@ import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
 import type ReloadPhase from "@shared/data/phases/ReloadPhase";
 import ActionPhase from "@shared/data/phases/ActionPhase";
 import { wait } from "@shared/utils";
+import { HudButton } from "@shared/enums/HudButton.enum";
 
 export default class GameScene extends Phaser.Scene {
     active!: boolean;
@@ -148,16 +149,18 @@ export default class GameScene extends Phaser.Scene {
 
         this.input.keyboard!.on("keydown-ONE", () => { this.debugFunction() });
         this.input.keyboard!.on("keydown-TWO", () => { this.room.send(RequestTypes.Debug) });
-        displayHud();
-        this.setupEndTurnButtonEvent();
+        this.setupHud();
     }
 
-    private setupEndTurnButtonEvent() {
-        const btn = document.getElementById("end-turn-btn") as HTMLButtonElement;
-        if (!btn) return;
+    private setupHud() {
+        displayHud();
 
-        btn.removeEventListener("click", this.onEndTurnClick);
-        btn.addEventListener("click", this.onEndTurnClick);
+        const HUD_BUTTON_CALLBACKS = new Map<HudButton, () => void>();
+        HUD_BUTTON_CALLBACKS.set(HudButton.EndTurn, this.onEndTurnClick);
+        HUD_BUTTON_CALLBACKS.set(HudButton.AddBot, () => { this.room.send(RequestTypes.AddBots) });
+        setupHudButtonCallbacks(HUD_BUTTON_CALLBACKS);
+        
+        showHudButton(HudButton.AddBot);
     }
 
     private onEndTurnClick = () => {
@@ -176,8 +179,13 @@ export default class GameScene extends Phaser.Scene {
 
         this.phaseManager.setCurrentPhase(phase);
 
+        if (phase.type === PhaseTypes.Waiting) {
+            showHudButton(HudButton.AddBot, true);
+            return;
+        }
+
         if (!ActionPhase.TYPES.includes(phase.type)) {
-            hideEndTurnButton();
+            hideHudButton();
             this.actionChoicePanel.hide();
 
             if (phase.type === PhaseTypes.Reload) {
@@ -192,11 +200,11 @@ export default class GameScene extends Phaser.Scene {
         const isConcerned = this.phaseManager.isConcerned(this.room.sessionId);
 
         if (this.phaseManager.isActionChoicePhase()) {
-            hideEndTurnButton()
+            hideHudButton()
             isConcerned ? this.actionChoicePanel.show() : this.actionChoicePanel.hide();
         } else {
             this.actionChoicePanel.hide();
-            showEndTurnButton(isConcerned)
+            showHudButton(HudButton.EndTurn, isConcerned);
         }
     }
 

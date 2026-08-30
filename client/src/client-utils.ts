@@ -1,8 +1,11 @@
 import { EXPLOSION_CONST } from "@shared/const";
 import { Cursor } from "@shared/enums/Cursor.enum";
+import { HudButton } from "@shared/enums/HudButton.enum";
 import tinycolor from "tinycolor2";
 
 const SERVER_URL: string = import.meta.env.VITE_SERVER_URL || "ws://localhost:2567";
+
+let currentHudButton = HudButton.EndTurn;
 
 export function lightenHexColor(hex: number, coef: number = 7.5) {
     const hexString = "#" + hex.toString(16).padStart(6, "0");
@@ -139,15 +142,34 @@ export function removeHud() {
     gameCanvas.style.height = "100%";
 }
 
-export function showEndTurnButton(enabled: boolean) {
-    const btn = document.getElementById("end-turn-btn") as HTMLButtonElement;
-    if (!btn) return;
-    btn.style.display = "block";
-    btn.disabled = !enabled;
+function getCurrentHudButtonType() {
+    return currentHudButton;
 }
 
-export function hideEndTurnButton() {
-    const btn = document.getElementById("end-turn-btn") as HTMLButtonElement;
+export function setupHudButtonCallbacks(hudCallbacks: Map<HudButton, () => void>) {
+    const btn = document.getElementById("hud-btn") as HTMLButtonElement;
+    if (!btn) return;
+
+    btn.onclick = () => {
+        btn.disabled = true;
+        const buttonType = getCurrentHudButtonType() as HudButton;
+        hudCallbacks.get(buttonType)?.();
+    }
+}
+
+export function showHudButton(buttonType: HudButton, enabled: boolean = true) {
+    const btn = document.getElementById("hud-btn") as HTMLButtonElement;
+    if (!btn) return;
+
+    btn.textContent = buttonType;
+    btn.style.display = "block";
+    btn.disabled = !enabled;
+
+    currentHudButton = buttonType;
+}
+
+export function hideHudButton() {
+    const btn = document.getElementById("hud-btn") as HTMLButtonElement;
     if (!btn) return;
     btn.style.display = "none";
 }
