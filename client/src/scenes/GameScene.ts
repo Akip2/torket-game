@@ -9,9 +9,9 @@ import TerrainManagerClient from "../managers/TerrainManagerClient";
 import ShotManager from "../managers/ShotManager";
 import PlayerManagerClient from "../managers/PlayerManagerClient";
 import EffectsManager from "../managers/EffectsManager";
-import { SceneNames } from "@shared/enums/SceneNames.enum";
+import { SceneNames } from "../enums/SceneNames.enum";
 import type { CaptureInfo, ExplosionInfo, FirstSynchroInfo, FullSynchroInfo, InitData, PlayerData, Position, PowerUpdateData, ShootInfo } from "@shared/types";
-import { Depths } from "@shared/enums/Depths.enum.ts";
+import { Depths } from "../enums/Depths.enum";
 import PhaseManagerClient from "../managers/PhaseManagerClient";
 import UiText from "../ui/UiText";
 import { canPlayerShoot } from "@shared/logics/player-logic";
@@ -30,7 +30,7 @@ import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
 import type ReloadPhase from "@shared/data/phases/ReloadPhase";
 import ActionPhase from "@shared/data/phases/ActionPhase";
 import { wait } from "@shared/utils";
-import { HudButton } from "@shared/enums/HudButton.enum";
+import { HudButton } from "../enums/HudButton.enum";
 
 export default class GameScene extends Phaser.Scene {
     active!: boolean;
@@ -159,8 +159,9 @@ export default class GameScene extends Phaser.Scene {
         HUD_BUTTON_CALLBACKS.set(HudButton.EndTurn, this.onEndTurnClick);
         HUD_BUTTON_CALLBACKS.set(HudButton.AddBot, () => { this.room.send(RequestTypes.AddBots) });
         setupHudButtonCallbacks(HUD_BUTTON_CALLBACKS);
-        
-        showHudButton(HudButton.AddBot);
+
+        console.log(this.phaseManager.currentPhase);
+        this.updatePhaseRelatedUi();
     }
 
     private onEndTurnClick = () => {
@@ -178,34 +179,7 @@ export default class GameScene extends Phaser.Scene {
         console.log("PHASE SYNC");
 
         this.phaseManager.setCurrentPhase(phase);
-
-        if (phase.type === PhaseTypes.Waiting) {
-            showHudButton(HudButton.AddBot, true);
-            return;
-        }
-
-        if (!ActionPhase.TYPES.includes(phase.type)) {
-            hideHudButton();
-            this.actionChoicePanel.hide();
-
-            if (phase.type === PhaseTypes.Reload) {
-                SoundManager.play(RessourceKeys.Reloading);
-
-                const concernedPlayer = this.playerManager.getPlayer((phase as ReloadPhase).playerId);
-                this.effectsManager.floatingText(concernedPlayer.x, concernedPlayer.y, "+1 bullet");
-            }
-            return;
-        }
-
-        const isConcerned = this.phaseManager.isConcerned(this.room.sessionId);
-
-        if (this.phaseManager.isActionChoicePhase()) {
-            hideHudButton()
-            isConcerned ? this.actionChoicePanel.show() : this.actionChoicePanel.hide();
-        } else {
-            this.actionChoicePanel.hide();
-            showHudButton(HudButton.EndTurn, isConcerned);
-        }
+        this.updatePhaseRelatedUi();
     }
 
     private fullSynchro(synchroInfo: FullSynchroInfo) {
@@ -591,5 +565,36 @@ export default class GameScene extends Phaser.Scene {
 
     shutDown() {
         this.input.keyboard?.clearCaptures();
+    }
+
+    private updatePhaseRelatedUi() {        
+        const phase = this.phaseManager.currentPhase;
+        if (phase.type === PhaseTypes.Waiting) {
+            showHudButton(HudButton.AddBot, true);
+            return;
+        }
+
+        if (!ActionPhase.TYPES.includes(phase.type)) {
+            hideHudButton();
+            this.actionChoicePanel.hide();
+
+            if (phase.type === PhaseTypes.Reload) {
+                SoundManager.play(RessourceKeys.Reloading);
+
+                const concernedPlayer = this.playerManager.getPlayer((phase as ReloadPhase).playerId);
+                this.effectsManager.floatingText(concernedPlayer.x, concernedPlayer.y, "+1 bullet");
+            }
+            return;
+        }
+
+        const isConcerned = this.phaseManager.isConcerned(this.room.sessionId);
+
+        if (this.phaseManager.isActionChoicePhase()) {
+            hideHudButton()
+            isConcerned ? this.actionChoicePanel.show() : this.actionChoicePanel.hide();
+        } else {
+            this.actionChoicePanel.hide();
+            showHudButton(HudButton.EndTurn, isConcerned);
+        }
     }
 }

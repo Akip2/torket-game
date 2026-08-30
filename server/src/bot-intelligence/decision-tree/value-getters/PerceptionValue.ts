@@ -1,4 +1,4 @@
-import { BotPerceptionKey } from "@shared/enums/BotPerceptionKey.enum";
+import { BotPerceptionKey } from "../../../enums/BotPerceptionKey.enum";
 import BotPerception from "../../BotPerception";
 import { ValueGetter } from "./ValueGetter";
 

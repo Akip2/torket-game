@@ -1,4 +1,4 @@
-import { FaceExpression } from "./enums/FaceExpression.enum";
+import { FaceExpression } from "../client/src/enums/FaceExpression.enum";
 import { Parameter } from "./enums/Parameter.enum";
 import { RessourceKeys } from "./enums/RessourceKeys.enum";
 import type { ParameterChangeCoef } from "./types";

@@ -1,4 +1,4 @@
-import { SceneNames } from "@shared/enums/SceneNames.enum";
+import { SceneNames } from "../enums/SceneNames.enum";
 import titleScreenHtml from "../dom-ui/title-screen.html?raw";
 import roomCreationHtml from "../dom-ui/room-creation.html?raw";
 import roomListHtml from "../dom-ui/room-list.html?raw";

@@ -1,8 +1,8 @@
 import { PLAYER_CONST } from "@shared/const";
 import { Action } from "@shared/enums/Action.enum";
-import { BotMemoryKey } from "@shared/enums/BotMemoryKey.enum";
-import { BotPerceptionKey } from "@shared/enums/BotPerceptionKey.enum";
-import { Operation } from "@shared/enums/Operation.enum";
+import { BotMemoryKey } from "../../enums/BotMemoryKey.enum";
+import { BotPerceptionKey } from "../../enums/BotPerceptionKey.enum";
+import { Operation } from "../../enums/Operation.enum";
 import BotIntelligence from "../BotIntelligence";
 import ActionChoiceNode from "./nodes/actions/ActionChoiceNode";
 import EndTurnNode from "./nodes/actions/EndTurnNode";

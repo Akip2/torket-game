@@ -1,7 +1,7 @@
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import type GameScene from "../scenes/GameScene";
 import { PLAYER_CONST } from "@shared/const";
-import { Depths } from "@shared/enums/Depths.enum";
+import { Depths } from "../enums/Depths.enum";
 
 export class Glow extends Phaser.GameObjects.Image {
     constructor(scene: GameScene, x: number, y: number, self: boolean) {

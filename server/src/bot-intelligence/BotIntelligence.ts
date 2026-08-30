@@ -9,7 +9,7 @@ import { wait } from "@shared/utils";
 import { SHOT_CONST, SIMULATION_STEP_TIME_COEF, TIME_STEP } from "@shared/const";
 import { Position } from "@shared/types";
 import MovementCalculator from "./movement/MovementCalculator";
-import { BotMovementAction } from "@shared/enums/BotMovementAction.enum";
+import { BotMovementAction } from "../enums/BotMovementAction.enum";
 
 export default class BotIntelligence {
     private botAction: BotGameAction;

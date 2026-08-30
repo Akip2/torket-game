@@ -2,7 +2,7 @@ import { BULLET_CONST, EXPLOSION_CONST, PLAYER_CONST, SHOT_CONST } from "@shared
 import { generateBulletOriginPosition, simulateShot } from "@shared/logics/bullet-logic";
 import { CalculatedTrajectory, Position, ShootInfo } from "@shared/types";
 import QuadBlock from "@shared/data/QuadBlock";
-import { HitType } from "@shared/enums/HitType.enum";
+import { HitType } from "../enums/HitType.enum";
 
 const ANGLE_RANGE = Math.PI / 4;      // 45°
 const ANGLE_STEP = (Math.PI / 180);    // 5°

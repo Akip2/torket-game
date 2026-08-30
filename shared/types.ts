@@ -1,6 +1,6 @@
 import type Phase from "./data/phases/Phase";
-import type { Depths } from "./enums/Depths.enum";
-import type { HitType } from "./enums/HitType.enum.ts";
+import type { Depths } from "../client/src/enums/Depths.enum.ts";
+import type { HitType } from "../server/src/enums/HitType.enum.ts";
 import type { RequestTypes } from "./enums/RequestTypes.enum";
 import { Team } from "./enums/Team.enum.ts";
 

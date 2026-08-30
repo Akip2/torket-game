@@ -1,4 +1,4 @@
-import { Depths } from "@shared/enums/Depths.enum.ts";
+import { Depths } from "../enums/Depths.enum";
 import type GameScene from "../scenes/GameScene";
 
 export default class Tooltip extends Phaser.GameObjects.Container {

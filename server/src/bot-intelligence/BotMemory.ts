@@ -1,5 +1,5 @@
-import { BotMovementAction } from "@shared/enums/BotMovementAction.enum";
-import { HitType } from "@shared/enums/HitType.enum";
+import { BotMovementAction } from "../enums/BotMovementAction.enum";
+import { HitType } from "../enums/HitType.enum";
 import { CalculatedTrajectory, Position } from "@shared/types";
 
 export default class BotMemory {

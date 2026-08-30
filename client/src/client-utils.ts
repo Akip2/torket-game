@@ -1,6 +1,6 @@
 import { EXPLOSION_CONST } from "@shared/const";
-import { Cursor } from "@shared/enums/Cursor.enum";
-import { HudButton } from "@shared/enums/HudButton.enum";
+import { Cursor } from "./enums/Cursor.enum";
+import { HudButton } from "./enums/HudButton.enum";
 import tinycolor from "tinycolor2";
 
 const SERVER_URL: string = import.meta.env.VITE_SERVER_URL || "ws://localhost:2567";

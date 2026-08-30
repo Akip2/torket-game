@@ -1,5 +1,5 @@
 import { ValueGetter } from "./ValueGetter";
-import { BotMemoryKey } from "@shared/enums/BotMemoryKey.enum";
+import { BotMemoryKey } from "../../../enums/BotMemoryKey.enum";
 import BotMemory from "../../BotMemory";
 import { ComparableValue } from "@shared/types";
 

@@ -1,4 +1,4 @@
-import { Operation } from "@shared/enums/Operation.enum";
+import { Operation } from "../../../../enums/Operation.enum";
 import QuestionNode from "./QuestionNode";
 import { ComparableValue } from "@shared/types";
 import { ValueGetter } from "../../value-getters/ValueGetter";

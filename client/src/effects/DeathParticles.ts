@@ -1,6 +1,6 @@
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import type GameScene from "../scenes/GameScene";
-import { Depths } from "@shared/enums/Depths.enum";
+import { Depths } from "../enums/Depths.enum";
 
 export class DeathParticles extends Phaser.GameObjects.Particles.ParticleEmitter {
     constructor(scene: GameScene) {

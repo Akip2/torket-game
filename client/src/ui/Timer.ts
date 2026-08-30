@@ -1,7 +1,7 @@
 import type GameScene from "../scenes/GameScene";
 import UiText from "./UiText";
 import { TextStyle } from "./ui-styles";
-import { Depths } from "@shared/enums/Depths.enum.ts";
+import { Depths } from "../enums/Depths.enum";
 
 export default class Timer extends UiText {
     background: Phaser.GameObjects.Rectangle;
