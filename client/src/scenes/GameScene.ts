@@ -581,7 +581,7 @@ export default class GameScene extends Phaser.Scene {
             if (phase.type === PhaseTypes.Reload) {
                 SoundManager.play(RessourceKeys.Reloading);
 
-                const concernedPlayer = this.playerManager.getPlayer((phase as ReloadPhase).playerId);
+                const concernedPlayer = this.playerManager.getPlayer(this.phaseManager.concernedPlayerId!);
                 this.effectsManager.floatingText(concernedPlayer.x, concernedPlayer.y, "+1 bullet");
             }
             return;
