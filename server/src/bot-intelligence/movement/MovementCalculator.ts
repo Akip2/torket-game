@@ -144,23 +144,36 @@ export default class MovementCalculator {
 
     private simulatePhysics(state: BotSimulatedState, tickNumber: number) {
         const currentAction = state.actions[state.actions.length - 1];
+
         let movementDecrease = 0;
 
-        if (currentAction === BotMovementAction.Left || currentAction === BotMovementAction.Right) {
+        if (
+            currentAction === BotMovementAction.Left ||
+            currentAction === BotMovementAction.Right
+        ) {
             movementDecrease = 1;
         } else if (currentAction === BotMovementAction.Jump) {
             movementDecrease = PLAYER_CONST.BASE_JUMP_COST * state.jumpCoef;
         }
 
+        const frictionFactor = 1 - 0.05;
+
         for (let i = 0; i < tickNumber; i++) {
-            state.x += state.velocityX;
-            state.y += state.velocityY;
+            // Air friction
+            //state.velocityX *= frictionFactor;
+            state.velocityY *= frictionFactor;
+
+            // Gravity
             if (!this.isOnGround(state.x, state.y)) {
-                state.y += GRAVITY;
+                state.velocityY += GRAVITY;
             } else if (state.velocityY > 0) {
                 state.velocityY = 0;
                 state.jumpCoef = 1;
             }
+
+            // Position
+            state.x += state.velocityX;
+            state.y += state.velocityY;
 
             state.movementLeft -= movementDecrease;
         }
@@ -191,8 +204,8 @@ export default class MovementCalculator {
 
         //score += this.isOnGround(state.x, state.y) ? 0.25 : 0
         score += Math.min(0, state.velocityY) * 0.2
-       // score -= state.step > 2 ? state.movementLeft / 10 : 2;
-        score += this.isOnGround(state.x, state.y) ? 0.1 : -10 / state.movementLeft 
+        // score -= state.step > 2 ? state.movementLeft / 10 : 2;
+        score += this.isOnGround(state.x, state.y) ? 0.1 : -10 / state.movementLeft
 
         return score;
     }

@@ -46,7 +46,7 @@ export default class BotGameAction extends BasicGameAction {
         const dx = x - startX;
         const dy = y - startY;
 
-        const steps = Math.max(Math.abs(dx), Math.abs(dy)) / (Math.min(18, Math.random() * 22));
+        const steps = Math.max(Math.abs(dx), Math.abs(dy)) / (Math.min(2, Math.random() * 8));
 
         for (let i = 1; i <= steps; i++) {
             const t = i / steps;
