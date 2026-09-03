@@ -24,28 +24,26 @@ type SimplifiedSimulatedBotState = {
 }
 
 const ACTIONS = [
-    //BotMovementAction.None,
     BotMovementAction.Right,
     BotMovementAction.Left,
     BotMovementAction.Jump,
-    //BotMovementAction.JumpLeft,
-    //BotMovementAction.JumpRight,
 ];
 
 const MAX_STEP = 8;
 export default class MovementCalculator {
-    constructor(private botPerception: BotPerception, private botMemory: BotMemory, private terrain: QuadBlock, private trajectoryCalculator: TrajectoryCalculator) {
-
-    }
+    constructor(
+        private botPerception: BotPerception, 
+        private botMemory: BotMemory, 
+        private terrain: QuadBlock, 
+        private trajectoryCalculator: TrajectoryCalculator
+    ) {}
 
     findBestMovements() {
         const startState = {
             x: this.botPerception.selfPosition.x,
             y: this.botPerception.selfPosition.y,
-
             velocityX: this.botPerception.selfVelocity.x,
             velocityY: this.botPerception.selfVelocity.y,
-
             movementLeft: this.botPerception.selfMovementLeft,
             actions: [],
             jumpCoef: 1,
@@ -68,21 +66,75 @@ export default class MovementCalculator {
         return !this.terrain.collidesWithRect(
             x,
             y + 700 / 2,
-            PLAYER_CONST.BASE_WIDTH / 4,
+            PLAYER_CONST.BASE_WIDTH - 8,
             700
         );
     }
 
     private botCollides(x: number, y: number) {
-        return this.terrain.collidesWithRect(x, y, PLAYER_CONST.BASE_WIDTH - 8, PLAYER_CONST.BASE_WIDTH - 8);
+        return this.terrain.collidesWithRect(
+            x, 
+            y, 
+            PLAYER_CONST.BASE_WIDTH - 8, 
+            PLAYER_CONST.BASE_WIDTH - 8
+        );
     }
 
-    private getJumpCost(jumpCoef: number) {
-        return jumpCoef * PLAYER_CONST.BASE_JUMP_COST;
+    private resolveCollision(state: BotSimulatedState): { resolved: boolean; newX: number; newY: number; newVelX: number; newVelY: number } {
+        if (!this.botCollides(state.x, state.y)) {
+            return { resolved: false, newX: state.x, newY: state.y, newVelX: state.velocityX, newVelY: state.velocityY };
+        }
+
+        const width = PLAYER_CONST.BASE_WIDTH - 8;
+        const oldX = state.x;
+        const oldY = state.y;
+
+        let newX = state.x;
+        let newY = state.y;
+        let newVelX = state.velocityX;
+        let newVelY = state.velocityY;
+
+        for (let offset = 1; offset <= 32; offset += 2) {
+            const testY = state.y - offset;
+            if (!this.terrain.collidesWithRect(state.x, testY, width, width)) {
+                newY = testY;
+                newVelY = Math.min(0, state.velocityY);
+                return { resolved: true, newX, newY, newVelX, newVelY };
+            }
+        }
+
+        for (let offset = 1; offset <= 32; offset += 2) {
+            const testY = state.y + offset;
+            if (!this.terrain.collidesWithRect(state.x, testY, width, width)) {
+                newY = testY;
+                newVelY = Math.max(0, state.velocityY);
+                return { resolved: true, newX, newY, newVelX, newVelY };
+            }
+        }
+
+        for (let offset = 1; offset <= 32; offset += 2) {
+            const testX = state.x - offset;
+            if (!this.terrain.collidesWithRect(testX, state.y, width, width)) {
+                newX = testX;
+                newVelX = 0;
+                return { resolved: true, newX, newY, newVelX, newVelY };
+            }
+        }
+
+        for (let offset = 1; offset <= 32; offset += 2) {
+            const testX = state.x + offset;
+            if (!this.terrain.collidesWithRect(testX, state.y, width, width)) {
+                newX = testX;
+                newVelX = 0;
+                return { resolved: true, newX, newY, newVelX, newVelY };
+            }
+        }
+
+        return { resolved: false, newX: oldX, newY: oldY, newVelX: 0, newVelY: 0 };
     }
 
     private simulateStep(currentState: BotSimulatedState, action: BotMovementAction): SimplifiedSimulatedBotState {
-        const nextState: BotSimulatedState = { // copy
+        const nextState: BotSimulatedState = {
             ...currentState,
             actions: [...currentState.actions, action],
             step: currentState.step + 1,
@@ -101,10 +153,10 @@ export default class MovementCalculator {
             action === BotMovementAction.JumpLeft ||
             action === BotMovementAction.JumpRight;
 
-
         // HORIZONTAL MOVEMENT
         let targetSpeed = 0;
         const moving = wantsRight || wantsLeft;
+
         let tickNumber = 1;
         if (wantsJump) {
             nextState.velocityY = PLAYER_CONST.JUMP;
@@ -119,15 +171,28 @@ export default class MovementCalculator {
             }
         }
         nextState.velocityX = targetSpeed;
+        nextState.velocityX *= 0.95;
 
         this.simulatePhysics(nextState, tickNumber);
+
+        const collision = this.resolveCollision(nextState);
+        if (collision.resolved) {
+            nextState.x = collision.newX;
+            nextState.y = collision.newY;
+            nextState.velocityX = collision.newVelX;
+            nextState.velocityY = collision.newVelY;
+        }
 
         const currentSimplifiedState = {
             actions: nextState.actions,
             score: this.calculateScore(nextState),
+        };
+
+        if (nextState.movementLeft <= 0 || nextState.step > MAX_STEP) {
+            return currentSimplifiedState;
         }
 
-        if (this.botCollides(nextState.x, nextState.y) || nextState.movementLeft <= 0 || nextState.step > MAX_STEP) {
+        if (this.botCollides(nextState.x, nextState.y)) {
             return currentSimplifiedState;
         }
 
@@ -160,7 +225,6 @@ export default class MovementCalculator {
 
         for (let i = 0; i < tickNumber; i++) {
             // Air friction
-            //state.velocityX *= frictionFactor;
             state.velocityY *= frictionFactor;
 
             // Gravity
@@ -180,21 +244,11 @@ export default class MovementCalculator {
     }
 
     private calculateScore(state: BotSimulatedState) {
-        //TODO
         let score = 0;
 
         if (this.fallingToDeath(state.x, state.y)) {
             return -20000;
         }
-
-        if (this.botCollides(state.x, state.y)) {
-            return -10000;
-        }
-        /*
-                score += Math.sqrt(
-                    (state.x - this.botMemory.botPositionTurnStart.x) ** 2
-                );
-                */
 
         score -= Math.sqrt(
             (state.x - this.botPerception.otherPlayerPosition.x) ** 2
@@ -202,10 +256,9 @@ export default class MovementCalculator {
             (state.y - this.botPerception.otherPlayerPosition.y) ** 2
         );
 
-        //score += this.isOnGround(state.x, state.y) ? 0.25 : 0
-        score += Math.min(0, state.velocityY) * 0.2
-        // score -= state.step > 2 ? state.movementLeft / 10 : 2;
-        score += this.isOnGround(state.x, state.y) ? 0.1 : -10 / state.movementLeft
+        score += ((state.x - this.botPerception.selfPosition.x) ** 2) * 0.0225;
+
+        score += this.isOnGround(state.x, state.y) ? 0.1 : 0;
 
         return score;
     }
