@@ -27,7 +27,6 @@ import CapturePointManagerClient from "../managers/CapturePointManagerClient";
 import CameraManager from "../managers/CameraManager";
 import type QuadBlock from "@shared/data/QuadBlock";
 import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
-import type ReloadPhase from "@shared/data/phases/ReloadPhase";
 import ActionPhase from "@shared/data/phases/ActionPhase";
 import { wait } from "@shared/utils";
 import { HudButton } from "../enums/HudButton.enum";

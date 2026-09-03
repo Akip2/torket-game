@@ -1,6 +1,6 @@
 import { Action } from "@shared/enums/Action.enum";
-import BotIntelligence from "../../BotIntelligence";
 import ActionNode from "./ActionNode";
+import BotIntelligence from "../../../BotIntelligence";
 
 export default class ActionChoiceNode extends ActionNode {
     constructor(botIntelligence: BotIntelligence, private action: Action) { 

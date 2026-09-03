@@ -1,4 +1,4 @@
-import BotIntelligence from "../../BotIntelligence";
+import BotIntelligence from "../../../BotIntelligence";
 import EndNode from "../EndNode";
 import ActionNode from "./ActionNode";
 

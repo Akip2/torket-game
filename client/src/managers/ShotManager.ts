@@ -115,7 +115,10 @@ export default class ShotManager {
 
         simulateShot(
             shootInfo,
-            (x: number, y: number) => { this.trajectoryDrawer?.fillCircle(x, y, 2) },
+            (x: number, y: number) => {
+                this.trajectoryDrawer?.fillCircle(x, y, 2);
+                return false;
+            },
             100
         )
     }
