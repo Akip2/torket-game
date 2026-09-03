@@ -1,6 +1,6 @@
 import QuadBlock from "@shared/data/QuadBlock";
 import { BotMovementAction } from "../../enums/BotMovementAction.enum";
-import { GRAVITY, PLAYER_CONST, SIMULATION_STEP_TIME_COEF, TIME_STEP } from "@shared/const";
+import { GRAVITY, PLAYER_CONST } from "@shared/const";
 import TrajectoryCalculator from "../TrajectoryCalculator";
 import BotPerception from "../BotPerception";
 import BotMemory from "../BotMemory";

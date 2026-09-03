@@ -113,13 +113,18 @@ export default class PhaseManagerServer {
         }
     }
 
-    async endTurn(playerId: string) {
+    endTurn(playerId: string) {
         if (!ActionPhase.TYPES.includes(this.currentPhase.type) || playerId !== this.concernedPlayerId) return;
+
+        const concernedPlayer = this.playerManager.getPlayer(this.concernedPlayerId)!;
+        this.disableAction(concernedPlayer);
+        concernedPlayer.enableMass();
+        immobilizePlayer(concernedPlayer);
+
         this.concernedPlayerId = null;
 
         clearTimeout(this.timeOut);
-        await wait(250);
-        this.next();
+        this.next(200);
     }
 
     actionChoice(playerId: string, action: Action) {

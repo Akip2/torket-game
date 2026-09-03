@@ -82,6 +82,12 @@ export const PLAYER_CONST = {
     },
 };
 
+export const BOT_CONST = {
+    BOT_ID: "bot",
+    SIMULATION_STEP_TIME_COEF: 3,
+    SHOT_IMPRECISION_COEF: 1,
+}
+
 export const BULLET_CONST = {
     RADIUS: 4,
     TRAIL_DISTANCE: 2,
@@ -115,7 +121,6 @@ export const SHOT_CONST = {
     BASE_DAMAGE: 14,
     BASE_MAX_SHOT_FORCE: 27.5,
     MIN_SHOT_FORCE: 5,
-    BOT_IMPRECISION: 2,
 }
 
 export const BORDER_CONST = {
@@ -162,6 +167,3 @@ export const AUDIO_RESSOURCE_KEYS = [
     RessourceKeys.Uncapture,
     RessourceKeys.CaptureVictory,
 ];
-
-export const BOT_ID = "bot";
-export const SIMULATION_STEP_TIME_COEF = 3;

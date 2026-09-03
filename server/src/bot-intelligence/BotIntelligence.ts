@@ -6,7 +6,7 @@ import BotPerception from "./BotPerception";
 import TrajectoryCalculator from "./TrajectoryCalculator";
 import BotMemory from "./BotMemory";
 import { wait } from "@shared/utils";
-import { SHOT_CONST, SIMULATION_STEP_TIME_COEF, TIME_STEP } from "@shared/const";
+import { SHOT_CONST, BOT_CONST, TIME_STEP } from "@shared/const";
 import { Position } from "@shared/types";
 import MovementCalculator from "./movement/MovementCalculator";
 import { BotMovementAction } from "../enums/BotMovementAction.enum";
@@ -26,7 +26,8 @@ export default class BotIntelligence {
         this.movementCalculator = new MovementCalculator(this.botPerception, this.botMemory, room.terrainManager.root, this.trajectoryCalculator);
     }
 
-    async shootCalculatedTrajectory(forceImprecision: number = 0) {
+    async shootCalculatedTrajectory() {
+        const forceImprecision = BOT_CONST.SHOT_IMPRECISION_COEF * Math.random();
         const shootInfo = this.botMemory.bestTrajectory.shootInfo;
 
         // FORCE IMPRECISION
@@ -89,7 +90,7 @@ export default class BotIntelligence {
                 }
 
 
-                await wait(TIME_STEP * SIMULATION_STEP_TIME_COEF);
+                await wait(TIME_STEP * BOT_CONST.SIMULATION_STEP_TIME_COEF);
             }
         }
     }

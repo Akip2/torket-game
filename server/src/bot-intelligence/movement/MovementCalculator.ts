@@ -1,6 +1,6 @@
 import QuadBlock from "@shared/data/QuadBlock";
 import { BotMovementAction } from "../../enums/BotMovementAction.enum";
-import { GRAVITY, PLAYER_CONST, SIMULATION_STEP_TIME_COEF, TIME_STEP } from "@shared/const";
+import { BOT_CONST, GRAVITY, PLAYER_CONST } from "@shared/const";
 import TrajectoryCalculator from "../TrajectoryCalculator";
 import BotPerception from "../BotPerception";
 import BotMemory from "../BotMemory";
@@ -161,7 +161,7 @@ export default class MovementCalculator {
         if (wantsJump) {
             nextState.velocityY = PLAYER_CONST.JUMP;
         } else {
-            tickNumber = SIMULATION_STEP_TIME_COEF;
+            tickNumber = BOT_CONST.SIMULATION_STEP_TIME_COEF;
             if (moving) {
                 if (wantsRight) {
                     targetSpeed = PLAYER_CONST.SPEED;
