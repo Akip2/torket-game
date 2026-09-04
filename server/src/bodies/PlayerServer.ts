@@ -191,6 +191,21 @@ export default class PlayerServer extends GameBody implements IPlayer {
         this.onDamage(this.playerRef.hp, actualDamage, directHit);
     }
 
+    stabilizeHorizontalVelocity(): void {
+        if (!this.isOnGround) {
+            return;
+        }
+
+        const vx = this.body.velocity.x;
+
+        if (Math.abs(vx) < 0.15) {
+            Body.setVelocity(this.body, {
+                x: 0,
+                y: this.body.velocity.y,
+            });
+        }
+    }
+
     instantDeath() {
         this.die();
         this.onDamage(this.playerRef.hp);

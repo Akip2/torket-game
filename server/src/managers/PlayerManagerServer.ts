@@ -21,6 +21,7 @@ export default class PlayerManagerServer {
 
     updateRefsPosition() {
         this.playerBodies.forEach((playerBody) => {
+            playerBody.stabilizeHorizontalVelocity();
             playerBody.updatePlayerRefPosition();
         });
     }
