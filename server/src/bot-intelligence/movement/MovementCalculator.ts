@@ -29,7 +29,6 @@ const ACTIONS = [
     BotMovementAction.Jump,
 ];
 
-const MAX_STEP = 8;
 export default class MovementCalculator {
     constructor(
         private botPerception: BotPerception, 
@@ -188,7 +187,7 @@ export default class MovementCalculator {
             score: this.calculateScore(nextState),
         };
 
-        if (nextState.movementLeft <= 0 || nextState.step > MAX_STEP) {
+        if (nextState.movementLeft <= 0 || nextState.step > BOT_CONST.MAX_STEP) {
             return currentSimplifiedState;
         }
 

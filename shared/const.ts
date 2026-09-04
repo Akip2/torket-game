@@ -8,7 +8,7 @@ export const FREE_ROAM = false;
 export const CLIENT_PREDICTION = false;
 
 export const DEFAULT_MAP_ID = "temple";
-export const QUICKPLAY_MAPS = ["temple", "floating_isles", "sun", "mirrorhold"];
+export const QUICKPLAY_MAPS = ["temple", "floating_isles", "pillars", "mirrorhold"];
 
 export const DISPLAY_CAPTURE_POINTS = false;
 
@@ -22,7 +22,7 @@ export const GAME_WIDTH = 1600;
 export const GAME_HEIGHT = 800;
 export const GRAVITY = 1.75;
 
-export const TILE_SIZE = 2;
+export const TILE_SIZE = 3;
 export const EDITION_TILE_SIZE = 8;
 
 export const GROUND_TYPE = "stone";
@@ -86,6 +86,7 @@ export const BOT_CONST = {
     BOT_ID: "bot",
     SIMULATION_STEP_TIME_COEF: 3,
     SHOT_IMPRECISION_COEF: 1,
+    MAX_STEP: 6,
 }
 
 export const BULLET_CONST = {

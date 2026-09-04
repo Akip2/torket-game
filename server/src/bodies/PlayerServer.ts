@@ -40,7 +40,7 @@ export default class PlayerServer extends GameBody implements IPlayer {
                 restitution: 0,
 
                 chamfer: {
-                    radius: 2,
+                    radius: 4,
                 },
                 slop: 0,
 
