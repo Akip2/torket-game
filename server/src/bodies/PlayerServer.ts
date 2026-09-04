@@ -28,13 +28,26 @@ export default class PlayerServer extends GameBody implements IPlayer {
     currentScale: number;
 
     constructor(playerRef: Player, sessionId: string, onDamage: (hp: number, damage?: number, directHit?: boolean) => void, size: number = PLAYER_CONST.BASE_WIDTH) {
-        const body = Bodies.rectangle(playerRef.x, playerRef.y, size, size, {
-            friction: 0,
-            frictionAir: 0.05,
-            frictionStatic: 0,
-            slop: 0,
-            label: `${RessourceKeys.Player}:${sessionId}`,
-        });
+        const body = Bodies.rectangle(
+            playerRef.x,
+            playerRef.y,
+            size,
+            size,
+            {
+                friction: 0,
+                frictionAir: 0.05,
+                frictionStatic: 0,
+                restitution: 0,
+
+                chamfer: {
+                    radius: 2,
+                },
+                slop: 0,
+
+                label: `${RessourceKeys.Player}:${sessionId}`,
+            }
+        );
+
         Body.setMass(body, PLAYER_CONST.BASE_MASS);
         Body.setInertia(body, Infinity);
 
@@ -52,11 +65,11 @@ export default class PlayerServer extends GameBody implements IPlayer {
         this.currentScale = 1;
     }
     hasBullets(): boolean {
-        return this.playerRef.bulletCount > 0;
+        return this.getBulletCount() > 0;
     }
 
     hasMaxBulletCount(): boolean {
-        return this.playerRef.bulletCount === PLAYER_CONST.BASE_MAX_BULLET_COUNT;
+        return this.getBulletCount() === PLAYER_CONST.BASE_MAX_BULLET_COUNT;
     }
     decreaseBulletCount(): void {
         this.playerRef.bulletCount -= 1;
@@ -71,7 +84,7 @@ export default class PlayerServer extends GameBody implements IPlayer {
     }
 
     reload(): void {
-        if(this.playerRef.bulletCount < PLAYER_CONST.BASE_MAX_BULLET_COUNT) this.playerRef.bulletCount++;
+        if (this.playerRef.bulletCount < PLAYER_CONST.BASE_MAX_BULLET_COUNT) this.playerRef.bulletCount++;
     }
 
     getPseudo() {
@@ -119,12 +132,43 @@ export default class PlayerServer extends GameBody implements IPlayer {
     }
 
     moveHorizontally(speed: number): void {
-        if (Math.abs(this.body.velocity.x) < Math.abs(speed)) {
-            Body.applyForce(this.body, this.body.position, {
-                x: speed/1200 * this.body.mass,
-                y: 0
-            });
-        }
+        const currentVelocity = this.body.velocity.x;
+        Body.setVelocity(this.body, {
+            x: speed,
+            y: this.body.velocity.y,
+        });
+
+        /*
+
+        const isMoving = speed !== 0;
+        const isAirborne = !this.isOnGround;
+
+        const acceleration = isMoving
+            ? isAirborne
+                ? PLAYER_CONST.AIR_ACCELERATION
+                : PLAYER_CONST.ACCELERATION
+            : isAirborne
+                ? PLAYER_CONST.AIR_DECELERATION
+                : PLAYER_CONST.DECELERATION;
+
+        const difference = speed - currentVelocity;
+
+        const velocityChange = Math.max(
+            -acceleration,
+            Math.min(acceleration, difference)
+        );
+
+        const nextVelocityX = currentVelocity + velocityChange;
+
+        Body.setVelocity(this.body, {
+            x: nextVelocityX,
+            y: this.body.velocity.y,
+        });
+        */
+    }
+
+    getBulletCount(): number {
+        return this.playerRef.bulletCount;
     }
 
     enableMass() {

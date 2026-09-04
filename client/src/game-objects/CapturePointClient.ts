@@ -1,6 +1,6 @@
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import type GameScene from "../scenes/GameScene";
-import { Depths } from "@shared/enums/Depths.enum.ts";
+import { Depths } from "../enums/Depths.enum";
 import { CaptureStatus } from "@shared/enums/CaptureStatus.enum";
 import { CAPTURE_POINT_CONST } from "@shared/const";
 

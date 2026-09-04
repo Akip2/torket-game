@@ -1,13 +1,24 @@
 :root {
   --hud-height: 42px;
+  --ui-bg: #07111f;
+  --ui-panel: rgba(10, 24, 42, 0.97);
+  --ui-panel-soft: rgba(17, 38, 64, 0.95);
+  --ui-border: #284663;
+  --ui-border-strong: #456b8e;
+  --ui-text: #e8f2fb;
+  --ui-muted: #91a9bf;
+  --ui-accent: #45b8e8;
+  --ui-accent-hover: #6cc9ee;
+  --ui-danger: #d75a50;
+  --ui-secondary: #1b4266;
+  --ui-secondary-hover: #28577f;
 
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: var(--ui-text);
+  background-color: var(--ui-bg);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -15,12 +26,9 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-input:focus {
-  outline: none !important;
-}
-
 input {
-  border: none;
+  border: 1px solid var(--ui-border);
+  box-sizing: border-box;
 }
 
 canvas {
@@ -29,13 +37,13 @@ canvas {
 }
 
 a {
-  font-weight: 500;
-  color: #646cff;
+  font-weight: 600;
+  color: var(--ui-accent);
   text-decoration: inherit;
 }
 
 a:hover {
-  color: #535bf2;
+  color: var(--ui-accent-hover);
 }
 
 html,
@@ -48,7 +56,8 @@ body {
 body {
   display: flex;
   min-height: 100vh;
-  background-color: #000;
+  overflow: hidden;
+  background: #040b14;
 }
 
 h1 {
@@ -60,12 +69,12 @@ h1 {
 }
 
 thead {
-  background-color: rgb(186, 186, 186);
+  background-color: #2d3942;
   border: none;
 
   tr {
-    border-bottom: solid #1a1a1a 2px;
-    border-top: solid #1a1a1a 2px;
+    border-bottom: solid var(--ui-border-strong) 1px;
+    border-top: solid var(--ui-border-strong) 1px;
   }
 }
 
@@ -84,32 +93,39 @@ tbody {
 
   tr {
     height: 3em;
-    border-bottom: solid #1a1a1a 1px;
+    border-bottom: solid #35424b 1px;
 
     transition: 0.1s background-color;
 
     &:nth-child(even) {
-      background: rgb(215, 215, 215);
+      background: rgba(255, 255, 255, 0.035);
     }
 
     &:hover {
-      background: rgb(200, 200, 210);
+      background: rgba(69, 184, 232, 0.12);
       cursor: pointer;
     }
   }
 
   tr.selected {
-    background: rgb(190, 190, 210);
+    background: rgba(69, 184, 232, 0.2);
+    color: #d9f4ff;
   }
 }
 
 th {
-  padding: 0.175em 2em;
+  padding: 0.65em 0.75em;
+  color: var(--ui-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 td {
   text-align: center;
-  padding: 0em 0em;
+  padding: 0.7em 0.5em;
+  color: var(--ui-text);
+  font-size: 0.9rem;
 }
 
 table {
@@ -117,19 +133,18 @@ table {
 }
 
 button {
-  padding: 0.6em 1.2em;
-  font-size: large;
-  font-weight: 500;
+  padding: 0.78em 1.1em;
+  font-size: 0.95rem;
+  font-weight: 700;
   font-family: inherit;
   cursor: pointer;
 
-  background-color: rgb(121, 85, 72);
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  padding: 0.75em;
-  cursor: pointer;
-  transition: background-color 0.2s;
+  background-color: var(--ui-accent);
+  color: #061522;
+  border: 1px solid #83d9fa;
+  border-radius: 4px;
+  box-shadow: 0 3px 0 #123752, 0 6px 14px rgba(0, 0, 0, 0.22);
+  transition: background-color 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s;
 
   min-width: 100px;
 }
@@ -163,11 +178,14 @@ button.loading::after {
 }
 
 button:hover {
-  background-color: rgb(141, 110, 99);
+  background-color: var(--ui-accent-hover);
+  border-color: #b4eaff;
+  box-shadow: 0 4px 0 #123752, 0 8px 18px rgba(0, 0, 0, 0.28);
 }
 
-button:focus {
-  outline: none !important;
+button:not(:disabled):active {
+  transform: translateY(3px);
+  box-shadow: 0 0 0 #123752, 0 3px 8px rgba(0, 0, 0, 0.22);
 }
 
 #game-container {
@@ -189,10 +207,10 @@ canvas {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  border: solid 1px black;
-  background-color: rgb(180, 140, 40);
-  color: #f0f0f0;
-  font-weight: 500;
+  border: solid 1px var(--ui-border);
+  background-color: #122b46;
+  color: var(--ui-text);
+  font-weight: 600;
 
   transition: background-color 0.15s;
 }
@@ -207,7 +225,7 @@ canvas {
 
   .map-card:hover {
     cursor: pointer;
-    background-color: rgb(210, 165, 50);
+    background-color: #1d4265;
 
     .map-preview {
       background-color: #1a1a1a;
@@ -216,16 +234,18 @@ canvas {
 }
 
 .map-name {
-  padding: 0.2em;
+  padding: 0.5em;
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
 }
 
 .map-preview {
-  background-color: black;
+  background-color: #06111e;
   width: 100%;
   height: auto;
   display: block;
 
-  border: solid 1px black;
+  border: solid 1px #0b0e11;
 
   transition: background-color 0.15s;
 }
@@ -283,11 +303,11 @@ canvas {
 
 .room-list-buttons {
   position: absolute;
-  bottom: -3.5em;
+  bottom: -3.75em;
   right: 0;
   display: flex;
   flex-direction: row;
-  gap: 1em;
+  gap: 0.85em;
 }
 
 .central-container {
@@ -302,7 +322,8 @@ canvas {
   transform: translate(-50%, -50%);
 
   h1 {
-    font-size: 75px;
+    font-size: clamp(2.5rem, 7vw, 4.75rem);
+    letter-spacing: 0.12em;
     text-align: center;
     color: white;
   }
@@ -310,10 +331,12 @@ canvas {
 
 .title-screen {
   .vertical-container {
-    background-color: rgba(0, 0, 0, 0.4);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    background: var(--ui-panel);
+    border: 1px solid var(--ui-border);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
 
-    max-width: 500px;
+    width: min(320px, calc(100vw - 2rem));
+    box-sizing: border-box;
   }
 
   h1 {
@@ -322,14 +345,32 @@ canvas {
   }
 
   input {
-    background-color: white;
-    color: black;
+    width: 100%;
+    background-color: #0d1115;
+    color: var(--ui-text);
 
     text-align: center;
-    font-size: large;
-    font-weight: bold;
-    padding: 0.7em;
-    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 0.75em;
+    border-radius: 4px;
+
+    &::placeholder {
+      color: var(--ui-muted);
+    }
+  }
+
+  #join-game,
+  #create-game {
+    background-color: var(--ui-secondary);
+    color: var(--ui-text);
+    border-color: #39709d;
+  }
+
+  #join-game:hover,
+  #create-game:hover {
+    background-color: var(--ui-secondary-hover);
+    border-color: #5a91bb;
   }
 }
 
@@ -337,13 +378,12 @@ canvas {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 1.5em;
+  gap: 1em;
 
-  padding: 2em 3em;
-  border-radius: 1.5em;
+  padding: 1.5em;
+  border-radius: 6px;
 
-  font-family: "Arial", sans-serif;
-  color: #fff;
+  color: var(--ui-text);
   text-align: center;
 
   width: fit-content;
@@ -361,29 +401,31 @@ canvas {
 
 .close-btn {
   position: absolute;
-  top: -14px;
-  right: -14px;
+  top: 10px;
+  right: 10px;
 
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
 
-  background-color: #e74c3c;
+  background-color: transparent;
+  border: 1px solid var(--ui-border);
   color: white;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  font-size: 28px;
-  font-weight: bold;
+  font-size: 16px;
+  font-weight: 700;
 
   cursor: pointer;
   transition: background-color 0.1s ease;
 }
 
 .close-btn:hover {
-  background-color: #c0392b;
+  background-color: var(--ui-danger);
+  border-color: var(--ui-danger);
 }
 
 .toast {
@@ -393,9 +435,10 @@ canvas {
   transform: translate(-50%, -50%);
 
   padding: 0.75em 1.5em;
-  border-radius: 8px;
-  font-size: 1.1em;
-  font-weight: 500;
+  border: 1px solid #f07a6c;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
   color: white;
 
   opacity: 0;
@@ -403,7 +446,7 @@ canvas {
 
   pointer-events: none;
   z-index: 9999;
-  background-color: #e74c3c;
+  background-color: #632e2a;
 }
 
 .toast--visible {
@@ -415,35 +458,49 @@ canvas {
 }
 
 .popup {
-  background-color: rgba(226, 226, 226);
-  font-size: large;
-  color: black;
-  border: solid #1a1a1a 1px;
+  background-color: var(--ui-panel);
+  font-size: 1rem;
+  color: var(--ui-text);
+  border: solid var(--ui-border) 1px;
+  border-radius: 6px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.42);
+  max-width: min(680px, calc(100vw - 2rem));
+  color: #ffffff;
+
+  .input-div,
+  label,
+  p,
+  span {
+    color: #ffffff;
+  }
 
   h1 {
-    background-color: rgb(0, 150, 136);
+    background-color: var(--ui-panel-soft);
+    border-bottom: 1px solid var(--ui-border);
     text-align: center;
     width: 100%;
-    font-size: xx-large;
-    font-weight: 500;
-    padding-bottom: 2%;
-    padding-top: 2%;
+    box-sizing: border-box;
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 1em 3em 1em 1em;
   }
 }
 
 .popup {
   input {
-    font-size: large;
+    font-size: 1rem;
 
-    color: black;
-    background-color: white;
+    color: var(--ui-text);
+    background-color: #0d1115;
 
     text-align: center;
     padding: 0.4em;
 
-    border: #1a1a1a solid 1px;
+    border: var(--ui-border) solid 1px;
 
-    min-width: 280px;
+    min-width: min(280px, 70vw);
+    border-radius: 4px;
   }
 }
 
@@ -515,18 +572,20 @@ canvas {
   text-align: center;
 }
 
-#end-turn-btn {
-  font-size: 15px;
-  padding: 0.2em 0.5em;
-  min-width: unset;
-  background-color: rgb(30, 90, 120);
-  border: 1px solid rgb(60, 140, 180);
-  border-radius: 6px;
-  color: white;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  transition: background-color 0.15s, box-shadow 0.15s, transform 0.1s;
-  cursor: pointer;
+#hud-top {
+  button {
+    font-size: 15px;
+    padding: 0.2em 0.5em;
+    min-width: unset;
+    background-color: rgb(30, 90, 120);
+    border: 1px solid rgb(60, 140, 180);
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    transition: background-color 0.15s, box-shadow 0.15s, transform 0.1s;
+    cursor: pointer;
+  }
 }
 
 #end-turn-btn:not(:disabled):hover {
@@ -548,4 +607,8 @@ canvas {
 .dots {
   display: inline-block;
   width: 1.2em;
+}
+
+button:focus-visible {
+  outline: none;
 }

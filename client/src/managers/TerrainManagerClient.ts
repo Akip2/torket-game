@@ -3,7 +3,7 @@ import type GameScene from "../scenes/GameScene";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { DEBUG, TEXTURE_SIZE, TILE_SIZE } from "@shared/const";
 import type { Bounds, QuadBlockType } from "@shared/types";
-import { Depths } from "@shared/enums/Depths.enum.ts";
+import { Depths } from "../enums/Depths.enum";
 import BlockSprite from "../game-objects/BlockSprite";
 import { generateBorderData } from "@shared/utils";
 import SimulationBorderClient from "../game-objects/SimulationBorderClient";

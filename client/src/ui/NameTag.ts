@@ -1,6 +1,6 @@
 import { PLAYER_CONST } from "@shared/const";
 import type GameScene from "../scenes/GameScene";
-import { Depths } from "@shared/enums/Depths.enum.ts";
+import { Depths } from "../enums/Depths.enum";
 
 export default class NameTag extends Phaser.GameObjects.Text {
     private marginOffsetY: number;

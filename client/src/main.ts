@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import { GRAVITY, HUD_HEIGHT } from "@shared/const";
 import GameScene from "./scenes/GameScene";
 import MapEditionScene from "./scenes/MapEditionScene";
-import { SceneNames } from "@shared/enums/SceneNames.enum";
+import { SceneNames } from "./enums/SceneNames.enum";
 import TitleScreenScene from "./scenes/TitleScreenScene";
 
 const startSceneName = import.meta.env.VITE_START_SCENE;

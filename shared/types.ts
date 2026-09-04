@@ -1,5 +1,6 @@
 import type Phase from "./data/phases/Phase";
-import type { Depths } from "./enums/Depths.enum";
+import type { Depths } from "../client/src/enums/Depths.enum.ts";
+import type { HitType } from "../server/src/enums/HitType.enum.ts";
 import type { RequestTypes } from "./enums/RequestTypes.enum";
 import { Team } from "./enums/Team.enum.ts";
 
@@ -23,6 +24,15 @@ export type ShootInfo = {
     targetX: number,
     targetY: number
 }
+
+export type CalculatedTrajectory = {
+    hitType: HitType;
+    collisionNumber: number;
+    shootInfo: ShootInfo;
+    useful: boolean;
+}
+
+export type ComparableValue = number | boolean;
 
 export type CaptureInfo = {
     id: number;

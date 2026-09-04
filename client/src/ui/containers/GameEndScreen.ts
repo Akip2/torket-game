@@ -1,5 +1,5 @@
-import { Depths } from "@shared/enums/Depths.enum.ts";
-import { SceneNames } from "@shared/enums/SceneNames.enum";
+import { Depths } from "../../enums/Depths.enum";
+import { SceneNames } from "../../enums/SceneNames.enum";
 import type GameScene from "../../scenes/GameScene";
 import { wait } from "@shared/utils";
 import { showToast } from "../../client-utils";

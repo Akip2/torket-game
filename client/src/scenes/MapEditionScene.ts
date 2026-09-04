@@ -1,9 +1,9 @@
 import { CAPTURE_POINT_CONST, EDITION_TILE_SIZE, GAME_HEIGHT, GAME_WIDTH, GROUND_TYPE, PLAYER_CONST, TEXTURE_SIZE } from "@shared/const";
 import PrimitiveMap from "@shared/data/PrimitiveMap";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
-import { SceneNames } from "@shared/enums/SceneNames.enum";
+import { SceneNames } from "../enums/SceneNames.enum";
 import TextureManager from "../managers/TextureManager";
-import { Depths } from "@shared/enums/Depths.enum.ts";
+import { Depths } from "../enums/Depths.enum";
 import CameraManager from "../managers/CameraManager";
 
 export default class MapEditionScene extends Phaser.Scene {

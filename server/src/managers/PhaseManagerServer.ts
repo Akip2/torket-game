@@ -17,16 +17,18 @@ import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
 import { immobilizePlayer } from "@shared/logics/player-logic";
 import ReloadPhase from "@shared/data/phases/ReloadPhase";
 import ActionPhase from "@shared/data/phases/ActionPhase";
+import Bot from "../bodies/Bot";
+import { isBotId } from "../server-utils";
 
 export default class PhaseManagerServer {
-    currentIndex: number = -1;
-    currentPhase: Phase = new WaitingPhase();
-    phases: Phase[] = [];
-    playerManager: PlayerManagerServer;
-    timeOut?: NodeJS.Timeout;
-    concernedPlayerId: string | null = null;
-    onPhaseChange: (phase: Phase) => void;
-    onGameStart: () => void;
+    private currentIndex: number = -1;
+    private currentPhase: Phase = new WaitingPhase();
+    private phases: Phase[] = [];
+    private playerManager: PlayerManagerServer;
+    private timeOut?: NodeJS.Timeout;
+    private concernedPlayerId: string | null = null;
+    private onPhaseChange: (phase: Phase) => void;
+    private onGameStart: () => void;
 
     constructor(playerManager: PlayerManagerServer, onGameStart: () => void, onPhaseChange: (phase: Phase) => void) {
         this.playerManager = playerManager;
@@ -63,7 +65,7 @@ export default class PhaseManagerServer {
         clearTimeout(this.timeOut);
 
         if (phase instanceof TimedPhase) {
-            (phase as TimedPhase).setStartTime(Date.now());
+            phase.setStartTime(Date.now());
             this.timeOut = setTimeout(
                 () => {
                     let transitionDelay = 0;
@@ -83,7 +85,7 @@ export default class PhaseManagerServer {
             this.concernedPlayerId = null;
         }
 
-        if (!FREE_ROAM) this.playerManager.handlePlayersState(phase);
+        if (!FREE_ROAM) this.playerManager.handlePlayersState(phase, this.concernedPlayerId);
 
         this.currentPhase = phase;
         this.onPhaseChange(phase);
@@ -111,13 +113,18 @@ export default class PhaseManagerServer {
         }
     }
 
-    async endTurn(playerId: string) {
+    endTurn(playerId: string) {
         if (!ActionPhase.TYPES.includes(this.currentPhase.type) || playerId !== this.concernedPlayerId) return;
+
+        const concernedPlayer = this.playerManager.getPlayer(this.concernedPlayerId)!;
+        this.disableAction(concernedPlayer);
+        concernedPlayer.enableMass();
+        immobilizePlayer(concernedPlayer);
+
         this.concernedPlayerId = null;
 
         clearTimeout(this.timeOut);
-        await wait(250);
-        this.next();
+        this.next(200);
     }
 
     actionChoice(playerId: string, action: Action) {
@@ -173,6 +180,10 @@ export default class PhaseManagerServer {
                 this.movingPhaseStartEvent();
                 break;
         }
+
+        if (this.concernedPlayerId && isBotId(this.concernedPlayerId)) {
+            (this.playerManager.getPlayer(this.concernedPlayerId) as Bot).runAlgo(this.currentPhase.type);
+        }
     }
 
     movingPhaseStartEvent() {
@@ -188,10 +199,19 @@ export default class PhaseManagerServer {
                 concernedPlayer.enableMass();
             } else if (!concernedPlayer.hasMovementLeft()) {
                 clearInterval(loop);
+                this.disableAction(concernedPlayer);
                 concernedPlayer.enableMass();
                 immobilizePlayer(concernedPlayer);
                 this.next(500);
             }
         }, 50)
+    }
+
+    getCurrentPhase() {
+        return this.currentPhase;
+    }
+
+    getConcernedPlayerId() {
+        return this.concernedPlayerId;
     }
 }

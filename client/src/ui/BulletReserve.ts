@@ -1,7 +1,7 @@
 import type GameScene from "../scenes/GameScene";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import { BULLET_RESERVE_CONST, PLAYER_CONST } from "@shared/const";
-import { Depths } from "@shared/enums/Depths.enum.ts";
+import { Depths } from "../enums/Depths.enum";
 import { BarStyle } from "./ui-styles";
 
 export default class BulletReserve {

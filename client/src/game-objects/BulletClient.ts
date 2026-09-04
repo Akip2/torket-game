@@ -1,7 +1,7 @@
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import type GameScene from "../scenes/GameScene";
 import type { ExplosionInfo, Position } from "@shared/types";
-import { Depths } from "@shared/enums/Depths.enum.ts";
+import { Depths } from "../enums/Depths.enum";
 import { BULLET_CONST, GRAVITY } from "@shared/const";
 import type { IBulletInterface } from "@shared/interfaces/Bullet.interface";
 

@@ -1,6 +1,6 @@
 import { PLAYER_CONST } from "@shared/const";
 import { Action } from "@shared/enums/Action.enum";
-import { Depths } from "@shared/enums/Depths.enum.ts"
+import { Depths } from "../enums/Depths.enum"
 import type { BarStyleType, UIButtonStyle } from "@shared/types";
 
 export const BarStyle = {

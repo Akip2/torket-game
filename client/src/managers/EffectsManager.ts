@@ -1,5 +1,5 @@
 import type GameScene from "../scenes/GameScene";
-import { Depths } from "@shared/enums/Depths.enum.ts";
+import { Depths } from "../enums/Depths.enum";
 
 export default class EffectsManager {
     private scene: GameScene;

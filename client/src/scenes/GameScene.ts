@@ -1,4 +1,4 @@
-import { AUDIO_RESSOURCE_KEYS, DEBUG, EXPLOSION_CONST, GROUND_TYPE, TEXTURE_SIZE, TILE_SIZE, TIME_STEP } from "@shared/const";
+import { AUDIO_RESSOURCE_KEYS, DEBUG, EXPLOSION_CONST, GRID_COLOR, GRID_SIZE, GROUND_TYPE, TEXTURE_SIZE, TILE_SIZE, TIME_STEP } from "@shared/const";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 import BulletClient from "../game-objects/BulletClient";
 import PlayerClient from "../game-objects/PlayerClient";
@@ -9,16 +9,16 @@ import TerrainManagerClient from "../managers/TerrainManagerClient";
 import ShotManager from "../managers/ShotManager";
 import PlayerManagerClient from "../managers/PlayerManagerClient";
 import EffectsManager from "../managers/EffectsManager";
-import { SceneNames } from "@shared/enums/SceneNames.enum";
+import { SceneNames } from "../enums/SceneNames.enum";
 import type { CaptureInfo, ExplosionInfo, FirstSynchroInfo, FullSynchroInfo, InitData, PlayerData, Position, PowerUpdateData, ShootInfo } from "@shared/types";
-import { Depths } from "@shared/enums/Depths.enum.ts";
+import { Depths } from "../enums/Depths.enum";
 import PhaseManagerClient from "../managers/PhaseManagerClient";
 import UiText from "../ui/UiText";
 import { canPlayerShoot } from "@shared/logics/player-logic";
 import ActionChoicePanel from "../ui/containers/ActionChoicePanel";
 import UiButton from "../ui/buttons/UiButton";
 import type Phase from "@shared/data/phases/Phase";
-import { displayHud, getExplosionSpriteScale, hideEndTurnButton, loadFont, showEndTurnButton, showToast } from "../client-utils";
+import { displayHud, getExplosionSpriteScale, hideHudButton, loadFont, setupHudButtonCallbacks, showHudButton, showToast } from "../client-utils";
 import GameEndScreen from "../ui/containers/GameEndScreen";
 import SoundManager from "../managers/SoundManager";
 import { setCookie } from "typescript-cookie";
@@ -27,9 +27,9 @@ import CapturePointManagerClient from "../managers/CapturePointManagerClient";
 import CameraManager from "../managers/CameraManager";
 import type QuadBlock from "@shared/data/QuadBlock";
 import { PhaseTypes } from "@shared/enums/PhaseTypes.enum";
-import type ReloadPhase from "@shared/data/phases/ReloadPhase";
 import ActionPhase from "@shared/data/phases/ActionPhase";
 import { wait } from "@shared/utils";
+import { HudButton } from "../enums/HudButton.enum";
 
 export default class GameScene extends Phaser.Scene {
     active!: boolean;
@@ -62,6 +62,9 @@ export default class GameScene extends Phaser.Scene {
     //UI
     actionChoicePanel!: ActionChoicePanel;
     gameEndScreen!: GameEndScreen;
+    private gridGraphics!: Phaser.GameObjects.Graphics;
+    private lastGridScroll!: { x: number, y: number };
+    private lastGridZoom!: number;
 
     constructor() {
         super(SceneNames.Game);
@@ -74,6 +77,10 @@ export default class GameScene extends Phaser.Scene {
         this.room = RoomManager.getRoom();
         this.playerData = data.playerData;
         this.messageBuffer = data.messageBuffer ?? [];
+
+        this.lastGridScroll = { x: -1, y: -1 };
+        this.lastGridZoom = -1;
+
         setCookie("playerName", this.playerData.name, { expires: 7 });
     }
 
@@ -134,22 +141,26 @@ export default class GameScene extends Phaser.Scene {
         this.setupCameraControls();
         this.setupVisibilityHandler();
         this.setupUi();
+        this.setupGrid();
         //this.setupBorders();
 
         this.setupRoomMessages();
 
         this.input.keyboard!.on("keydown-ONE", () => { this.debugFunction() });
         this.input.keyboard!.on("keydown-TWO", () => { this.room.send(RequestTypes.Debug) });
-        displayHud();
-        this.setupEndTurnButtonEvent();
+        this.setupHud();
     }
 
-    private setupEndTurnButtonEvent() {
-        const btn = document.getElementById("end-turn-btn") as HTMLButtonElement;
-        if (!btn) return;
+    private setupHud() {
+        displayHud();
 
-        btn.removeEventListener("click", this.onEndTurnClick);
-        btn.addEventListener("click", this.onEndTurnClick);
+        const HUD_BUTTON_CALLBACKS = new Map<HudButton, () => void>();
+        HUD_BUTTON_CALLBACKS.set(HudButton.EndTurn, this.onEndTurnClick);
+        HUD_BUTTON_CALLBACKS.set(HudButton.AddBot, () => { this.room.send(RequestTypes.AddBots) });
+        setupHudButtonCallbacks(HUD_BUTTON_CALLBACKS);
+
+        console.log(this.phaseManager.currentPhase);
+        this.updatePhaseRelatedUi();
     }
 
     private onEndTurnClick = () => {
@@ -167,29 +178,7 @@ export default class GameScene extends Phaser.Scene {
         console.log("PHASE SYNC");
 
         this.phaseManager.setCurrentPhase(phase);
-
-        if (!ActionPhase.TYPES.includes(phase.type)) {
-            hideEndTurnButton();
-            this.actionChoicePanel.hide();
-
-            if (phase.type === PhaseTypes.Reload) {
-                SoundManager.play(RessourceKeys.Reloading);
-
-                const concernedPlayer = this.playerManager.getPlayer((phase as ReloadPhase).playerId);
-                this.effectsManager.floatingText(concernedPlayer.x, concernedPlayer.y, "+1 bullet");
-            }
-            return;
-        }
-
-        const isConcerned = this.phaseManager.isConcerned(this.room.sessionId);
-
-        if (this.phaseManager.isActionChoicePhase()) {
-            hideEndTurnButton()
-            isConcerned ? this.actionChoicePanel.show() : this.actionChoicePanel.hide();
-        } else {
-            this.actionChoicePanel.hide();
-            showEndTurnButton(isConcerned)
-        }
+        this.updatePhaseRelatedUi();
     }
 
     private fullSynchro(synchroInfo: FullSynchroInfo) {
@@ -207,6 +196,7 @@ export default class GameScene extends Phaser.Scene {
 
         this.capturePointManager.syncCapturePoints(synchroInfo.capturePoints);
         this.terrainManager.createBorders(synchroInfo.bounds);
+        this.cameraManager.fitBounds(synchroInfo.bounds);
     }
 
     async setupRoomMessages() {
@@ -355,6 +345,8 @@ export default class GameScene extends Phaser.Scene {
 
         this.matter.world.step(TIME_STEP);
         this.events.emit('fixed-tick');
+
+        this.drawGrid();
     }
 
     update(_time: number, delta: number): void {
@@ -429,6 +421,55 @@ export default class GameScene extends Phaser.Scene {
         this.effectsManager.burstParticles(x, y, 12, 0xff8800);
 
         this.playerManager.reactToExplosion(bullet);
+    }
+
+    private setupGrid(): void {
+        this.gridGraphics = this.add.graphics();
+        this.gridGraphics.setScrollFactor(1);
+        this.worldContainer.add(this.gridGraphics);
+        this.gridGraphics.setDepth(Depths.Grid); // depth la plus basse
+    }
+
+    private drawGrid(): void {
+        if (!this.gridGraphics) return;
+
+        const camera = this.cameras.main;
+
+        if (
+            camera.scrollX === this.lastGridScroll.x &&
+            camera.scrollY === this.lastGridScroll.y &&
+            camera.zoom === this.lastGridZoom
+        ) return;
+
+        this.lastGridScroll = { x: camera.scrollX, y: camera.scrollY };
+        this.lastGridZoom = camera.zoom;
+
+        const view = camera.worldView;
+
+        const startX = Math.floor(view.left / GRID_SIZE) * GRID_SIZE;
+        const startY = Math.floor(view.top / GRID_SIZE) * GRID_SIZE;
+
+        const endX = view.right + GRID_SIZE;
+        const endY = view.bottom + GRID_SIZE;
+
+        const lineWidth = 2 / camera.zoom;
+
+        this.gridGraphics.clear();
+        this.gridGraphics.lineStyle(lineWidth, GRID_COLOR, 0.2);
+
+        this.gridGraphics.beginPath();
+
+        for (let x = startX; x <= endX; x += GRID_SIZE) {
+            this.gridGraphics.moveTo(x, startY);
+            this.gridGraphics.lineTo(x, endY);
+        }
+
+        for (let y = startY; y <= endY; y += GRID_SIZE) {
+            this.gridGraphics.moveTo(startX, y);
+            this.gridGraphics.lineTo(endX, y);
+        }
+
+        this.gridGraphics.strokePath();
     }
 
     private getWorldPointerPosition(pointer: Phaser.Input.Pointer): Position {
@@ -517,9 +558,42 @@ export default class GameScene extends Phaser.Scene {
 
     debugFunction() {
         if (!DEBUG) return;
+
+        this.room.send(RequestTypes.AddBots);
     }
 
     shutDown() {
         this.input.keyboard?.clearCaptures();
+    }
+
+    private updatePhaseRelatedUi() {        
+        const phase = this.phaseManager.currentPhase;
+        if (phase.type === PhaseTypes.Waiting) {
+            showHudButton(HudButton.AddBot, true);
+            return;
+        }
+
+        if (!ActionPhase.TYPES.includes(phase.type)) {
+            hideHudButton();
+            this.actionChoicePanel.hide();
+
+            if (phase.type === PhaseTypes.Reload) {
+                SoundManager.play(RessourceKeys.Reloading);
+
+                const concernedPlayer = this.playerManager.getPlayer(this.phaseManager.concernedPlayerId!);
+                this.effectsManager.floatingText(concernedPlayer.x, concernedPlayer.y, "+1 bullet");
+            }
+            return;
+        }
+
+        const isConcerned = this.phaseManager.isConcerned(this.room.sessionId);
+
+        if (this.phaseManager.isActionChoicePhase()) {
+            hideHudButton()
+            isConcerned ? this.actionChoicePanel.show() : this.actionChoicePanel.hide();
+        } else {
+            this.actionChoicePanel.hide();
+            showHudButton(HudButton.EndTurn, isConcerned);
+        }
     }
 }

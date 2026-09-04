@@ -9,6 +9,6 @@
       "@shared/*": ["../shared/*"]
     }
   },
-  "include": ["src", "../shared/**/*"],
+  "include": ["src", "../shared/**/*", "../server/src/enums/BotPerceptionKey.enum.ts", "../server/src/enums/HitType.enum.ts", "../server/src/enums/Operation.enum.ts", "../server/src/enums/BotMemoryKey.enum.ts", "../server/src/enums/BotMovementAction.enum.ts"],
   "exclude": ["../server"]
 }

@@ -1,4 +1,4 @@
-import { FaceExpression } from "./enums/FaceExpression.enum";
+import { FaceExpression } from "../client/src/enums/FaceExpression.enum";
 import { Parameter } from "./enums/Parameter.enum";
 import { RessourceKeys } from "./enums/RessourceKeys.enum";
 import type { ParameterChangeCoef } from "./types";
@@ -26,7 +26,7 @@ export const TILE_SIZE = 2;
 export const EDITION_TILE_SIZE = 8;
 
 export const GROUND_TYPE = "stone";
-export const TEXTURE_SIZE = 128;
+export const TEXTURE_SIZE = 256;
 
 export const TIME_STEP = 1000 / 60;
 
@@ -34,22 +34,30 @@ export const HEALTH_TRANSITION_DURATION = 400;
 
 export const PLAYER_CONST = {
     BASE_WIDTH: 32,
-    SPEED: 4.5,
-    JUMP: -17.5,
-    BASE_MAX_HP: 100,
 
+    SPEED: 4.5,
+
+    ACCELERATION: 0.6,
+    DECELERATION: 1.1,
+
+    AIR_ACCELERATION: 0.8,
+    AIR_DECELERATION: 0.08,
+
+    JUMP: -17.5,
+    MAX_FALL_SPEED: 22,
+
+    BASE_MAX_HP: 100,
     BASE_JUMP_COST: 20,
 
-    BASE_BULLET_COUNT: [
-        1,
-        2
-    ],
+    BASE_BULLET_COUNT: [1, 2],
     BASE_MAX_BULLET_COUNT: 3,
 
     SELF_COLOR: 0x3498db,
     ENNEMY_COLOR: 0xdb3445,
 
-    BASE_MAX_MOVEMENT: FREE_ROAM ? Number.MAX_VALUE : 185,
+    BASE_MAX_MOVEMENT: FREE_ROAM
+        ? Number.MAX_VALUE
+        : 185,
 
     BASE_MASS: 26,
 
@@ -58,7 +66,7 @@ export const PLAYER_CONST = {
     BASE_FRICTION: {
         FRICTION: 0,
         FRICTION_STATIC: 0,
-        FRICTION_AIR: 0.05,
+        FRICTION_AIR: 0,
     },
 
     PUSH_FRICTION: {
@@ -72,6 +80,12 @@ export const PLAYER_CONST = {
         FRICTION_STATIC: 0,
         FRICTION_AIR: 0.05,
     },
+};
+
+export const BOT_CONST = {
+    BOT_ID: "bot",
+    SIMULATION_STEP_TIME_COEF: 3,
+    SHOT_IMPRECISION_COEF: 1,
 }
 
 export const BULLET_CONST = {
@@ -104,7 +118,7 @@ export const EXPLOSION_CONST = {
 }
 
 export const SHOT_CONST = {
-    BASE_DAMAGE: 20,
+    BASE_DAMAGE: 14,
     BASE_MAX_SHOT_FORCE: 27.5,
     MIN_SHOT_FORCE: 5,
 }
@@ -139,6 +153,9 @@ export const PARAM_BASE_VALUE_MAP = new Map<Parameter, number>([
 export const MAP_PREVIEW_WIDTH = 300;
 export const MAP_PREVIEW_HEIGHT = 150;
 export const HUD_HEIGHT = 42;
+
+export const GRID_COLOR = 0x2e2e1b;
+export const GRID_SIZE = 32;
 
 export const AUDIO_RESSOURCE_KEYS = [
     RessourceKeys.Explosion,

@@ -1,5 +1,5 @@
-import { Depths } from "@shared/enums/Depths.enum";
-import { FaceExpression } from "@shared/enums/FaceExpression.enum";
+import { Depths } from "../enums/Depths.enum";
+import { FaceExpression } from "../enums/FaceExpression.enum";
 import type GameScene from "../scenes/GameScene";
 import { PLAYER_CONST } from "@shared/const";
 import { wait } from "@shared/utils";

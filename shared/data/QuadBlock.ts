@@ -163,91 +163,138 @@ export default class QuadBlock {
         return res;
     }
 
-    static mergeAdjacentBlocks(blocks: QuadBlock[]): Rectangle[] {
-        if (blocks.length === 0) return [];
-
-        const sorted = [...blocks].sort((a, b) => {
-            if (a.x !== b.x) return a.x - b.x;
-            return a.y - b.y;
-        });
-
-        const merged: Array<{ x: number, y: number, width: number, height: number }> = [];
-        const used = new Set<number>();
-
-        for (let i = 0; i < sorted.length; i++) {
-            if (used.has(i)) continue;
-
-            const block = sorted[i];
-            let x = block.x;
-            let y = block.y;
-            let width = block.width;
-            let height = block.height;
-
-            let foundAdjacent = true;
-            while (foundAdjacent) {
-                foundAdjacent = false;
-
-                for (let j = i + 1; j < sorted.length; j++) {
-                    if (used.has(j)) continue;
-
-                    const next = sorted[j];
-
-                    if (next.x > x) break;
-
-                    if (next.x === x && next.width === width && next.y === y + height) {
-                        height += next.height;
-                        used.add(j);
-                        foundAdjacent = true;
-                        break;
-                    }
-                }
-            }
-
-            merged.push({ x, y, width, height });
-            used.add(i);
+    collidesWithCircle(cx: number, cy: number, radius: number): boolean {
+        if (!circleIntersectsRectangle(
+            cx, cy, radius,
+            this.x, this.y, this.width, this.height
+        )) {
+            return false;
         }
 
-        const finalMerged: Array<{ x: number, y: number, width: number, height: number }> = [];
-        const usedMerged = new Set<number>();
-
-        merged.sort((a, b) => {
-            if (a.y !== b.y) return a.y - b.y;
-            return a.x - b.x;
-        });
-
-        for (let i = 0; i < merged.length; i++) {
-            if (usedMerged.has(i)) continue;
-
-            let rect = merged[i];
-            let x = rect.x;
-            let y = rect.y;
-            let width = rect.width;
-            let height = rect.height;
-
-            let foundAdjacent = true;
-            while (foundAdjacent) {
-                foundAdjacent = false;
-
-                for (let j = i + 1; j < merged.length; j++) {
-                    if (usedMerged.has(j)) continue;
-
-                    const next = merged[j];
-
-                    if (next.y > y) break;
-
-                    if (next.y === y && next.height === height && next.x === x + width) {
-                        width += next.width;
-                        usedMerged.add(j);
-                        foundAdjacent = true;
-                        break;
-                    }
-                }
-            }
-
-            finalMerged.push({ x, y, width, height });
-            usedMerged.add(i);
+        if (!this.hasChildren()) {
+            return this.filled;
         }
 
-        return finalMerged;
+        return this.children.some(child =>
+            child.collidesWithCircle(cx, cy, radius)
+        );
+    }
+
+    collidesWithRect(x: number, y: number, width: number, height: number): boolean {
+        const halfWidth = width / 2;
+        const halfHeight = height / 2;
+
+        const rectMinX = x - halfWidth;
+        const rectMaxX = x + halfWidth;
+        const rectMinY = y - halfHeight;
+        const rectMaxY = y + halfHeight;
+
+        if (rectMaxX < this.x || rectMinX > this.x + this.width ||
+            rectMaxY < this.y || rectMinY > this.y + this.height) {
+            return false;
+        }
+
+        if (this.filled) return true;
+
+        if (!this.children || this.children.length === 0) return false;
+
+        return this.children.some(child => child.collidesWithRect(x, y, width, height));
+    }
+
+    static mergeAdjacentBlocks(
+        blocks: QuadBlock[]
+    ): Rectangle[] {
+        if (blocks.length === 0) {
+            return [];
+        }
+
+        let rects: Rectangle[] = blocks.map(block => ({
+            x: block.x,
+            y: block.y,
+            width: block.width,
+            height: block.height,
+        }));
+
+        let changed = true;
+
+        while (changed) {
+            changed = false;
+
+            // Fusion horizontale
+            rects.sort((a, b) => {
+                if (a.y !== b.y) {
+                    return a.y - b.y;
+                }
+
+                if (a.height !== b.height) {
+                    return a.height - b.height;
+                }
+
+                return a.x - b.x;
+            });
+
+            for (let i = 0; i < rects.length - 1; i++) {
+                const current = rects[i];
+                const next = rects[i + 1];
+
+                const sameRow =
+                    current.y === next.y &&
+                    current.height === next.height;
+
+                const touchingHorizontally =
+                    current.x + current.width === next.x;
+
+                if (!sameRow || !touchingHorizontally) {
+                    continue;
+                }
+
+                current.width += next.width;
+                rects.splice(i + 1, 1);
+
+                changed = true;
+                break;
+            }
+
+            if (changed) {
+                continue;
+            }
+
+            // Fusion verticale
+            rects.sort((a, b) => {
+                if (a.x !== b.x) {
+                    return a.x - b.x;
+                }
+
+                if (a.width !== b.width) {
+                    return a.width - b.width;
+                }
+
+                return a.y - b.y;
+            });
+
+            for (let i = 0; i < rects.length - 1; i++) {
+                const current = rects[i];
+                const next = rects[i + 1];
+
+                const sameColumn =
+                    current.x === next.x &&
+                    current.width === next.width;
+
+                const touchingVertically =
+                    current.y + current.height === next.y;
+
+                if (!sameColumn || !touchingVertically) {
+                    continue;
+                }
+
+                current.height += next.height;
+                rects.splice(i + 1, 1);
+
+                changed = true;
+                break;
+            }
+        }
+
+        return rects;
     }
 }
