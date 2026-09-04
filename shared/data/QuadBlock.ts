@@ -9,6 +9,7 @@ export default class QuadBlock {
     height: number;
     filled: boolean;
     children: QuadBlock[];
+    private recycledChildren: QuadBlock[] = [];
 
     constructor(
         x: number,
@@ -41,6 +42,17 @@ export default class QuadBlock {
         return Math.round(value / minSize) * minSize;
     }
 
+    private acquireChild(x: number, y: number, width: number, height: number): QuadBlock {
+        const child = this.recycledChildren.pop() ?? new QuadBlock(x, y, width, height);
+        child.x = x;
+        child.y = y;
+        child.width = width;
+        child.height = height;
+        child.filled = true;
+        child.children = [];
+        return child;
+    }
+
     subdivideEqually(minSize = TILE_SIZE) {
         const hw = this.roundToTileMultiple(this.width / 2, minSize);
         const hh = this.roundToTileMultiple(this.height / 2, minSize);
@@ -49,10 +61,10 @@ export default class QuadBlock {
         const bottomH = this.height - hh;
 
         this.children = [
-            new QuadBlock(this.x, this.y, hw, hh),
-            new QuadBlock(this.x + hw, this.y, rightW, hh),
-            new QuadBlock(this.x, this.y + hh, hw, bottomH),
-            new QuadBlock(this.x + hw, this.y + hh, rightW, bottomH),
+            this.acquireChild(this.x, this.y, hw, hh),
+            this.acquireChild(this.x + hw, this.y, rightW, hh),
+            this.acquireChild(this.x, this.y + hh, hw, bottomH),
+            this.acquireChild(this.x + hw, this.y + hh, rightW, bottomH),
         ];
     }
 
@@ -62,8 +74,8 @@ export default class QuadBlock {
         const midX = this.x + hw;
 
         this.children = [
-            new QuadBlock(this.x, this.y, hw, this.height),
-            new QuadBlock(midX, this.y, rightW, this.height),
+            this.acquireChild(this.x, this.y, hw, this.height),
+            this.acquireChild(midX, this.y, rightW, this.height),
         ];
     }
 
@@ -73,8 +85,8 @@ export default class QuadBlock {
         const midY = this.y + hh;
 
         this.children = [
-            new QuadBlock(this.x, this.y, this.width, hh),
-            new QuadBlock(this.x, midY, this.width, bottomH),
+            this.acquireChild(this.x, this.y, this.width, hh),
+            this.acquireChild(this.x, midY, this.width, bottomH),
         ];
     }
 
@@ -129,7 +141,15 @@ export default class QuadBlock {
             child.cleanup();
         }
 
-        this.children = this.children.filter(child => !child.isEmpty());
+        const remainingChildren: QuadBlock[] = [];
+        for (const child of this.children) {
+            if (child.isEmpty()) {
+                this.recycledChildren.push(child);
+            } else {
+                remainingChildren.push(child);
+            }
+        }
+        this.children = remainingChildren;
 
         if (this.children.length === 0) {
             this.turnEmpty();
@@ -138,6 +158,7 @@ export default class QuadBlock {
 
     turnEmpty() {
         this.filled = false;
+        this.recycledChildren.push(...this.children);
         this.children = [];
     }
 

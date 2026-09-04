@@ -12,6 +12,7 @@ export default class TerrainManagerClient {
     scene: GameScene;
     root: QuadBlock;
     terrainColliders: MatterJS.BodyType[] = [];
+    colliderPool: MatterJS.BodyType[] = [];
     terrainSprites: Phaser.GameObjects.TileSprite[] = [];
 
     spritePool: Phaser.GameObjects.TileSprite[] = [];
@@ -82,10 +83,11 @@ export default class TerrainManagerClient {
     }
 
     private recreateColliders() {
-        if (this.terrainColliders.length > 0) {
-            this.scene.matter.world.remove(this.terrainColliders);
-            this.terrainColliders = [];
+        for (const collider of this.terrainColliders) {
+            this.scene.matter.world.remove(collider);
+            this.colliderPool.push(collider);
         }
+        this.terrainColliders = [];
 
         this.createTerrainColliders();
     }
@@ -106,9 +108,12 @@ export default class TerrainManagerClient {
 
         for (let i = 0; i < mergedRects.length; i++) {
             const rect = mergedRects[i];
-            const collider = this.scene.matter.add.rectangle(
-                rect.x + rect.width / 2,
-                rect.y + rect.height / 2,
+            const x = rect.x + rect.width / 2;
+            const y = rect.y + rect.height / 2;
+            const pooledCollider = this.colliderPool.pop();
+            const collider = pooledCollider ?? this.scene.matter.add.rectangle(
+                x,
+                y,
                 rect.width,
                 rect.height,
                 {
@@ -119,6 +124,18 @@ export default class TerrainManagerClient {
                     label: RessourceKeys.Ground,
                 }
             );
+
+            if (pooledCollider) {
+                this.scene.matter.body.setPosition(collider, { x, y });
+                this.scene.matter.body.setVertices(collider, [
+                    { x: -rect.width / 2, y: -rect.height / 2 },
+                    { x: rect.width / 2, y: -rect.height / 2 },
+                    { x: rect.width / 2, y: rect.height / 2 },
+                    { x: -rect.width / 2, y: rect.height / 2 },
+                ]);
+                this.scene.matter.body.setPosition(collider, { x, y });
+                this.scene.matter.world.add(collider);
+            }
             this.terrainColliders.push(collider);
 
             if (DEBUG) {

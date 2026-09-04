@@ -1,4 +1,4 @@
-import { Bodies } from "matter-js";
+import { Body, Bodies, Vertices } from "matter-js";
 import GameBody from "./GameBody";
 import { RessourceKeys } from "@shared/enums/RessourceKeys.enum";
 
@@ -13,5 +13,15 @@ export default class TerrainBlock extends GameBody {
         });
 
         super(body);
+    }
+
+    setBounds(x: number, y: number, width: number, height: number) {
+        Body.setPosition(this.body, { x, y });
+        Body.setVertices(this.body, Vertices.fromPath(
+            `${-width / 2} ${-height / 2} ${width / 2} ${-height / 2} ` +
+            `${width / 2} ${height / 2} ${-width / 2} ${height / 2}`,
+            this.body
+        ));
+        Body.setPosition(this.body, { x, y });
     }
 }

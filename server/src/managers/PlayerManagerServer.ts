@@ -1,4 +1,4 @@
-import { getPlayerDistanceFromPoint, isPlayerInRadius, movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
+import { movePlayerFromInputs, playerReactToExplosion } from "@shared/logics/player-logic";
 import { InputPayload, PendingExplosion } from "@shared/types";
 import PlayerServer from "../bodies/PlayerServer";
 import Phase from "@shared/data/phases/Phase";
@@ -75,13 +75,13 @@ export default class PlayerManagerServer {
     }
 
     applyExplosion(pendingExplosion: PendingExplosion) {
-        this.playerBodies.forEach((p, id) => {
-            playerReactToExplosion(p, pendingExplosion);
+        this.playerBodies.forEach((player) => {
+            if (!player.isAlive()) return;
 
-            if (isPlayerInRadius(p, pendingExplosion.cx, pendingExplosion.cy, pendingExplosion.radius)) {
-                const distanceToExplosion = getPlayerDistanceFromPoint(p, pendingExplosion.cx, pendingExplosion.cy);
+            const distanceToExplosion = playerReactToExplosion(player, pendingExplosion);
+            if (distanceToExplosion !== null) {
                 // Explosion damage is not a direct hit, but it scales with distance to the center.
-                this.playerBodies.get(id)?.applyDamage(pendingExplosion.damage!, false, distanceToExplosion, pendingExplosion.radius);
+                player.applyDamage(pendingExplosion.damage!, false, distanceToExplosion, pendingExplosion.radius);
             }
         });
     }

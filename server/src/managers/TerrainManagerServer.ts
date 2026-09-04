@@ -11,6 +11,7 @@ export default class TerrainManagerServer {
     physicsManager: PhysicsManager;
     root: QuadBlock;
     terrainBlocks: TerrainBlock[] = [];
+    terrainBlockPool: TerrainBlock[] = [];
     bounds: Bounds;
 
     constructor(physicsManager: PhysicsManager, root: QuadBlock, bounds: Bounds) {
@@ -49,7 +50,14 @@ export default class TerrainManagerServer {
         const mergedRects = QuadBlock.mergeAdjacentBlocks(filledBlocks);
 
         for (const rect of mergedRects) {
-            const terrainBlock = new TerrainBlock(
+            const terrainBlock = this.terrainBlockPool.pop() ?? new TerrainBlock(
+                rect.x + rect.width / 2,
+                rect.y + rect.height / 2,
+                rect.width,
+                rect.height
+            );
+
+            terrainBlock.setBounds(
                 rect.x + rect.width / 2,
                 rect.y + rect.height / 2,
                 rect.width,
@@ -62,7 +70,10 @@ export default class TerrainManagerServer {
     }
 
     recreateTerrain() {
-        this.terrainBlocks.forEach(t => t.removeFromWorld());
+        for (const terrainBlock of this.terrainBlocks) {
+            terrainBlock.removeFromWorld();
+            this.terrainBlockPool.push(terrainBlock);
+        }
         this.terrainBlocks = [];
         this.createTerrain();
     }

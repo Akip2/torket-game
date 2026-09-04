@@ -38,6 +38,7 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
 
     glow: Glow;
     deathParticles: DeathParticles;
+    private readonly forceVector = new Phaser.Math.Vector2();
 
     maxMovement: number;
     movementLeft: number;
@@ -142,15 +143,16 @@ export default class PlayerClient extends Phaser.Physics.Matter.Sprite implement
     }
 
     addForceX(x: number): void {
-        this.applyForce(new Phaser.Math.Vector2(x, 0));
+        this.addForce(x, 0);
     }
 
     addForceY(y: number): void {
-        this.applyForce(new Phaser.Math.Vector2(0, y));
+        this.addForce(0, y);
     }
 
     addForce(x: number, y: number): void {
-        this.applyForce(new Phaser.Math.Vector2(x = x, y = y));
+        this.forceVector.set(x, y);
+        this.applyForce(this.forceVector);
     }
 
     addPower(powerName: string) {
