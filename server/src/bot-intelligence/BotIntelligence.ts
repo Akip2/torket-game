@@ -97,7 +97,7 @@ export default class BotIntelligence {
 
     async waitForStability() {
         while (!(this.botPerception.otherPlayerObj.isStable() && this.botPerception.selfObj.isStable())) {
-            await wait(TIME_STEP);
+            await wait(1000);
         }
     }
 

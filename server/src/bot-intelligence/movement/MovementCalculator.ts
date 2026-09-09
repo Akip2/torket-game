@@ -31,11 +31,11 @@ const ACTIONS = [
 
 export default class MovementCalculator {
     constructor(
-        private botPerception: BotPerception, 
-        private botMemory: BotMemory, 
-        private terrain: QuadBlock, 
+        private botPerception: BotPerception,
+        private botMemory: BotMemory,
+        private terrain: QuadBlock,
         private trajectoryCalculator: TrajectoryCalculator
-    ) {}
+    ) { }
 
     findBestMovements() {
         const startState = {
@@ -65,16 +65,16 @@ export default class MovementCalculator {
         return !this.terrain.collidesWithRect(
             x,
             y + 700 / 2,
-            PLAYER_CONST.BASE_WIDTH - 8,
+            1,
             700
         );
     }
 
     private botCollides(x: number, y: number) {
         return this.terrain.collidesWithRect(
-            x, 
-            y, 
-            PLAYER_CONST.BASE_WIDTH - 8, 
+            x,
+            y,
+            PLAYER_CONST.BASE_WIDTH - 8,
             PLAYER_CONST.BASE_WIDTH - 8
         );
     }
@@ -170,7 +170,7 @@ export default class MovementCalculator {
             }
         }
         nextState.velocityX = targetSpeed;
-        nextState.velocityX *= 0.95;
+        nextState.velocityX *= 0.9;
 
         this.simulatePhysics(nextState, tickNumber);
 
@@ -257,7 +257,13 @@ export default class MovementCalculator {
 
         score += ((state.x - this.botPerception.selfPosition.x) ** 2) * 0.0225;
 
-        score += this.isOnGround(state.x, state.y) ? 0.1 : 0;
+        if (this.isOnGround(state.x, state.y)) {
+            score += 0.1;
+            score += Math.max(
+                this.botMemory.botPositionTurnStart.y - state.y,
+                0
+            );
+        }
 
         return score;
     }
