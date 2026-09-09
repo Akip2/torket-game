@@ -95,6 +95,12 @@ export default class BotIntelligence {
         }
     }
 
+    async waitForStability() {
+        while (!(this.botPerception.otherPlayerObj.isStable() && this.botPerception.selfObj.isStable())) {
+            await wait(TIME_STEP);
+        }
+    }
+
     memorizeBestTrajectory(origin: Position, target: Position) {
         const bestTrajectory = this.trajectoryCalculator.findBestTrajectory(
             origin,//this.botPerception.selfPosition,
