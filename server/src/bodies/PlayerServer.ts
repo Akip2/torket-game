@@ -40,7 +40,7 @@ export default class PlayerServer extends GameBody implements IPlayer {
                 restitution: 0,
 
                 chamfer: {
-                    radius: 4,
+                    radius: 2,
                 },
                 slop: 0,
 
@@ -198,7 +198,7 @@ export default class PlayerServer extends GameBody implements IPlayer {
 
         const vx = this.body.velocity.x;
 
-        if (Math.abs(vx) < 0.15) {
+        if (Math.abs(vx) < 0.1) {
             Body.setVelocity(this.body, {
                 x: 0,
                 y: this.body.velocity.y,
