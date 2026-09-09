@@ -74,7 +74,7 @@ export default class TerrainManagerServer {
             terrainBlock.removeFromWorld();
             this.terrainBlockPool.push(terrainBlock);
         }
-        this.terrainBlocks = [];
+        this.terrainBlocks.length = 0;
         this.createTerrain();
     }
 
@@ -83,6 +83,8 @@ export default class TerrainManagerServer {
         const explosionSize = bullet.getExplosionInfo().explosionSize;
 
         this.root.destroy(x, y, explosionSize, minSize);
+        //this.root.cleanup();
+        
         this.recreateTerrain();
     }
 }

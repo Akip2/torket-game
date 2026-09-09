@@ -170,18 +170,17 @@ export default class QuadBlock {
         return !this.filled && !this.hasChildren();
     }
 
-    getFilledBlocks(): QuadBlock[] {
-        let res: QuadBlock[] = [];
-
+    getFilledBlocks(result: QuadBlock[] = []): QuadBlock[] {
         if (this.filled) {
-            res = [this];
-        } else if (this.hasChildren()) {
-            for (const child of this.children) {
-                res = res.concat(child.getFilledBlocks());
-            }
+            result.push(this);
+            return result;
         }
 
-        return res;
+        for (const child of this.children) {
+            child.getFilledBlocks(result);
+        }
+
+        return result;
     }
 
     collidesWithCircle(cx: number, cy: number, radius: number): boolean {
