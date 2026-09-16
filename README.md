@@ -1,14 +1,14 @@
 # 🚀 Torket
 
-A small **real-time multiplayer game** built with **Phaser 3** and **Colyseus**, where players can move around, aim, and fire projectiles in a **physics-based, destructible environment** ⚙️💥
+A small ** multiplayer game** built with **Phaser 3** and **Colyseus**, where players can move around, aim, and fire projectiles in a **physics-based, destructible environment** 💥
 
 ---
 
 ## 🕹️ Overview
 
 Each player controls a little character equipped with a **rocket launcher**.  
-The world is **interactive and destructible**, and projectiles follow a **realistic physics trajectory** (gravity, impulse, etc).  
-All players’ positions and actions are **synchronized in real time** through a Colyseus server.
+The world is **interactive and destructible**, and projectiles follow a **physics trajectory** (gravity, impulse, etc).  
+All players’ positions and actions are **synchronized** through a Colyseus server.
 
 ---
 
@@ -30,10 +30,11 @@ All players’ positions and actions are **synchronized in real time** through a
 Clone the repository and install dependencies for both client and server:
 
 ```bash
-git clone https://github.com/your-username/multiplayer-rocket-game.git
+git clone https://github.com/Akip2/torket-game.git
 cd torket-game
 
 # Install dependencies for both parts
+npm install
 cd client && npm install
 cd ../server && npm install
 cd ..
@@ -93,30 +94,12 @@ http://localhost:5173/
 
 - **Colyseus server** runs at:  
   ```
-  http://localhost:2567/
+  http://localhost:25671/
   ```
 - **Vite client** runs at:  
   ```
   http://localhost:5173/
   ```
-
-### Environment variables
-
-Both the **client** and **server** use `.env` files for configuration.
-
-#### 🖥️ Server (`/server/.env`)
-```bash
-PORT=2567
-```
-
-#### 💻 Client (`/client/.env`)
-```bash
-VITE_SERVER_URL=localhost:2567
-VITE_PORT=5173
-``` 
-Make sure to create both `.env` files manually — they are not included in the repository.
-
----
 
 ## 🎮 Controls
 
