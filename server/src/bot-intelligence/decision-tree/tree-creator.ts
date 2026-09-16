@@ -21,12 +21,15 @@ import StaticValue from "./value-getters/StaticValue";
 import MovementCalculationNode from "./nodes/actions/MovementCalculattionNode";
 import MoveNode from "./nodes/actions/MoveNode";
 import PositionMemorisationNode from "./nodes/actions/PositionMemorisationNode";
+import WaitForStabilityNode from "./nodes/actions/WaitForStabilityNode";
 
 const END = new EndNode();
 
 export function createActionChoiceDecisionTree(botIntelligence: BotIntelligence): TreeNode {
     const perception = botIntelligence.getBotPerception();
     const memory = botIntelligence.getBotMemory();
+
+    const waitForStability = new WaitForStabilityNode(botIntelligence);
 
     const hasMunitions = new ValueComparisonNode(
         new PerceptionValue(perception, BotPerceptionKey.SelfBulletCount),
@@ -76,6 +79,8 @@ export function createActionChoiceDecisionTree(botIntelligence: BotIntelligence)
     const probaChooseMove = new ProbaNode(0.7);
     const probaChooseMoveIfHasBulletsAndInDanger = new ProbaNode(0.9);
 
+    waitForStability.setNextNode(hasMunitions);
+
     hasMunitions.setTrueNode(calculateBestTrajectory);
     hasMunitions.setFalseNode(ennemyHasMunitions);
 
@@ -107,7 +112,7 @@ export function createActionChoiceDecisionTree(botIntelligence: BotIntelligence)
     chooseMove.setNextNode(END);
     chooseReload.setNextNode(END);
 
-    return hasMunitions;
+    return waitForStability;
 }
 
 export function createMovingDecisionTree(botIntelligence: BotIntelligence): TreeNode {
@@ -153,6 +158,7 @@ export function createShootingDecisionTree(botIntelligence: BotIntelligence): Tr
     );
 
     const waitAfterShot = new WaitingNode(2);
+    const waitForStability = new WaitForStabilityNode(botIntelligence);
 
     const calculateBestTrajectory = new TrajectoryCalculationNode(botIntelligence);
     const usefulShot = new TrueCheckerNode
@@ -169,7 +175,8 @@ export function createShootingDecisionTree(botIntelligence: BotIntelligence): Tr
     hasMunitions.setTrueNode(waitAfterShot);
     hasMunitions.setFalseNode(END);
 
-    waitAfterShot.setNextNode(calculateBestTrajectory);
+    waitAfterShot.setNextNode(waitForStability);
+    waitForStability.setNextNode(calculateBestTrajectory);
 
     calculateBestTrajectory.setNextNode(usefulShot);
 

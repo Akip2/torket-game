@@ -4,6 +4,7 @@ import { Position } from "@shared/types";
 import Bot from "../bodies/Bot";
 import { MyRoom } from "../rooms/MyRoom";
 import QuadBlock from "@shared/data/QuadBlock";
+import Matter from "matter-js";
 
 export default class BotPerception {
     private readonly otherPlayer: PlayerServer;
@@ -21,12 +22,24 @@ export default class BotPerception {
         this.self = bot;
     }
 
+    get otherPlayerObj() {
+        return this.otherPlayer;
+    }
+
+    get selfObj() {
+        return this.self;
+    }
+
     get currentPhase() {
         return this.phaseManager.getCurrentPhase();
     }
 
     get otherPlayerPosition(): Position {
         return this.otherPlayer.getPosition();
+    }
+
+    get otherPlayerVelocity(): Matter.Vector {
+        return this.otherPlayer.getVelocity();
     }
     
     get otherBulletCount() {

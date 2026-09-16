@@ -1,6 +1,5 @@
 import { PlayerState } from "../enums/PlayerState.enum";
 import { EXPLOSION_CONST, PLAYER_CONST } from "../const";
-import Vector from "../data/Vector";
 import type { IPlayer } from "../interfaces/Player.interface";
 import type { InputPayload, PendingExplosion } from "../types";
 import { wait } from "../utils";
@@ -94,13 +93,17 @@ export function calculateExplosionDamage(baseDamage: number, directHit: boolean,
     return Math.max(0, Math.round(baseDamage * damageRatio));
 }
 
-export function playerReactToExplosion(player: IPlayer, pendingExplosion: PendingExplosion) {
+export function playerReactToExplosion(player: IPlayer, pendingExplosion: PendingExplosion): number | null {
     const { radius, pushCoef } = pendingExplosion;
     const { cx, cy } = pendingExplosion;
+    const distance = getPlayerDistanceFromPoint(player, cx, cy);
 
-    if (isPlayerInRadius(player, cx, cy, radius)) {
-        pushPlayer(player, cx, cy, radius, pushCoef);
+    if (distance > radius * 0.9) {
+        return null;
     }
+
+    pushPlayer(player, cx, cy, radius, pushCoef, distance);
+    return distance;
 }
 
 export function getPlayerDistanceFromPoint(player: IPlayer, cx: number, cy: number) {
@@ -108,19 +111,29 @@ export function getPlayerDistanceFromPoint(player: IPlayer, cx: number, cy: numb
 
     const closestX = Math.max(playerPosition.x - PLAYER_CONST.BASE_WIDTH / 2, Math.min(cx, playerPosition.x + PLAYER_CONST.BASE_WIDTH / 2));
     const closestY = Math.max(playerPosition.y - PLAYER_CONST.BASE_WIDTH / 2, Math.min(cy, playerPosition.y + PLAYER_CONST.BASE_WIDTH / 2));
-    const distVect = new Vector(closestX - cx, closestY - cy);
+    const distanceX = closestX - cx;
+    const distanceY = closestY - cy;
 
-    return distVect.getNorm();
+    return Math.sqrt(distanceX * distanceX + distanceY * distanceY);
 }
 
-export function pushPlayer(player: IPlayer, cx: number, cy: number, radius: number, pushCoef: number) {
-    const dist = getPlayerDistanceFromPoint(player, cx, cy);
+export function pushPlayer(
+    player: IPlayer,
+    cx: number,
+    cy: number,
+    radius: number,
+    pushCoef: number,
+    distance = getPlayerDistanceFromPoint(player, cx, cy)
+) {
+    if (distance >= radius) return;
 
-    if (dist < radius) {
-        const playerPosition = player.getPosition();
-        const normalizedPushVector = new Vector(playerPosition.x - cx, playerPosition.y - cy).getNormalizedVector();
-        const force = (1 - dist / radius) * (pushCoef + Math.min(radius * 0.005, EXPLOSION_CONST.BASE_PUSH / 2));
+    const playerPosition = player.getPosition();
+    const directionX = playerPosition.x - cx;
+    const directionY = playerPosition.y - cy;
+    const directionNorm = Math.sqrt(directionX * directionX + directionY * directionY);
+    const normalizedX = directionNorm > 0 ? directionX / directionNorm : 0;
+    const normalizedY = directionNorm > 0 ? directionY / directionNorm : -1;
+    const force = (1 - distance / radius) * (pushCoef + Math.min(radius * 0.005, EXPLOSION_CONST.BASE_PUSH / 2));
 
-        player.addForce(normalizedPushVector.x * force, normalizedPushVector.y * force);
-    }
+    player.addForce(normalizedX * force, normalizedY * force);
 }

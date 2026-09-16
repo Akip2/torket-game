@@ -60,6 +60,12 @@ export default abstract class GameBody implements IBasicBody {
         }
     }
 
+    isStable() {
+        const vel = this.getVelocity();
+
+        return Math.abs(vel.x) < 0.1 && Math.abs(vel.y) < 0.1;
+    }
+
     removeFromWorld() {
         throw new Error("GameBody wasn't added to the world");
     }
